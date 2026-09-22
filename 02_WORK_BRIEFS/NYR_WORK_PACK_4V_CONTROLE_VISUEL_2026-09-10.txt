@@ -1,0 +1,50 @@
+NYR — WORK PACK 4V — CONTROLE VISUEL DU PROTOTYPE ACTUEL
+Date : 2026-09-10
+
+OBJECTIF UNIQUE
+Produire des preuves visuelles du prototype NYR tel qu'il existe après le PACK 4, sans modifier le gameplay ni ajouter de fonctionnalité.
+
+SOURCE DE VERITE
+- Lire docs/work/WORK_RULES.md.
+- Lire docs/checkpoints/CHECKPOINT_PACK_4.md.
+- Ne modifier aucun comportement validé des PACKS 0 à 4.
+
+A FAIRE UNIQUEMENT
+1. Ouvrir NYR via un serveur local temporaire, sans dépendance permanente.
+2. Capturer au minimum :
+   - une vue desktop 1366 x 768 montrant Nyr Forme I et les 6 Fragments normaux ;
+   - une vue mobile paysage 844 x 390 montrant Nyr Forme I et les 6 Fragments normaux ;
+   - si possible, une vue portrait 390 x 844 montrant l'overlay de rotation et la suspension.
+3. Les captures doivent refléter le projet réel exécuté, pas une maquette ou une image générée.
+4. Enregistrer les captures dans :
+   tests/visual/
+   avec des noms explicites, par exemple :
+   - PACK_4_DESKTOP_1366x768.png
+   - PACK_4_MOBILE_LANDSCAPE_844x390.png
+   - PACK_4_MOBILE_PORTRAIT_390x844.png
+5. Vérifier visuellement :
+   - Nyr visible et lisible ;
+   - 6 fragments présents ;
+   - aucune superposition manifestement incorrecte ;
+   - canvas bien cadré ;
+   - paysage mobile lisible ;
+   - overlay portrait lisible si la capture est possible.
+6. Créer docs/checkpoints/CHECKPOINT_PACK_4V_VISUEL.md en listant les captures produites et le résultat du contrôle.
+
+INTERDICTIONS ABSOLUES
+- Aucun changement de mouvement.
+- Aucun +1 segment.
+- Aucun +100 points.
+- Aucun score, compteur, croissance ou combo.
+- Aucun nouveau collectible.
+- Aucun Dash, collision, stabilité, HUD gameplay, caméra, zone, danger, événement, CJ, audio, réseau, multijoueur, Capacitor, GitHub ou déploiement.
+- Ne pas retoucher les captures pour masquer un défaut du rendu réel.
+
+REGLE QUOTA / CREDITS PRIORITAIRE
+- Ce pack doit rester très court et atomique.
+- Si une limite/quota faible est signalé ou si la capacité à terminer proprement le pack est incertaine, ne pas commencer.
+- Si le quota exact n'est pas visible, ne pas inventer de pourcentage.
+- Ne commencer aucun autre pack après celui-ci.
+
+FIN DU PACK
+Une fois les captures enregistrées et CHECKPOINT_PACK_4V_VISUEL.md créé, s'arrêter strictement. PACK 5 NON COMMENCE.

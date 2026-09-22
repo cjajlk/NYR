@@ -1,0 +1,117 @@
+NYR — WORK PACK 11 — INTEGRATION FOND ZONE 1
+Date : 2026-09-10
+
+SOURCE DE VERITE
+Projet : /CJAJLK Games/NYR/
+Canon : /CJAJLK Games/NYR/docs/canon/NYR_DIRECTION_V1_CANON_2026-09-09.txt
+Etat stable de depart : CHECKPOINT_PACK_10.md
+
+OBJECTIF UNIQUE
+Intégrer visuellement le premier vrai fond de gameplay :
+assets/images/zones/NYR_ZONE_01_ESPACE_NOCTURNE_V1.png
+
+Le PACK 11 ne doit introduire AUCUN autre système.
+
+CANON A RESPECTER
+ZONE 1 — ESPACE NOCTURNE
+- 0 à 24 fragments
+- apprentissage
+- peu d'obstacles
+- ambiance calme
+La partie restera plus tard continue entre les zones, mais ce PACK ne code PAS encore les transitions de zones.
+
+TRAVAIL AUTORISE
+1. Charger proprement NYR_ZONE_01_ESPACE_NOCTURNE_V1.png avec un chemin relatif.
+2. L'afficher comme fond du canvas de gameplay actuel.
+3. Gérer correctement le redimensionnement desktop/mobile paysage et DPR existant.
+4. Préserver la lisibilité de Nyr et des Fragments normaux au-dessus du fond.
+5. Conserver le fond pendant la suspension portrait sans faire évoluer aucun état.
+6. Si nécessaire, ajouter uniquement une fonction/module léger dédié au chargement/rendu du fond.
+7. Prévoir un fallback technique simple vers le fond actuel si l'image ne peut pas être chargée, sans erreur bloquante.
+8. Mettre à jour README.md pour indiquer le PACK 11.
+9. Créer docs/checkpoints/CHECKPOINT_PACK_11.md puis s'arrêter.
+
+CADRAGE VISUEL
+- L'image doit remplir la surface de jeu sans déformation.
+- Préférer un comportement type "cover" avec recadrage centré si le ratio diffère.
+- Ne pas modifier l'image source.
+- Ne pas ajouter d'assombrissement permanent lourd qui dénature le visuel.
+- Un voile très léger n'est autorisé que si indispensable à la lisibilité, et doit être centralisé/provisoire.
+- Les fragments, Nyr et le flash d'absorption doivent rester clairement visibles.
+
+INTERDICTIONS STRICTES
+- PAS de parallaxe dans ce PACK.
+- PAS d'intégration des couches stars/nebula/particles/asteroids.
+- PAS de Zone 2, 3 ou 4.
+- PAS de logique de changement de zone à 25 fragments.
+- PAS d'obstacle, hazard, astéroïde de gameplay ou collision.
+- PAS de nouveau collectible.
+- PAS de score, record, combo, multiplicateur ou HUD.
+- PAS de Forme III/IV.
+- PAS de changement de vitesse, virage, rayon de rotation ou contrôle.
+- PAS de Dash, stabilité, dégâts, mort ou game over.
+- PAS de caméra, mini-map, événement.
+- PAS de CJ, profil, sauvegarde persistante.
+- PAS d'audio, vibration, réseau ou multijoueur.
+- PAS de Capacitor, framework, npm, bundler, CDN.
+- PAS de GitHub, publication ou déploiement.
+- Ne modifier aucun autre projet CJAJLK.
+
+NON-REGRESSION OBLIGATOIRE
+Conserver exactement les acquis PACKS 0 à 10 :
+- déplacement automatique
+- souris + tactile
+- virage progressif
+- suspension portrait réelle
+- six Fragments normaux
+- absorption/respawn
+- +1 segment par absorption
+- suivi du corps indépendant du FPS
+- compteur interne
+- Spectre à 20 fragments
+- corps organique
+- flash d'absorption 0,36 s
+
+TESTS OBLIGATOIRES
+- chargement local HTTP sans erreur bloquante
+- asset de fond chargé avec HTTP 200
+- desktop 1366x768
+- mobile paysage 844x390
+- portrait 390x844 : suspension inchangée
+- DPR 1 et DPR 2
+- image sans déformation visible
+- Nyr lisible en Éclat
+- Nyr lisible en Spectre
+- six Fragments normaux visibles
+- flash d'absorption visible
+- 19 -> 20 fragments toujours correct
+- aucun changement de logique gameplay
+- aucun chemin absolu
+- aucun CDN
+- fallback testé en simulant une image indisponible si raisonnablement possible
+
+CHECKPOINT
+Créer :
+docs/checkpoints/CHECKPOINT_PACK_11.md
+
+Le checkpoint doit préciser :
+- fichiers créés/modifiés
+- méthode de chargement/rendu du fond
+- comportement de cadrage
+- fallback
+- tests desktop/mobile/DPR/portrait
+- non-régression PACKS 0 à 10
+- systèmes explicitement non commencés
+- confirmation : PACK 12 NON COMMENCÉ
+
+REGLE QUOTA PRIORITAIRE
+Si Work signale une limite proche, quota faible, capacité réduite, ou si tu n'es pas certain de pouvoir terminer ce PACK proprement :
+- ne commence pas une nouvelle étape
+- ne lance surtout pas PACK 12
+- laisse uniquement un état propre, testable et checkpointé
+- ne prétends pas connaître un pourcentage de quota si l'information n'est pas réellement disponible
+
+ARRET STRICT
+Une fois CHECKPOINT_PACK_11.md créé et les tests terminés :
+STOP.
+PACK 12 NON COMMENCÉ.

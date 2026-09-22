@@ -1,0 +1,117 @@
+NYR — WORK PACK 9 — CORPS ORGANIQUE VISUEL V1
+Date : 2026-09-10
+
+OBJECTIF UNIQUE
+Améliorer uniquement le rendu visuel du corps de Nyr afin qu'il ressemble moins à une suite de petites billes et davantage à une créature astrale organique et fluide.
+
+CANON À RESPECTER
+- corps long et fluide ;
+- segments organiques légèrement espacés ;
+- énergie visible entre certains segments ;
+- mouvement visuellement organique ;
+- Forme I Éclat avant 20 fragments ;
+- Forme II Spectre à partir de 20 fragments ;
+- le rendu exact des segments et de l'énergie reste encore PROVISOIRE / À VALIDER.
+
+PÉRIMÈTRE AUTORISÉ
+Modifier uniquement le rendu canvas du corps, en réutilisant la trajectoire et les états existants.
+
+Le PACK 9 doit :
+1. Conserver exactement la trajectoire, le nombre de segments, les seuils et la progression existants.
+2. Remplacer l'impression de "perles rondes alignées" par des segments visuellement plus organiques.
+3. Orienter visuellement chaque segment selon la direction locale de la trajectoire lorsque cela est faisable proprement.
+4. Utiliser des formes légèrement allongées / elliptiques ou une autre primitive canvas simple, cohérente avec NYR, plutôt que de gros cercles identiques.
+5. Conserver un léger espace entre les segments : ne pas transformer Nyr en serpent plein continu.
+6. Ajouter une liaison d'énergie discrète entre certains segments ou entre segments consécutifs afin de rendre le corps plus cohérent et astral.
+7. Garder la différence Éclat / Spectre :
+   - Éclat : rendu plus simple, aura faible ;
+   - Spectre : lignes / énergie / aura plus présentes, comme au PACK 8.
+8. Donner à l'extrémité du corps une terminaison visuelle plus naturelle / effilée, sans modifier la logique de longueur.
+9. Centraliser les nouveaux réglages purement visuels si nécessaire et les marquer clairement comme PROVISOIRES / NON CANONIQUES / NON FINAUX.
+
+IMPORTANT — VISUEL UNIQUEMENT
+Ne modifier AUCUN comportement de gameplay :
+- aucune vitesse ;
+- aucun virage ;
+- aucun rayon de courbure ;
+- aucune logique de trajectoire ;
+- aucune absorption ;
+- aucun spawn ;
+- aucun compteur ;
+- aucune croissance ;
+- aucun seuil ;
+- aucune collision ;
+- aucune hitbox ;
+- aucun score ;
+- aucun combo ;
+- aucun HUD ;
+- aucun son ;
+- aucune vibration.
+
+NE PAS AJOUTER
+- Forme III Nocturne ;
+- Forme IV Dévoreur ;
+- seuil 50 ou 100 ;
+- score / +100 points ;
+- combo / multiplicateur ;
+- changement de vitesse ;
+- Dash ;
+- stabilité ;
+- dégâts / mort / game over ;
+- caméra ;
+- zones ;
+- dangers ;
+- événements ;
+- mini-carte ;
+- autre collectible ;
+- CJ / profil / sauvegarde ;
+- audio ;
+- réseau / multijoueur ;
+- Capacitor ;
+- npm / framework / bundler / CDN ;
+- GitHub / publication / déploiement.
+
+TESTS OBLIGATOIRES
+Vérifier au minimum :
+- Éclat à 4 segments ;
+- Éclat à 19 fragments / 23 segments ;
+- Spectre à 20 fragments / 24 segments ;
+- Spectre à 50 segments de corps de test ;
+- Spectre à 120 segments de corps de test ;
+- aucun empilement visuel nouveau ;
+- aucune rupture / gros trou entre tête et corps ;
+- queue / extrémité lisible ;
+- rendu cohérent dans les virages ;
+- desktop 1366×768 ;
+- mobile paysage 844×390 ;
+- DPR 1 et DPR 2 ;
+- comportement logique identique à 30 / 60 / 120 Hz ;
+- suspension portrait : aucun état ne bouge ni ne progresse ;
+- reprise sans bond ;
+- six fragments toujours actifs ;
+- +1 segment par absorption toujours exact ;
+- seuil Spectre toujours exact à 20.
+
+Le renderer peut être testé par inspection logique / canvas déterministe si le navigateur visuel n'est pas disponible, mais ne jamais fabriquer de fausse capture.
+
+CHECKPOINT
+Créer :
+`docs/checkpoints/CHECKPOINT_PACK_9.md`
+
+Le checkpoint doit décrire :
+- fichiers modifiés/créés ;
+- choix visuels provisoires ;
+- différences Éclat / Spectre ;
+- résultats des tests 4 / 23 / 24 / 50 / 120 segments ;
+- non-régression des PACKS précédents ;
+- confirmation qu'aucun gameplay n'a changé.
+
+RÈGLE QUOTA / CRÉDITS PRIORITAIRE
+Ce pack doit rester atomique et entièrement terminable.
+Si Work signale une limite, un quota faible, une capacité réduite, ou s'il existe un doute raisonnable sur la possibilité de terminer proprement ce pack : NE PAS LE COMMENCER.
+Si une limite apparaît pendant l'exécution : ne lancer aucune nouvelle extension de périmètre ; conserver uniquement un état propre et checkpointé.
+Ne jamais prétendre connaître un pourcentage de quota s'il n'est pas réellement disponible.
+
+ARRÊT STRICT
+Une fois PACK 9 terminé, testé et checkpointé : STOP.
+PACK 10 NON COMMENCÉ.

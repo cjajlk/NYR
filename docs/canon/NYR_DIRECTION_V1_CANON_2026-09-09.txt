@@ -1,0 +1,571 @@
+CJAJLK GAMES — NOUVEAU JEU NYR
+DIRECTION V1 — CONCEPTION CANON
+Date : 09/09/2026
+Statut : DIRECTION VALIDÉE — AUCUN CODE À ÉCRIRE POUR L’INSTANT
+Nom du jeu : NOCTURNE DEVOURER (PROVISOIRE)
+Créature principale : NYR
+
+IMPORTANT
+- Ce document fixe la direction de conception actuelle.
+- Aucun dépôt ne doit être créé et aucun code ne doit être commencé sur la base de cette archive sans décision explicite de CJ.
+- Le nom NOCTURNE DEVOURER reste provisoire.
+- NYR et la direction de gameplay/identité ci-dessous servent de base canon de travail.
+
+============================================================
+1. POSITIONNEMENT DANS CJAJLK GAMES
+============================================================
+
+Direction retenue :
+- Le jeu sera un jeu autonome de l’écosystème CJAJLK Games.
+- Quand le développement commencera, privilégier un dépôt GitHub séparé, sur le modèle de Nocturne Velocity.
+- Le jeu sera relié au hub CJAJLK Games et pourra y avoir sa carte/bouton Jouer.
+- Le dépôt séparé ne signifie PAS un profil CJ séparé.
+- Ne pas mélanger inutilement le code du nouveau jeu avec le cœur des jeux déjà en ligne.
+
+============================================================
+2. PROFIL CJ / COMPTE GLOBAL — RÈGLE À RESPECTER
+============================================================
+
+Architecture actuelle à conserver :
+- Source de vérité locale actuelle du profil/CJ global : localStorage `cjPlayerData`.
+- Scripts centraux actuels : `core/cjAccount.js` et `core/cjEngine.js`.
+- Un seul solde CJ global commun à CJAJLK Games et aux jeux.
+- Les jeux peuvent GAGNER des CJ et AFFICHER le solde.
+- Les CJ sont DÉPENSABLES UNIQUEMENT sur le site CJAJLK Games.
+- Le nouveau jeu ne doit pas créer son propre solde CJ.
+- Le nouveau jeu pourra avoir ses propres statistiques/progression de jeu, rattachées au joueur global.
+
+Standard CJ à prévoir plus tard lors du développement :
+- gain CJ uniquement pendant le gameplay actif ;
+- aucun gain dans menu, profil, pause, onglet inactif ou après game over ;
+- HUD CJ discret avec progression vers le prochain CJ et notification réelle `+1 CJ` ;
+- règle actuelle de l’écosystème : 1 CJ pour 600 secondes de gameplay actif, tant qu’elle n’est pas remplacée par une nouvelle directive globale.
+
+Architecture future déjà prévue par CJAJLK Games :
+- compte/pseudo global commun à tous les jeux ;
+- serveur/base de données à terme comme source de vérité ;
+- sauvegardes de jeu séparées mais rattachées au même joueur ;
+- ne PAS lancer cette refonte dans le cadre de ce nouveau jeu tant qu’elle n’est pas décidée globalement.
+
+============================================================
+3. PITCH DU JEU
+============================================================
+
+Le joueur contrôle NYR, une petite créature astrale de type dragon-serpent.
+NYR avance en permanence, absorbe des fragments d’énergie, grandit, évolue visuellement et tente de survivre le plus longtemps possible.
+
+Boucle centrale :
+DÉPLACER -> ABSORBER -> GRANDIR -> ÉVOLUER -> SURVIVRE -> BATTRE SON RECORD -> REJOUER
+
+Objectif produit :
+- jeu très simple à comprendre ;
+- parties rapides à relancer ;
+- sensation de croissance très visible ;
+- difficulté créée en grande partie par la réussite du joueur : plus NYR grandit, plus il devient difficile à manœuvrer.
+
+============================================================
+4. NYR — IDENTITÉ VISUELLE
+============================================================
+
+Nature :
+- créature astrale ;
+- mélange de dragon-serpent, anguille cosmique et esprit nocturne ;
+- éviter le serpent réaliste et le dragon chinois classique.
+
+Silhouette :
+- tête unique immédiatement reconnaissable ;
+- corps long et fluide ;
+- segments organiques légèrement espacés ;
+- énergie visible entre certains segments ;
+- mouvement ondulant.
+
+Palette de base :
+- corps noir bleuté / anthracite ;
+- lueurs violet, bleu électrique et cyan léger ;
+- yeux très lumineux ;
+- accents dorés très discrets uniquement sur la forme finale.
+
+Personnalité visuelle :
+- mignon au départ ;
+- élégant et mystérieux ensuite ;
+- majestueux et légèrement inquiétant dans sa forme finale.
+
+Absorption :
+- un nouveau segment apparaît avec un petit flash lumineux ;
+- il rejoint la queue et s’intègre naturellement à l’ondulation générale.
+
+Mort :
+- aucune violence graphique ;
+- NYR se désagrège en fragments et poussière astrale.
+
+============================================================
+5. LES 4 FORMES DE NYR
+============================================================
+
+FORME I — L’ÉCLAT
+Seuil : 0 à 19 fragments.
+- petite tête arrondie/légèrement triangulaire ;
+- deux mini-cornes ;
+- grands yeux lumineux ;
+- corps très simple ;
+- petite queue en pointe ;
+- faible aura et petites particules.
+
+FORME II — LE SPECTRE
+Seuil : 20 à 49 fragments.
+- tête un peu plus allongée ;
+- cornes plus visibles ;
+- petites nageoires/ailerons latéraux ;
+- lignes lumineuses sur le corps ;
+- traînée plus présente.
+
+FORME III — LE NOCTURNE
+Seuil : 50 à 99 fragments.
+- tête affirmée ;
+- cornes plus longues/courbées ;
+- regard plus intense ;
+- plaques ou écailles lumineuses ;
+- petites ailes/membranes spectrales décoratives ;
+- impulsions lumineuses lors des absorptions.
+
+FORME IV — LE DÉVOREUR
+Seuil : 100 fragments et plus.
+- grande tête majestueuse ;
+- cornes développées ;
+- yeux intenses ;
+- ailes spectrales plus lisibles ;
+- lignes lumineuses sur le corps ;
+- crêtes/pointes fines sur certains segments ;
+- accents dorés discrets ;
+- queue spectaculaire ;
+- aura légère et circulation d’énergie visible.
+
+La partie continue après la Forme IV : aucune fin automatique à 100 fragments.
+
+============================================================
+6. CONTRÔLES — DIRECTION
+============================================================
+
+Mobile :
+- NYR avance en permanence ;
+- le joueur indique la direction avec le doigt ;
+- NYR tourne progressivement vers la direction indiquée ;
+- éviter quatre gros boutons directionnels si le contrôle tactile fluide fonctionne bien.
+
+PC :
+- souris et/ou touches directionnelles à prévoir lors du prototype.
+
+À décider plus tard :
+- orientation d’écran définitive ;
+- sensibilité et rayon de courbure exacts ;
+- contrôle PC final.
+
+============================================================
+7. OBJETS / ABSORPTIONS V1
+============================================================
+
+FRAGMENT NORMAL
+- +100 points
+- +1 segment
+- ressource principale, apparition fréquente
+
+ORBE RARE
+- +400 points
+- +3 segments
+
+ÉNERGIE
+- +200 points
+- boost de vitesse temporaire d’environ 3 secondes
+
+ÉCLAT RARE
+- +1000 points
+- récompense rare ; ne doit pas rallonger excessivement le corps
+
+FRAGMENT PUR
+- restaure environ +20 % de stabilité
+- maximum 100 %
+
+CORRUPTION
+- élément dangereux
+- retire environ 20 % de stabilité
+
+============================================================
+8. CROISSANCE / LONGUEUR
+============================================================
+
+Départ : environ 3 segments.
+
+Principe :
+- la longueur grandit avec les absorptions ;
+- la croissance doit être immédiatement visible ;
+- éviter une longueur techniquement infinie qui pénaliserait les performances mobiles.
+
+Direction V1 :
+- longueur visuelle maximale autour de 120 segments ;
+- au-delà, le score et la progression continuent même si le nombre de segments affichés plafonne.
+
+============================================================
+9. VITESSE / DIFFICULTÉ
+============================================================
+
+Courbe de vitesse de départ envisagée :
+- début : 100 %
+- 25 fragments : 105 %
+- 50 fragments : 110 %
+- 75 fragments : 115 %
+- 100 fragments : 120 %
+- 150 fragments : 125 %
+- plafond visé : environ 130 %
+
+Principe :
+- ne pas rendre le jeu difficile uniquement par une vitesse excessive ;
+- la longueur, les obstacles, la corruption et l’espace disponible doivent être les principales sources de tension.
+
+============================================================
+10. STABILITÉ / COLLISIONS
+============================================================
+
+NYR possède une jauge STABILITÉ.
+Départ : 100 %.
+
+Valeurs V1 de travail :
+- collision avec obstacle : -25 % ;
+- collision avec son propre corps : -15 % ;
+- corruption : -20 % ;
+- gros danger exceptionnel : jusqu’à -35 % si retenu plus tard ;
+- fragment pur : +20 %.
+
+Game over uniquement lorsque STABILITÉ atteint 0 %.
+
+Direction importante :
+- éviter la mort instantanée au premier contact comme dans Snake classique ;
+- laisser au joueur une possibilité de récupération et de sauvetage de partie.
+
+============================================================
+11. ZONES D’UNE PARTIE
+============================================================
+
+La partie reste continue, sans chargement entre les zones.
+Le décor et l’ambiance évoluent progressivement.
+
+ZONE 1 — ESPACE NOCTURNE
+0 à 24 fragments.
+- apprentissage ;
+- peu d’obstacles ;
+- ambiance calme.
+
+ZONE 2 — NÉBULEUSE
+25 à 59 fragments.
+- premiers obstacles mobiles ;
+- corruption occasionnelle ;
+- ambiance plus dense.
+
+ZONE 3 — FAILLE ASTRALE
+60 à 99 fragments.
+- davantage d’obstacles ;
+- zones dangereuses ;
+- vitesse supérieure ;
+- tension accrue.
+
+ZONE 4 — LE VIDE
+100 fragments et plus.
+- Forme IV atteinte ;
+- tous les dangers V1 peuvent apparaître ;
+- densité qui continue à augmenter progressivement ;
+- survie et record sans limite de score imposée.
+
+Chaque changement de zone doit pouvoir être signalé visuellement sans interrompre la partie.
+
+============================================================
+12. SCORE / COMBO
+============================================================
+
+Le score vient principalement des objets absorbés.
+
+Multiplicateur de série sans dégâts envisagé :
+- 10 objets sans dégâts : x1,25
+- 25 objets : x1,50
+- 50 objets : x2
+- 100 objets : x3
+
+Une collision remet le multiplicateur à x1.
+
+But :
+- permettre de jouer simplement pour survivre ;
+- récompenser aussi les joueurs cherchant un record propre et maîtrisé.
+
+============================================================
+13. ÉCRANS V1
+============================================================
+
+MENU
+- Jouer
+- Créatures
+- Profil CJ
+- Options
+
+JOUER
+HUD minimal envisagé :
+- Score
+- Longueur
+- Stabilité
+- Combo/multiplicateur quand actif
+- petit HUD CJ standard CJAJLK Games lorsqu’il sera intégré
+
+CRÉATURES
+- apparence actuelle de NYR
+- skins débloqués
+- aucune amélioration pay-to-win
+
+PROFIL CJ
+- utilise/reconnaît le profil global CJAJLK Games
+- ne crée pas un second profil global propre au jeu
+- affiche éventuellement les statistiques propres au jeu dans une section dédiée
+
+FIN DE PARTIE
+- score
+- record
+- fragments absorbés
+- longueur maximale
+- forme atteinte
+- meilleur combo
+- temps de partie
+- CJ réellement gagné pendant la session
+- Rejouer
+- Menu
+
+============================================================
+14. PROGRESSION PERMANENTE
+============================================================
+
+Statistiques propres au jeu à conserver plus tard :
+- record personnel ;
+- meilleure longueur ;
+- forme maximale découverte ;
+- total de fragments absorbés ;
+- temps de jeu ;
+- éventuellement meilleur combo.
+
+Principe :
+- progression propre au jeu séparée des données globales ;
+- identité/pseudo/CJ restent rattachés au compte global CJAJLK Games.
+
+Pas d’amélioration permanente rendant NYR plus fort pour battre les records.
+Les records doivent rester comparables et reposer sur la maîtrise du joueur.
+
+============================================================
+15. SKINS / COLLECTION FUTURE
+============================================================
+
+Skins envisagés :
+- Nocturne (base)
+- Ignis
+- Aqua
+- Flora
+- Astrale
+- Corrompue
+- Futuriste
+
+Règle :
+- skins cosmétiques uniquement ;
+- même gameplay et mêmes statistiques ;
+- possibilité de liens futurs avec événements/univers CJAJLK Games.
+
+============================================================
+16. PHILOSOPHIE PRODUIT
+============================================================
+
+À conserver :
+- jeu simple et immédiatement compréhensible ;
+- facile à lancer, difficile à maîtriser ;
+- croissance de NYR = spectacle principal ;
+- relance de partie très rapide ;
+- mobile prioritaire dans la réflexion d’interface ;
+- pas de pay-to-win ;
+- pas de farming forcé ;
+- pas de pression artificielle ;
+- personnalisation cosmétique possible plus tard.
+
+============================================================
+17. CE QUI N’EST PAS PRÉVU POUR LA V1
+============================================================
+
+Ne pas ajouter au départ :
+- campagne ;
+- boss ;
+- missions complexes ;
+- arbre de compétences ;
+- statistiques payantes ;
+- bonus achetables donnant un avantage de score ;
+- multijoueur ;
+- grosse narration ;
+- nombreux modes dès le lancement.
+
+V1 = UN mode principal infini, propre et agréable.
+
+
+============================================================
+17B. MULTIJOUEUR — DIRECTION FUTURE À PRÉVOIR
+============================================================
+
+Décision :
+- Le multijoueur n’est PAS à développer pour la V1.
+- Il doit néanmoins être prévu dans la conception afin de ne pas bloquer une évolution future.
+- La V1 reste entièrement jouable en solo.
+- Éviter, lors du futur développement, une architecture qui rendrait impossible l’ajout ultérieur de plusieurs joueurs dans une même arène ou d’un mode compétitif/coopératif.
+- Aucun serveur, matchmaking, lobby, classement en ligne ou synchronisation réseau ne doit être développé maintenant.
+- Les règles exactes du futur multi restent ouvertes et seront décidées seulement après validation du plaisir de jeu solo.
+
+Direction possible à étudier plus tard :
+- arène partagée avec plusieurs Nyr ;
+- compétition de score/survie ;
+- interaction limitée entre joueurs pour éviter le chaos ;
+- éventuellement coopération ou événements communs, si cela reste simple et cohérent avec l’esprit du jeu.
+
+
+============================================================
+17C. ORIENTATION / FORMAT ÉCRAN — DIRECTION VALIDÉE
+============================================================
+
+Décision :
+- Gameplay mobile en orientation PAYSAGE.
+- PC en format horizontal classique.
+- Le HUD, la caméra et la lisibilité de NYR doivent être conçus autour de cette largeur.
+- Objectif : laisser de l’espace devant NYR pour anticiper les trajectoires, valoriser la longueur de son corps et garder une bonne visibilité des zones/dangers.
+- Les menus doivent eux aussi rester propres et lisibles en paysage.
+- Ne pas prévoir un gameplay portrait principal pour la V1.
+
+============================================================
+18. POINTS ENCORE OUVERTS — À DÉCIDER AVANT CODAGE
+============================================================
+
+- nom définitif du jeu ;
+- design visuel définitif des 4 formes de NYR ;
+- références/images officielles de NYR ;
+- rendu exact des segments et de l’énergie ;
+- contrôle PC final ;
+- réglage fin des vitesses, spawn et densités ;
+- structure exacte de la sauvegarde propre au jeu au moment où l’architecture globale CJAJLK sera prête.
+
+============================================================
+19. ORDRE DE REPRISE RECOMMANDÉ
+============================================================
+
+1. Relire ce document avant toute création de projet.
+2. Valider le nom définitif ou conserver un nom de travail.
+3. Valider une référence visuelle officielle de NYR et de ses 4 formes.
+4. Définir précisément le contrôle principal en paysage (mobile + PC).
+5. Seulement ensuite décider de créer le dépôt séparé.
+6. Faire un prototype minimal du mouvement + absorption + croissance.
+7. Tester le plaisir de jeu avant d’ajouter les systèmes secondaires.
+8. Raccorder au profil/CJ global selon l’architecture CJAJLK active au moment du développement.
+
+============================================================
+FIN — POINT DE REPRISE
+============================================================
+
+Direction canon actuelle :
+NYR = créature astrale dragon-serpent, petite et attachante au départ, majestueuse en grandissant.
+Gameplay = absorber, grandir, évoluer, survivre, battre son record.
+Jeu autonome = dépôt séparé envisagé plus tard, relié au hub CJAJLK Games.
+Profil = un seul écosystème CJ global ; pas de profil CJ concurrent.
+Statut = CONCEPTION UNIQUEMENT. AUCUN CODE POUR L’INSTANT.
+
+
+============================================================
+20B. CONTRÔLE / VIRAGE — DIRECTION VALIDÉE
+============================================================
+
+Décision validée le 09/09/2026 :
+- Le virage de NYR est LIMITÉ : aucun demi-tour instantané à 180°.
+- NYR peut tourner franchement, mais sa trajectoire doit rester fluide et organique.
+- La tête dirige ; le corps suit avec retard le chemin parcouru.
+- Le rayon de virage augmente légèrement avec la croissance / les formes de NYR afin que sa taille se ressente dans le pilotage.
+- Le contrôle mobile reste : toucher/glisser pour indiquer la direction, sans joystick permanent.
+- Le contrôle PC reste : souris en principal, clavier possible en alternative.
+- Le Dash conserve le contrôle de direction, mais avec un virage légèrement plus large pendant l'accélération.
+- Objectif : éviter les demi-tours artificiels, limiter les collisions absurdes avec le propre corps de NYR et renforcer la sensation de créature vivante.
+
+Valeurs exactes d'angle/vitesse de rotation : À RÉGLER PLUS TARD PAR TEST DE GAMEPLAY, sans coder pour l'instant.
+
+
+============================================================
+20C. AUDIO / SONS — PRODUCTION À PRÉVOIR VIA WORK
+============================================================
+
+Décision validée le 09/09/2026 :
+- Ne pas chercher ou acheter des banques de sons au hasard pour NYR.
+- Lors du développement, préparer et produire les sons du jeu directement dans Work, dans le cadre du projet, avec une liste d'assets audio claire et des consignes précises.
+- Ne générer aucun son maintenant : cette section est uniquement la direction de production future.
+- Les sons devront être cohérents entre eux : astral, doux, profond, énergétique, jamais agressif ou arcade générique.
+- Aucun son ne doit être ajouté au jeu sans écoute/validation préalable de CJ.
+
+LISTE AUDIO V1 À PRODUIRE :
+
+A. NYR / ACTIONS
+- nyr_fragment_absorb : absorption courte, cristalline et légère.
+- nyr_orb_rare : absorption plus riche et résonnante.
+- nyr_fragment_pur : son clair, apaisant, immédiatement distinct.
+- nyr_corruption_hit : impact grave, étouffé, légèrement distordu.
+- nyr_collision : pulsation sourde / fissure énergétique, sans gros bruit d'explosion.
+- nyr_dash_start : souffle énergétique court.
+- nyr_dash_loop : déplacement rapide discret pendant environ 1 seconde.
+- nyr_dash_end : retour énergétique sec et doux.
+- nyr_death : désagrégation en particules astrales, non violente.
+
+B. ÉVOLUTIONS
+- nyr_evolution_2 : Éclat -> Spectre.
+- nyr_evolution_3 : Spectre -> Nocturne.
+- nyr_evolution_4 : Nocturne -> Dévoreur.
+Direction : montée d'énergie + impulsion grave + éclat cristallin, courte, sans interrompre le gameplay.
+
+C. COMBO
+- combo_125 : petit tintement.
+- combo_150 : tintement plus riche.
+- combo_200 : impulsion énergétique.
+- combo_300 : signature sonore forte mais courte.
+- combo_lost : petit son descendant, non punitif.
+
+D. DANGERS / ÉVÉNEMENTS
+- asteroid_warning / asteroid_hit.
+- corruption_near.
+- astral_mine_arm / astral_mine_burst.
+- void_rift_open / void_rift_loop / void_rift_close.
+- fragment_rain_start.
+- astral_storm_warning / astral_storm_loop.
+- nocturne_echo_start / nocturne_echo_end.
+- void_border_warning : vent cosmique + basse progressive quand NYR approche de la frontière.
+
+E. INTERFACE
+- ui_confirm : validation discrète.
+- ui_back : retour discret.
+- ui_unlock : skin / titre débloqué.
+- ui_record : nouveau record.
+- ui_game_over : fin de partie courte, sans fanfare excessive.
+- cj_gain : notification réelle +1 CJ, cohérente avec le standard CJAJLK Games.
+
+F. MUSIQUE / AMBIANCES
+Prévoir une bande-son dynamique en couches plutôt que quatre morceaux brutalement séparés :
+- layer_space_nocturne : base calme, profonde, aérienne.
+- layer_nebula : rythme/pulsation légère supplémentaire.
+- layer_astral_rift : basses et tension supplémentaires.
+- layer_void : couche plus ample et sombre pour Le Vide.
+- transitions entre zones progressives, sans coupure nette.
+
+RÈGLES DE PRODUCTION AUDIO :
+- Priorité à des sons courts, propres et immédiatement reconnaissables.
+- Éviter les sons stridents ou fatigants, surtout pour les actions répétées.
+- L'absorption normale doit rester agréable même répétée plusieurs centaines de fois.
+- Prévoir des variantes légères si nécessaire pour éviter la répétition mécanique, sans multiplier inutilement les fichiers.
+- Volume et mixage à équilibrer ensuite en jeu : musique en fond, feedback gameplay toujours lisible.
+- Pas de voix parlée en V1.
+- Vibrations mobiles séparées de l'audio : collision et évolution seulement, très légères.
+
+FORMAT / ORGANISATION À PRÉVOIR AU DÉVELOPPEMENT :
+- Conserver une source audio de qualité (WAV) pour les originaux.
+- Export jeu optimisé en OGG ou format adapté à la plateforme retenue.
+- Dossier cible conseillé : assets/audio/sfx/ et assets/audio/music/.
+- Noms de fichiers stables et explicites selon la liste ci-dessus.
+- Work devra produire/organiser les fichiers puis les intégrer seulement après validation de CJ.
+
+Objectif : disposer d'une identité sonore propre à NYR, conçue avec le jeu, sans dépendre d'un assemblage de sons génériques provenant de sources différentes.

@@ -1,0 +1,113 @@
+NYR — CONSIGNE DE DÉMARRAGE POUR CHATGPT WORK
+Date : 10/09/2026
+Statut : PACK 0 — PRÉPARATION DU DOSSIER UNIQUEMENT
+
+IMPORTANT — NOM OFFICIEL
+- Le jeu s'appelle NYR.
+- « Nocturne Devourer » est uniquement un ancien nom de travail.
+- Slogan : « Absorbez. Grandissez. Survivez. »
+
+SOURCE DE VÉRITÉ À LIRE AVANT TOUTE ACTION
+Dans la Library : /CJAJLK Games/NYR/
+- 00_CANON/NYR_DIRECTION_V1_CANON_2026-09-09.txt
+- 01_REFERENCES_VISUELLES/NYR_REFERENCE_VISUELLE_V1_2026-09-09.png
+- 01_REFERENCES_VISUELLES/NYR_PLANCHE_MARQUE.png
+- 01_REFERENCES_VISUELLES/NYR_ICONE_MOBILE_V1.png
+- 01_REFERENCES_VISUELLES/NYR_ECRAN_TITRE_V1.png
+- 01_REFERENCES_VISUELLES/NYR_SELECTION_SKINS_V1.png
+
+OBJECTIF DE CE PREMIER PACK
+Préparer uniquement un dossier de projet NYR propre, autonome, portable et facile à transférer plus tard sur un autre lecteur.
+NE PAS commencer le gameplay.
+NE PAS créer le moteur du serpent/créature.
+NE PAS intégrer les CJ.
+NE PAS générer les sons maintenant.
+NE PAS créer de dépôt GitHub ni publier quoi que ce soit sans demande explicite de CJ.
+NE PAS modifier CJAJLK Games, Attrape-les-tous, Breaker ou Velocity.
+
+STRUCTURE DE DOSSIER À PRÉPARER
+NYR/
+  README.md
+  docs/
+    canon/
+    work/
+    checkpoints/
+  assets/
+    images/
+      references/
+      ui/
+      nyr/
+      skins/
+      zones/
+      collectibles/
+      hazards/
+    audio/
+      sfx/
+      music/
+  src/
+    core/
+    gameplay/
+    ui/
+    systems/
+  tests/
+
+Le dossier doit rester déplaçable :
+- aucun chemin absolu dépendant du disque actuel ;
+- aucune dépendance à un emplacement local fixe ;
+- tous les futurs chemins d'assets devront être relatifs au projet ;
+- CJ pourra transférer le projet sur un autre lecteur plus tard, petit à petit.
+
+FICHIERS À PRÉPARER DANS CE PACK
+1. README.md
+   - nom NYR ;
+   - pitch court ;
+   - statut « préproduction / aucun gameplay codé » ;
+   - orientation paysage mobile + PC horizontal ;
+   - référence au profil global CJAJLK, mais sans l'intégrer maintenant.
+
+2. docs/work/WORK_RULES.md
+   - conserver le canon ;
+   - modifications petites, contrôlées et testables ;
+   - ne pas inventer de systèmes non validés ;
+   - ne pas toucher aux autres jeux ;
+   - garder le projet portable.
+
+3. docs/checkpoints/CHECKPOINT_PACK_0.md
+   - lister exactement ce qui a été créé ;
+   - confirmer qu'aucun gameplay n'a été codé ;
+   - indiquer la prochaine étape possible, sans la démarrer.
+
+4. Copier/organiser les références disponibles dans docs/canon et assets/images/references si le contexte Work permet d'accéder aux fichiers de la Library. Ne jamais altérer les originaux.
+
+RÈGLE CRITIQUE — CRÉDITS / QUOTA WORK
+CJ ne voit pas toujours le niveau de crédits/quota avant l'épuisement.
+Donc :
+- travailler en PACKS COURTS ET ATOMIQUES ;
+- chaque pack doit pouvoir être terminé, vérifié et checkpointé avant de lancer le suivant ;
+- NE JAMAIS démarrer un gros travail « tant qu'il reste du quota » ;
+- si Work détecte un avertissement, un quota faible, une limite proche, une capacité réduite ou une incertitude sérieuse sur la possibilité de terminer le prochain pack : S'ARRÊTER AVANT DE COMMENCER LE PACK SUIVANT ;
+- ne jamais laisser le projet au milieu d'une migration, d'une grosse refonte ou d'un fichier essentiel partiellement modifié ;
+- si Work ne peut pas connaître précisément le quota restant, adopter par défaut une stratégie conservatrice : un seul petit pack fini à la fois ;
+- avant chaque nouveau pack substantiel, vérifier d'abord si l'environnement signale une limitation ;
+- si aucune information de quota n'est accessible, ne pas prétendre connaître le nombre de crédits restants.
+
+MÉTHODE À CONSERVER POUR LA SUITE
+1. Lire le canon.
+2. Définir un seul petit pack.
+3. Exécuter uniquement ce pack.
+4. Vérifier les fichiers/résultats.
+5. Écrire un checkpoint.
+6. S'arrêter et présenter le résultat avant un nouveau pack important.
+
+DIRECTION TECHNIQUE À NE PAS OUBLIER PLUS TARD
+- jeu autonome de l'écosystème CJAJLK Games ;
+- dépôt séparé envisagé plus tard, comme Velocity ;
+- profil/CJ global partagé, pas de profil CJ concurrent ;
+- architecture actuelle du compte global : cjPlayerData + core/cjAccount.js + core/cjEngine.js ;
+- futur serveur global prévu, mais ne pas le développer dans NYR ;
+- futur multijoueur à ne pas bloquer architecturalement, mais V1 SOLO et aucun réseau maintenant ;
+- audio à fabriquer plus tard directement via Work, puis validation de CJ avant intégration.
+
+LIVRABLE DE CE PACK 0
+Un dossier NYR propre et portable + README + règles Work + checkpoint Pack 0.
+Aucun gameplay fonctionnel demandé dans ce pack.

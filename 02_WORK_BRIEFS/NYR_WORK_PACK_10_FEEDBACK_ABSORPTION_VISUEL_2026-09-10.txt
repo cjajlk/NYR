@@ -1,0 +1,87 @@
+NYR — WORK PACK 10 — FEEDBACK VISUEL D’ABSORPTION
+Date : 2026-09-10
+
+OBJECTIF UNIQUE
+Ajouter uniquement un feedback visuel court lors de l’absorption d’un Fragment normal afin que le +1 segment soit immédiatement perceptible et satisfaisant.
+
+CANON À RESPECTER
+Le canon NYR indique :
+- un nouveau segment apparaît avec un petit flash lumineux ;
+- il rejoint la queue et s’intègre naturellement à l’ondulation générale.
+
+PÉRIMÈTRE STRICT
+Conserver intégralement tous les acquis des PACKS 0 à 9.
+Le PACK 10 ne doit modifier aucun gameplay.
+
+À FAIRE
+1. Ajouter un effet visuel bref déclenché exactement lors d’une absorption réelle d’un Fragment normal.
+2. Le flash doit mettre en valeur le nouveau segment / l’extrémité de la queue, pas créer un nouvel objet de gameplay.
+3. Le flash doit rester discret, astral, cohérent avec la palette cyan/violet existante.
+4. Éclat : feedback plus doux.
+5. Spectre : feedback légèrement plus énergétique, sans devenir envahissant.
+6. La durée et l’intensité doivent être regroupées dans une configuration visuelle provisoire, explicitement non canonique et facilement réglable.
+7. L’effet doit être piloté par le temps de simulation actif, jamais par Date.now(), performance.now() ou un timer indépendant qui continuerait pendant une suspension.
+8. Si le runtime passe en portrait pendant le flash, l’état de l’effet doit se figer exactement puis reprendre là où il s’était arrêté au retour paysage.
+9. Une absorption = un seul déclenchement visuel. Aucun déclenchement supplémentaire par frame.
+10. Si plusieurs absorptions surviennent rapidement, le comportement doit rester propre et borné : pas d’accumulation illimitée d’effets ni de fuite mémoire.
+
+ARCHITECTURE CONSEILLÉE
+- Préférer un petit module visuel dédié, par exemple `src/gameplay/nyrAbsorptionFeedback.js`, ou une solution équivalente propre et isolée.
+- `main.js` peut déclencher l’effet dans le callback d’absorption déjà existant après le +1 segment et l’enregistrement de progression.
+- Le système visuel doit être mis à jour uniquement depuis la boucle active déjà protégée par `isRuntimeActive()`.
+- Le renderer peut recevoir un snapshot minimal du feedback et dessiner le flash autour de la nouvelle extrémité/queue à partir des poses déjà calculées.
+- Ne pas dupliquer ni modifier la logique de trajectoire, d’absorption ou de progression pour produire l’effet.
+
+INTERDIT DANS CE PACK
+- aucun score ni +100 points ;
+- aucun HUD, compteur visible, combo ou multiplicateur ;
+- aucun son, vibration ou haptique ;
+- aucune particule lourde, explosion, cinématique ou freeze d’évolution ;
+- aucun changement de vitesse, virage, contrôle, rayon de courbure ou collision ;
+- aucun changement des six Fragments normaux, de leur spawn ou de leur rayon d’absorption ;
+- aucune modification de la règle +1 segment ;
+- aucun nouveau collectible ;
+- aucune Forme III — Nocturne ni Forme IV — Dévoreur ;
+- aucun Dash, stabilité, dégâts, mort ou game over ;
+- aucune caméra, zone, événement ou mini-carte ;
+- aucun CJ, profil, sauvegarde, audio, réseau, multijoueur, Capacitor, npm, framework, GitHub ou déploiement.
+
+TESTS OBLIGATOIRES
+- état initial : aucun flash actif ;
+- première absorption : +1 segment exactement et un seul flash ;
+- 10 absorptions successives : 10 segments ajoutés et exactement 10 déclenchements, sans accumulation anormale ;
+- absorption à 19 → 20 : Spectre s’active toujours exactement au seuil et le feedback reste purement visuel ;
+- absorption à 20 → 21 : aucun second signal de seuil, mais un feedback d’absorption normal ;
+- test Éclat et Spectre pour confirmer une intensité visuelle distincte sans impact logique ;
+- 30 / 60 / 120 Hz : même nombre de déclenchements et durée logique équivalente ;
+- desktop 1366×768 ;
+- mobile paysage 844×390 ;
+- DPR 1 et DPR 2 ;
+- deux cycles paysage → portrait → paysage ;
+- test spécifique : passer en portrait pendant un flash, vérifier qu’il se fige puis reprend sans saut ni disparition prématurée ;
+- vérifier que la trajectoire organique PACK 9, la queue effilée, la croissance, les 6 fragments et le suivi longue longueur restent inchangés ;
+- aucune erreur JavaScript bloquante, aucun chemin absolu, aucune ressource distante obligatoire/CDN.
+
+CHECKPOINT
+Créer :
+`docs/checkpoints/CHECKPOINT_PACK_10.md`
+
+Le checkpoint doit préciser :
+- fichiers créés/modifiés ;
+- architecture du feedback ;
+- valeurs visuelles provisoires ;
+- comportement exact pendant suspension/reprise ;
+- résultats 30/60/120 Hz ;
+- résultats desktop/mobile/DPR ;
+- contrôle des interdictions ;
+- confirmation explicite : PACK 11 NON COMMENCÉ.
+
+RÈGLE WORK / QUOTA PRIORITAIRE
+Ce pack doit rester atomique, testable et totalement terminable.
+Si Work signale une limite, un quota faible, une capacité réduite ou une incertitude sur la possibilité de terminer proprement ce PACK 10, ne pas le commencer.
+Si une limite apparaît pendant l’exécution, ne lancer aucune étape supplémentaire inutile et laisser uniquement un état propre, cohérent et checkpointé.
+Ne jamais prétendre connaître un pourcentage de quota si cette information n’est pas réellement disponible.
+
+ARRÊT STRICT
+Après validation et création de `CHECKPOINT_PACK_10.md`, s’arrêter.
+NE PAS COMMENCER LE PACK 11.

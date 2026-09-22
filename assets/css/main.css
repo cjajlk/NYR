@@ -1,0 +1,168 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #070713;
+  color: #f4f1ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 35%, rgb(90 45 150 / 32%), transparent 36rem),
+    linear-gradient(135deg, #05050d, #0d0b21 52%, #080717);
+}
+
+.app-shell {
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+.preproduction-screen {
+  width: 100%;
+  height: calc(100vh - clamp(1.5rem, 4vw, 3rem));
+  height: calc(100svh - clamp(1.5rem, 4vw, 3rem));
+  min-height: 12rem;
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgb(133 105 214 / 28%);
+  border-radius: clamp(0.75rem, 2vw, 1.25rem);
+  background: #080714;
+  box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 35%);
+  text-align: center;
+}
+
+.display-surface {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.foundation-label {
+  position: absolute;
+  top: clamp(0.65rem, 2vw, 1.25rem);
+  left: clamp(0.65rem, 2vw, 1.25rem);
+  z-index: 1;
+  text-align: left;
+  pointer-events: none;
+}
+
+.game-title {
+  margin: 0;
+  font-size: clamp(1.4rem, 4vw, 2.4rem);
+  font-weight: 800;
+  line-height: 0.85;
+  letter-spacing: 0.08em;
+  text-indent: 0.08em;
+  text-shadow: 0 0 2rem rgb(123 77 255 / 35%);
+}
+
+.tagline {
+  margin: 0.35rem 0 0;
+  color: #d9d2ef;
+  font-size: clamp(0.62rem, 1.3vw, 0.82rem);
+  letter-spacing: 0.12em;
+}
+
+.project-status {
+  display: inline-block;
+  margin: 0.5rem 0 0;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid rgb(156 131 218 / 40%);
+  border-radius: 999px;
+  color: #aaa0c5;
+  background: rgb(15 12 32 / 75%);
+  font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.orientation-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background: rgb(5 5 13 / 96%);
+  text-align: center;
+}
+
+.orientation-overlay[hidden] {
+  display: none;
+}
+
+.score-display {
+  position: fixed;
+  top: clamp(0.85rem, 2vw, 1.35rem);
+  left: 50%;
+  z-index: 11;
+  min-width: 8.8rem;
+  padding: 0.38rem 0.72rem;
+  transform: translateX(-50%);
+  border: 1px solid rgb(162 220 255 / 20%);
+  border-radius: 999px;
+  color: #e7f9ff;
+  background: rgb(7 8 22 / 44%);
+  box-shadow: 0 0 1.5rem rgb(91 189 255 / 12%);
+  font-size: clamp(0.72rem, 1.5vw, 0.9rem);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 0 0.7rem rgb(157 230 255 / 45%);
+  pointer-events: none;
+}
+
+.orientation-message {
+  max-width: 24rem;
+  margin: 0;
+  color: #e8e2ff;
+  font-size: clamp(1.1rem, 5vw, 1.6rem);
+  line-height: 1.5;
+}
+
+@media (max-height: 420px) and (orientation: landscape) {
+  .app-shell {
+    padding: 0.5rem;
+  }
+
+  .preproduction-screen {
+    height: calc(100vh - 1rem);
+    height: calc(100svh - 1rem);
+    min-height: 0;
+  }
+
+  .game-title {
+    font-size: clamp(1.2rem, 8vh, 1.8rem);
+  }
+
+  .tagline,
+  .project-status {
+    margin-top: 0.3rem;
+  }
+
+  .score-display {
+    top: 0.72rem;
+  }
+}

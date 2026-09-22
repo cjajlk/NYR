@@ -1,0 +1,143 @@
+NYR — WORK PACK 6 — SUIVI DU CORPS ROBUSTE / CROISSANCE INDEPENDANTE DU FPS
+Date : 2026-09-10
+
+OBJECTIF UNIQUE
+Sécuriser le suivi du corps de Nyr pour que la croissance visuelle du PACK 5 reste correcte à grande longueur et ne dépende pas du nombre d'images par seconde de l'écran/appareil.
+
+SOURCE DE VERITE
+Avant toute modification, lire et respecter :
+- docs/canon/NYR_DIRECTION_V1_CANON_2026-09-09.txt
+- docs/work/WORK_RULES.md
+- docs/checkpoints/CHECKPOINT_PACK_5.md
+
+CONSERVER STRICTEMENT LES ACQUIS DES PACKS 0 A 5
+- surface canvas responsive ;
+- DPR ;
+- suspension portrait réelle et reprise sans bond ;
+- Nyr Forme I ;
+- avance automatique ;
+- pilotage souris sans clic ;
+- tactile toucher/glisser ;
+- virage progressif sans demi-tour instantané ;
+- six Fragments normaux et leur spawn/respawn sûr ;
+- 4 segments initiaux ;
+- exactement +1 segment par Fragment normal absorbé.
+
+PROBLEME A CORRIGER
+Au PACK 5, le renderer place les segments à partir d'un historique de trajectoire, mais cet historique est actuellement borné en nombre de points. Comme un point est ajouté à chaque frame, la distance réellement mémorisée varie selon le FPS (30/60/120 Hz). A grande longueur, cela peut faire manquer de trajectoire et empiler plusieurs segments vers l'extrémité de l'historique.
+
+RESULTAT ATTENDU
+Le corps doit suivre une trajectoire représentée/échantillonnée en fonction de la DISTANCE parcourue, et non du nombre de frames.
+
+Exigences :
+1. Le rendu de Nyr doit rester visuellement équivalent à petite longueur.
+2. A vitesse et trajectoire identiques, la position des segments doit être pratiquement identique à 30, 60 et 120 Hz.
+3. Le système doit fournir assez de trajectoire pour les longueurs élevées prévues par le canon, au minimum jusqu'à 120 segments visuels, sans empilement artificiel causé par un historique trop court.
+4. Ne pas appliquer dans ce pack un plafond de gameplay à 120 segments : il s'agit seulement de rendre le système capable de gérer au moins cette longueur. Le futur plafonnement éventuel reste une décision séparée.
+5. L'espacement visuel actuel de 14 px reste inchangé pour ce pack.
+6. Vitesse, vitesse angulaire, contrôles et rayon de virage restent inchangés.
+7. Ne pas modifier le système de fragments autrement que si une adaptation purement technique est nécessaire à la compatibilité.
+8. La suspension portrait doit figer totalement la trajectoire et le nombre de segments ; la reprise ne doit créer ni trou, ni saut, ni accumulation de distance fantôme.
+9. Le recentrage technique provisoire hors surface peut rester, mais il doit conserver le nombre de segments et réinitialiser proprement la trajectoire sans artefact massif.
+
+DIRECTION TECHNIQUE RECOMMANDEE
+Choisir une représentation bornée par DISTANCE plutôt que par nombre de frames. Par exemple :
+- échantillonner la trajectoire tous les quelques pixels parcourus ;
+- ou stocker une polyligne et la tronquer selon une distance totale nécessaire ;
+- calculer la longueur utile à conserver d'après segmentCount * segmentSpacingPixels + une marge de sécurité.
+
+La méthode exacte appartient à Work, à condition que les tests démontrent l'indépendance vis-à-vis du FPS et l'absence d'empilement à grande longueur.
+
+INTERDICTIONS — NE RIEN COMMENCER D'AUTRE
+Ne pas ajouter ni commencer :
+- score ou +100 points ;
+- combo / multiplicateur ;
+- Forme II, III ou IV ;
+- changement de vitesse ;
+- Dash ;
+- collisions ;
+- stabilité / dégâts / mort / game over ;
+- HUD gameplay ;
+- caméra ;
+- zones ;
+- dangers ;
+- événements ;
+- autres collectibles ;
+- CJ / profil / sauvegarde ;
+- audio / vibration ;
+- réseau / serveur / multijoueur ;
+- Capacitor ;
+- GitHub ;
+- publication / déploiement.
+
+TESTS OBLIGATOIRES
+A. Non-régression PACK 5
+- état initial = 4 segments ;
+- 1 absorption = 5 segments ;
+- 10 absorptions = 14 segments ;
+- six fragments toujours actifs ;
+- souris/tactile inchangés ;
+- aucun demi-tour instantané ;
+- aucune récompense supplémentaire.
+
+B. Indépendance FPS
+Exécuter une trajectoire contrôlée/déterministe équivalente à :
+- 30 Hz ;
+- 60 Hz ;
+- 120 Hz.
+Comparer les positions des segments après une même durée/distance. Les écarts doivent rester faibles et ne pas produire de forme de corps différente perceptible.
+
+C. Grande longueur
+Tester au minimum les états artificiels de :
+- 20 segments ;
+- 50 segments ;
+- 120 segments.
+Pour chacun :
+- tous les segments doivent être répartis le long de la trajectoire ;
+- pas de paquet de nombreux segments empilés au dernier point mémorisé ;
+- pas d'explosion mémoire ni de croissance non bornée de l'historique ;
+- renderer stable.
+
+D. Suspension
+- paysage -> portrait -> paysage, deux cycles ;
+- trajectoire, position, cap et segmentCount strictement figés pendant la suspension ;
+- première frame de reprise neutre ;
+- pas d'ajout de distance fantôme ;
+- corps intact après reprise.
+
+E. Robustesse générale
+- desktop 1366x768 ;
+- mobile paysage 844x390 ;
+- portrait 390x844 ;
+- DPR 1 et DPR 2 ;
+- redimensionnements successifs ;
+- aucune erreur JavaScript bloquante ;
+- aucun chemin absolu ;
+- aucune ressource distante obligatoire / CDN ;
+- aucune modification hors de /CJAJLK Games/NYR/.
+
+DOCUMENTATION / CHECKPOINT
+Mettre à jour README.md uniquement pour refléter le statut PACK 6.
+Créer obligatoirement :
+- docs/checkpoints/CHECKPOINT_PACK_6.md
+
+Le checkpoint doit détailler :
+- fichiers créés/modifiés ;
+- méthode retenue pour rendre le suivi indépendant du FPS ;
+- règle de bornage mémoire ;
+- résultats des tests 30/60/120 Hz ;
+- résultats 20/50/120 segments ;
+- suspension/reprise ;
+- non-régression des PACKS précédents ;
+- confirmation qu'aucun système interdit n'a été commencé.
+
+REGLE QUOTA / CREDITS — PRIORITAIRE
+Travailler uniquement si ce PACK 6 peut être terminé, testé et checkpointé proprement.
+Si une limite est signalée, si le quota paraît faible, ou si la capacité à finir devient incertaine :
+- ne pas commencer le pack si ce n'est pas encore fait ;
+- si le travail a déjà commencé, ne lancer aucune extension de périmètre et laisser uniquement un état cohérent, testable et checkpointé ;
+- ne jamais inventer un pourcentage de quota non visible.
+
+ARRET STRICT
+Une fois PACK 6 terminé et CHECKPOINT_PACK_6.md créé, s'arrêter.
+NE PAS COMMENCER PACK 7.

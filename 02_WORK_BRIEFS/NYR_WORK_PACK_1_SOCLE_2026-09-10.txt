@@ -1,0 +1,109 @@
+NYR — WORK PACK 1 : SOCLE TECHNIQUE MINIMAL
+Date : 10/09/2026
+Statut : À EXÉCUTER UNIQUEMENT APRÈS PACK 0 VALIDÉ
+
+SOURCE DE VÉRITÉ
+- Racine projet : /CJAJLK Games/NYR/
+- Lire avant toute action :
+  1) README.md
+  2) docs/work/WORK_RULES.md
+  3) docs/checkpoints/CHECKPOINT_PACK_0.md
+  4) docs/canon/NYR_DIRECTION_V1_CANON_2026-09-09.txt
+- Le nom officiel est NYR.
+- Slogan : « Absorbez. Grandissez. Survivez. »
+
+RÈGLE CRÉDITS / QUOTA — PRIORITAIRE
+- Ce PACK 1 doit rester petit, atomique, vérifiable et entièrement terminable.
+- Si Work signale une limite, un quota faible, une capacité réduite ou une incertitude sérieuse AVANT de commencer, NE PAS démarrer le pack.
+- Si le quota précis n’est pas visible, ne jamais inventer de pourcentage ou de chiffre.
+- Si une limite apparaît pendant le pack, terminer uniquement l’opération déjà engagée si elle peut être achevée proprement sans élargir le périmètre, puis vérifier et checkpoint­er. Ne pas commencer d’étape supplémentaire.
+- Ne jamais laisser un fichier essentiel partiellement écrit.
+- À la fin du PACK 1, s’arrêter. Ne pas enchaîner automatiquement sur PACK 2.
+
+OBJECTIF UNIQUE DU PACK 1
+Créer le socle Web autonome minimal de NYR afin que le projet puisse être ouvert localement sur PC et afficher un écran de démarrage statique propre en paysage, SANS commencer le gameplay.
+
+TECHNOLOGIE / PORTABILITÉ
+- HTML5 + CSS + JavaScript natif uniquement pour ce pack.
+- Aucune dépendance npm, framework, bundler ou CDN.
+- Aucun chemin absolu.
+- Tous les liens vers assets/fichiers doivent être relatifs à la racine NYR/.
+- Le projet doit pouvoir être copié plus tard sur un autre lecteur sans modification de chemins.
+
+À CRÉER — STRICTEMENT
+1. index.html
+   - document HTML minimal valide ;
+   - charge uniquement les fichiers locaux du projet ;
+   - contient le conteneur racine de l’application ;
+   - aucune logique de gameplay.
+
+2. assets/css/main.css
+   - styles globaux minimaux ;
+   - écran pensé pour paysage mobile + desktop horizontal ;
+   - aucune mise en page gameplay définitive ;
+   - aucun framework CSS.
+
+3. src/main.js
+   - point d’entrée JavaScript minimal ;
+   - initialise uniquement l’écran statique de préproduction ;
+   - aucune boucle de jeu, requestAnimationFrame gameplay, timer de score, déplacement ou collision.
+
+4. src/core/appConfig.js
+   - constantes de projet non sensibles uniquement : nom NYR, slogan, statut PREPRODUCTION, version de socle ;
+   - aucune donnée CJ, aucun profil, aucune URL serveur, aucun secret.
+
+5. Écran statique de démarrage
+   - afficher clairement : NYR ;
+   - slogan « Absorbez. Grandissez. Survivez. » ;
+   - mention discrète « Préproduction — socle technique » ;
+   - utiliser si pertinent une COPIE locale d’une référence déjà présente dans assets/images/references/, sans modifier l’original ;
+   - si l’image gêne la lisibilité ou complique le pack, rester sur un fond CSS simple : ne pas créer de nouvel asset.
+   - aucun bouton Jouer fonctionnel ; s’il existe visuellement, il doit être absent ou clairement désactivé avec une mention de préproduction. Préférer ne pas en mettre.
+
+6. README.md
+   - mettre à jour uniquement le statut pour indiquer que PACK 1 ajoute un socle Web statique, toujours sans gameplay ;
+   - conserver les liens et règles du PACK 0.
+
+7. docs/checkpoints/CHECKPOINT_PACK_1.md
+   - lister exactement les fichiers créés/modifiés ;
+   - confirmer les tests réalisés ;
+   - confirmer qu’aucun gameplay ni système interdit n’a été commencé ;
+   - indiquer la prochaine étape comme « à définir avec CJ », sans la commencer.
+
+TESTS OBLIGATOIRES DU PACK 1
+- Ouvrir index.html / servir localement selon la méthode la plus simple disponible sans installer de dépendance permanente.
+- Vérifier : aucune erreur JavaScript bloquante dans la console.
+- Vérifier : aucun chemin absolu dans les fichiers créés/modifiés.
+- Vérifier : l’écran reste lisible en format desktop horizontal.
+- Vérifier : l’écran reste lisible en simulation paysage mobile raisonnable, sans prétendre que cela remplace un futur test téléphone réel.
+- Vérifier : aucune ressource distante obligatoire.
+- Vérifier : aucune modification hors /CJAJLK Games/NYR/.
+
+INTERDICTIONS — NE PAS FAIRE DANS PACK 1
+- ne pas coder le déplacement de NYR ;
+- ne pas coder le corps/segments, croissance ou évolution ;
+- ne pas coder fragments, collectibles, spawn, score, combo ou stabilité ;
+- ne pas coder Dash, collisions, dangers, zones ou événements ;
+- ne pas coder caméra, mini-carte ou HUD gameplay ;
+- ne pas intégrer profil CJ, cjPlayerData, cjAccount.js, cjEngine.js ou gain CJ ;
+- ne pas créer de sauvegarde joueur ;
+- ne pas créer de son, musique ou système audio ;
+- ne pas créer de réseau, serveur, multijoueur ou classement ;
+- ne pas installer Capacitor dans ce pack ;
+- ne pas créer de dépôt GitHub, commit distant, publication ou déploiement ;
+- ne pas modifier les autres projets CJAJLK ;
+- ne pas inventer de nouvelle mécanique ou direction artistique.
+
+CRITÈRES DE VALIDATION
+PACK 1 est terminé uniquement si :
+- le socle statique s’ouvre sans erreur bloquante ;
+- la structure reste portable ;
+- les fichiers sont simples et commentés seulement quand utile ;
+- le README reflète l’état réel ;
+- CHECKPOINT_PACK_1.md existe et correspond à ce qui a réellement été fait ;
+- aucun gameplay ni système externe n’a été commencé.
+
+FIN DE MISSION
+Après validation et checkpoint, STOP.
+Ne pas proposer ni exécuter PACK 2 automatiquement.
+Attendre la validation explicite de CJ.

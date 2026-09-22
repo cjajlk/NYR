@@ -1,0 +1,287 @@
+NYR — WORK PACK 8 — TRANSFORMATION VISUELLE ÉCLAT → SPECTRE
+Date : 2026-09-10
+
+============================================================
+0. RÈGLE ABSOLUE DE TRAVAIL / QUOTA
+============================================================
+
+Ce PACK 8 doit rester PETIT, ATOMIQUE, TESTABLE et TERMINABLE.
+
+Avant de commencer :
+- relire `docs/canon/NYR_DIRECTION_V1_CANON_2026-09-09.txt` ;
+- relire `docs/work/WORK_RULES.md` ;
+- relire `docs/checkpoints/CHECKPOINT_PACK_7.md` ;
+- conserver tous les acquis des PACKS 0 à 7.
+
+Règle quota/crédits prioritaire :
+- si Work signale quota faible, limite proche, capacité réduite ou incertitude sur la possibilité de finir proprement le PACK 8, NE PAS COMMENCER ;
+- ne jamais prétendre connaître un pourcentage précis de quota si cette information n'est pas réellement disponible ;
+- si une limite apparaît pendant l'exécution, ne lancer aucune étape supplémentaire non indispensable ;
+- laisser uniquement un état propre, cohérent, testé autant que possible et checkpointé ;
+- ne jamais commencer le PACK 9 automatiquement.
+
+============================================================
+1. OBJECTIF UNIQUE DU PACK 8
+============================================================
+
+Implémenter la première évolution VISUELLE de Nyr :
+
+FORME I — ÉCLAT
+- reste affichée de 0 à 19 Fragments normaux absorbés.
+
+FORME II — LE SPECTRE
+- devient le rendu actif dès la 20e absorption réelle ;
+- reste active à 21 et au-delà ;
+- ne se redéclenche pas plusieurs fois ;
+- ne modifie PAS le gameplay dans ce pack.
+
+Le compteur interne et le seuil one-shot existent déjà depuis PACK 7.
+Ne créer aucun second compteur parallèle.
+Ne déduire la forme ni du nombre de segments ni du score.
+
+============================================================
+2. RÉFÉRENCE CANONIQUE SPECTRE
+============================================================
+
+Respecter la direction canonique existante pour la Forme II — Le Spectre :
+- tête un peu plus allongée ;
+- cornes plus visibles ;
+- petites nageoires/ailerons latéraux ;
+- lignes lumineuses sur le corps ;
+- traînée plus présente.
+
+Le rendu doit rester cohérent avec l'identité actuelle de NYR :
+- base sombre anthracite / bleu-noir ;
+- violet ;
+- bleu électrique / cyan lumineux ;
+- style astral lisible sur fond sombre.
+
+Les références visuelles présentes dans `assets/images/references/` peuvent être consultées pour rester cohérent avec la direction officielle.
+
+IMPORTANT :
+- rester sur des primitives canvas pour ce prototype ;
+- ne pas générer, importer ou fabriquer de nouveaux assets dans ce pack ;
+- ne pas chercher le rendu final commercial ;
+- le but est de rendre la différence Éclat / Spectre immédiatement lisible et propre.
+
+============================================================
+3. ARCHITECTURE ATTENDUE
+============================================================
+
+Faire le minimum propre nécessaire.
+
+Préférence :
+- conserver `nyrProgression.js` comme source de vérité du compteur de fragments ;
+- exposer ou dériver proprement la forme courante à partir du seuil existant ;
+- éviter tout état de forme dupliqué susceptible de se désynchroniser ;
+- le renderer choisit le rendu Forme I ou Forme II à partir de cet état de progression ;
+- le mouvement reste totalement indépendant de la forme dans ce PACK 8.
+
+Il est acceptable soit :
+- d'étendre proprement `nyrRenderer.js`,
+soit
+- de créer un petit module de rendu Spectre dédié si cela rend le code plus clair.
+
+Ne pas faire de refactor général.
+Ne modifier que les fichiers indispensables.
+
+============================================================
+4. COMPORTEMENT VISUEL ATTENDU
+============================================================
+
+Avant 20 fragments :
+- rendu Éclat actuel conservé ;
+- tête actuelle ;
+- petites cornes ;
+- corps actuel ;
+- aucune caractéristique Spectre visible prématurément.
+
+À partir de 20 fragments :
+- tête visiblement un peu plus longue/affirmée ;
+- cornes sensiblement plus longues et lisibles ;
+- ajout de petits ailerons/nageoires latéraux ;
+- segments du corps portant des accents/lignes lumineuses supplémentaires ;
+- traînée/aura visuelle un peu plus présente ;
+- silhouette globale immédiatement distincte de l'Éclat même sans texte ni HUD.
+
+La transformation peut être INSTANTANÉE pour ce pack.
+
+NE PAS ajouter dans ce PACK 8 :
+- flash plein écran ;
+- texte "SPECTRE" ;
+- cinématique ;
+- freeze volontaire ;
+- particules complexes ;
+- animation de transformation dédiée ;
+- son d'évolution ;
+- vibration.
+
+Ces effets pourront être traités plus tard dans un pack séparé si validés.
+
+============================================================
+5. GAMEPLAY À NE PAS MODIFIER
+============================================================
+
+La Forme II doit être VISUELLE UNIQUEMENT dans ce pack.
+
+À 20 fragments :
+- vitesse identique ;
+- vitesse de rotation identique ;
+- rayon de virage identique ;
+- contrôle souris identique ;
+- contrôle tactile identique ;
+- nombre de fragments actifs identique ;
+- spawn/respawn identique ;
+- +1 segment par Fragment normal identique ;
+- suivi robuste du corps PACK 6 identique.
+
+Aucun bonus de gameplay lié à Spectre.
+
+============================================================
+6. SUSPENSION PORTRAIT
+============================================================
+
+Conserver strictement la règle actuelle :
+- en portrait mobile suspendu, aucune progression ;
+- aucune absorption ;
+- aucun changement de forme fantôme ;
+- aucun timer d'évolution ;
+- aucun mouvement.
+
+Scénario obligatoire :
+1. atteindre 19 fragments en paysage ;
+2. passer en portrait ;
+3. vérifier que Nyr reste Éclat et que le compteur reste 19 ;
+4. revenir paysage ;
+5. première frame neutre ;
+6. absorber réellement le 20e fragment ;
+7. vérifier que Nyr devient Spectre exactement à ce moment.
+
+============================================================
+7. TESTS OBLIGATOIRES
+============================================================
+
+Tester au minimum :
+
+A. Seuil visuel
+- départ 0 : Éclat ;
+- 19 fragments : Éclat ;
+- 20 fragments : Spectre ;
+- 21 fragments : Spectre, aucun second changement d'état.
+
+B. Différence visuelle
+- vérifier que les deux formes sont réellement différenciables ;
+- vérifier la tête plus allongée ;
+- vérifier les cornes plus visibles ;
+- vérifier les ailerons/nageoires ;
+- vérifier les accents lumineux du corps ;
+- vérifier la traînée/aura renforcée.
+
+C. Croissance
+- à 19 absorptions : 23 segments ;
+- à 20 absorptions : 24 segments ;
+- à 21 absorptions : 25 segments ;
+- le changement de forme ne doit ni ajouter ni retirer de segment en plus de la règle existante +1 par absorption.
+
+D. Fréquences
+- 30 Hz ;
+- 60 Hz ;
+- 120 Hz ;
+- la forme atteinte doit être strictement identique pour un même nombre d'absorptions.
+
+E. Formats
+- desktop 1366 × 768 ;
+- mobile paysage 844 × 390 ;
+- mobile portrait 390 × 844 pour suspension/reprise.
+
+F. DPR
+- DPR 1 ;
+- DPR 2 ;
+- rendu logique de la forme identique.
+
+G. Non-régression
+- mouvement automatique ;
+- souris sans clic ;
+- toucher/glisser ;
+- cap conservé au relâchement ;
+- virage progressif sans 180° instantané ;
+- six Fragments normaux ;
+- respawn sûr ;
+- +1 segment par absorption ;
+- compteur progression PACK 7 ;
+- suivi du corps grande longueur PACK 6 ;
+- suspension portrait réelle.
+
+============================================================
+8. INTERDICTIONS STRICTES DU PACK 8
+============================================================
+
+NE PAS ajouter :
+- Forme III — Nocturne ;
+- Forme IV — Dévoreur ;
+- logique des seuils 50 ou 100 ;
+- changement de vitesse par forme ;
+- changement du rayon de virage par forme ;
+- score / +100 points ;
+- record ;
+- combo / multiplicateur ;
+- HUD gameplay ;
+- compteur visible ;
+- animation/texte/son d'évolution ;
+- Dash ;
+- stabilité ;
+- collisions de danger ;
+- dégâts / mort / game over ;
+- caméra ;
+- zones ;
+- dangers ;
+- événements ;
+- autres collectibles ;
+- mini-carte ;
+- profil CJ ;
+- sauvegarde ;
+- gain CJ ;
+- audio ;
+- vibration ;
+- réseau ;
+- multijoueur ;
+- serveur ;
+- Capacitor ;
+- npm/framework/bundler ;
+- GitHub ;
+- publication ou déploiement.
+
+Ne modifier aucun autre projet CJAJLK.
+
+============================================================
+9. CHECKPOINT OBLIGATOIRE
+============================================================
+
+À la fin, créer :
+
+`docs/checkpoints/CHECKPOINT_PACK_8.md`
+
+Il doit documenter :
+- fichiers créés ;
+- fichiers modifiés ;
+- architecture retenue pour déterminer la forme ;
+- différences visuelles Éclat / Spectre ;
+- résultat exact à 19 / 20 / 21 fragments ;
+- nombre de segments à 19 / 20 / 21 ;
+- tests 30/60/120 Hz ;
+- tests desktop/mobile/DPR ;
+- suspension/reprise ;
+- non-régressions ;
+- confirmation de toutes les interdictions ;
+- mention explicite : `PACK 9 NON COMMENCÉ`.
+
+Mettre également à jour `README.md` avec le statut PACK 8, sans inventer de fonctionnalité supplémentaire.
+
+============================================================
+10. ARRÊT
+============================================================
+
+Une fois PACK 8 terminé, testé et checkpointé :
+ARRÊT STRICT.
+
+Ne pas préparer, coder ou commencer PACK 9.

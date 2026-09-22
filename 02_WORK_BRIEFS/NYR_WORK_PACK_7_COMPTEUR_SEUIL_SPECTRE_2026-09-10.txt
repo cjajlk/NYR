@@ -1,0 +1,99 @@
+NYR — WORK PACK 7 — COMPTEUR INTERNE + SEUIL SPECTRE
+Date : 2026-09-10
+
+OBJECTIF UNIQUE
+Ajouter un compteur INTERNE du nombre de Fragments normaux absorbés et détecter proprement, une seule fois, l'atteinte du seuil canon de 20 fragments préparant la future Forme II — Le Spectre.
+
+Ce PACK 7 ne doit produire AUCUNE transformation visuelle de Nyr et AUCUN HUD.
+
+PRÉREQUIS
+- Relire `docs/canon/NYR_DIRECTION_V1_CANON_2026-09-09.txt`.
+- Relire `docs/work/WORK_RULES.md`.
+- Conserver strictement les acquis des PACKS 0 à 6.
+- Le canon fixe Forme II — Le Spectre à 20–49 fragments.
+
+PÉRIMÈTRE AUTORISÉ
+1. Ajouter un état interne dédié au suivi de progression de la partie, séparé du mouvement si possible.
+2. État initial : 0 Fragment normal absorbé.
+3. À chaque absorption réelle d'un Fragment normal :
+   - incrémenter exactement de +1 le compteur interne ;
+   - conserver l'actuel +1 segment du PACK 5 ;
+   - ne déclencher aucune autre récompense.
+4. Détecter l'atteinte du seuil 20 :
+   - avant la 20e absorption : seuil non atteint ;
+   - exactement à la 20e : signal interne de seuil atteint ;
+   - après la 20e : ne pas redéclencher plusieurs fois un événement one-shot si une logique d'événement est utilisée.
+5. Exposer un snapshot/test API minimal permettant de vérifier le compteur et l'état du seuil sans créer d'interface utilisateur.
+6. Le compteur et l'état du seuil doivent rester strictement figés pendant la suspension portrait.
+7. Le redimensionnement, DPR et reprise ne doivent jamais incrémenter le compteur.
+
+ARCHITECTURE SOUHAITÉE
+- Préférer un petit module dédié, par exemple `src/gameplay/nyrProgression.js`, plutôt que d'enfouir cette logique dans le renderer ou dans les fragments.
+- Garder la logique générique et simple pour pouvoir ajouter plus tard les seuils 50 et 100, MAIS ne pas implémenter maintenant Forme III/IV ni leurs effets.
+- Si une constante de seuil est ajoutée, centraliser `20` dans une configuration clairement identifiée et canonique pour la Forme II.
+- Ne pas utiliser le nombre de segments comme substitut au nombre de Fragments absorbés : le compteur doit représenter les absorptions réelles, car d'autres objets pourront plus tard modifier la longueur différemment.
+
+TESTS OBLIGATOIRES
+A. Initialisation
+- compteur = 0 ;
+- seuil Spectre non atteint ;
+- Nyr commence toujours à 4 segments.
+
+B. Absorptions
+- après 1 absorption : compteur = 1 et segments = 5 ;
+- après 10 absorptions : compteur = 10 et segments = 14 ;
+- après 19 absorptions : compteur = 19, seuil Spectre non atteint ;
+- 20e absorption : compteur = 20, seuil Spectre atteint exactement à ce moment ;
+- 21e absorption : compteur = 21, seuil toujours atteint mais aucun second déclenchement one-shot.
+
+C. Suspension / reprise
+- au moins deux cycles paysage → portrait → paysage ;
+- compteur, segments et état du seuil figés pendant la suspension ;
+- aucune absorption fantôme ni incrément à la première frame de reprise.
+
+D. Non-régression
+- six Fragments normaux toujours actifs ;
+- respawn sûr inchangé ;
+- mouvement, souris, tactile et virage progressif inchangés ;
+- suivi de corps robuste du PACK 6 conservé ;
+- test de base à 30/60/120 Hz sans divergence du compteur pour un même scénario d'absorptions ;
+- DPR 1 et 2 : logique identique.
+
+INTERDICTIONS ABSOLUES — NE PAS COMMENCER
+- AUCUNE apparence Forme II/Spectre ;
+- AUCUNE Forme III ou IV ;
+- AUCUN texte ou animation d'évolution ;
+- AUCUN HUD, compteur visible ou debug visible permanent ;
+- AUCUN score, +100 points, record, combo ou multiplicateur ;
+- AUCUN changement de vitesse ;
+- AUCUN Dash ;
+- AUCUNE collision/danger/stabilité/dégâts/mort/game over ;
+- AUCUNE caméra, zone, événement, mini-carte ;
+- AUCUN autre collectible ;
+- AUCUN CJ, profil, sauvegarde ou progression permanente ;
+- AUCUN audio/vibration ;
+- AUCUN réseau/multijoueur ;
+- AUCUN Capacitor/npm/framework/bundler/CDN ;
+- AUCUN GitHub/publication/déploiement ;
+- AUCUNE modification d'un autre projet CJAJLK.
+
+CHECKPOINT
+Créer : `docs/checkpoints/CHECKPOINT_PACK_7.md`
+Le checkpoint doit documenter :
+- fichiers créés/modifiés ;
+- architecture du compteur ;
+- comportement exact 19 → 20 → 21 ;
+- tests suspension/reprise ;
+- non-régression PACKS 0 à 6 ;
+- liste des systèmes explicitement non commencés.
+
+RÈGLE QUOTA / CRÉDITS PRIORITAIRE
+- PACK atomique, entièrement terminable et testable.
+- Si Work signale quota faible, limite proche, capacité réduite, ou s'il existe un doute raisonnable sur la possibilité de terminer proprement : NE PAS COMMENCER le PACK 7.
+- Si une limite apparaît pendant l'exécution : ne lancer aucune étape supplémentaire non indispensable ; laisser uniquement un état cohérent et checkpointé.
+- Ne jamais prétendre connaître un pourcentage de quota si cette information n'est pas réellement disponible.
+- Ne jamais laisser migration/refactor/fichier essentiel à moitié terminé.
+
+ARRÊT STRICT
+Une fois PACK 7 testé et `CHECKPOINT_PACK_7.md` créé, ARRÊTER.
+NE PAS COMMENCER LE PACK 8.

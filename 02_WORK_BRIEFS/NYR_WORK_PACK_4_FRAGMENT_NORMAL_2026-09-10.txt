@@ -1,0 +1,187 @@
+NYR — WORK PACK 4 — FRAGMENT NORMAL / ABSORPTION MINIMALE
+Date : 2026-09-10
+
+SOURCE DE VÉRITÉ
+- Lire avant toute modification : docs/canon/NYR_DIRECTION_V1_CANON_2026-09-09.txt
+- Lire : docs/work/WORK_RULES.md
+- Lire : docs/checkpoints/CHECKPOINT_PACK_3.md
+- Conserver intégralement les acquis validés des PACKS 0 à 3.
+
+RÈGLE QUOTA / CRÉDIT PRIORITAIRE
+- Ce PACK doit rester petit, atomique, testable et entièrement terminable.
+- Si une limite est signalée, si le quota devient faible, si la capacité est réduite ou s'il existe une incertitude sérieuse sur la possibilité de terminer proprement CE PACK, ne pas le commencer.
+- Si une limite apparaît pendant l'exécution, ne lancer aucune étape supplémentaire. Ne laisser aucun fichier essentiel dans un état partiel. Finaliser uniquement ce qui peut être rendu cohérent, vérifié et checkpointé.
+- Ne jamais prétendre connaître un pourcentage de quota si cette donnée n'est pas réellement disponible.
+- Ne pas commencer le PACK 5 après avoir terminé ce PACK.
+
+OBJECTIF UNIQUE DU PACK 4
+Ajouter uniquement le premier objet absorbable de NYR : le FRAGMENT NORMAL.
+
+Le but de ce pack est de valider la boucle minimale :
+SE DÉPLACER -> APPROCHER UN FRAGMENT -> L'ABSORBER -> LE VOIR RÉAPPARAÎTRE AILLEURS.
+
+IMPORTANT : le canon prévoit plus tard +100 points et +1 segment par fragment normal. CES EFFETS NE DOIVENT PAS ÊTRE APPLIQUÉS DANS LE PACK 4.
+
+PÉRIMÈTRE AUTORISÉ
+1. FRAGMENT NORMAL UNIQUEMENT
+- Créer une représentation simple et lisible du fragment normal avec des primitives canvas ou une ressource locale très légère déjà présente si réellement adaptée.
+- Aspect provisoire cohérent avec NYR : petit éclat énergétique lumineux, cyan/violet, clairement distinct de Nyr.
+- Aucun autre objet : pas d'Orbe rare, Énergie, Éclat rare, Fragment pur ou Corruption.
+
+2. PETIT ENSEMBLE DE FRAGMENTS ACTIFS
+- Maintenir un petit nombre fixe de fragments normaux simultanément présents pour tester la sensation de collecte.
+- Valeur de prototype recommandée : 6 fragments actifs.
+- Cette valeur doit être centralisée dans une configuration provisoire et explicitement marquée NON CANONIQUE / NON FINALE.
+- Ne pas créer de progression de densité, de minuterie de rareté ou de logique de zone.
+
+3. SPAWN SÛR ET SIMPLE
+- Les fragments doivent apparaître à l'intérieur de la surface de jeu avec une marge raisonnable par rapport aux bords.
+- Un fragment ne doit pas apparaître directement sur la tête de Nyr ni dans une proximité immédiate qui provoquerait une absorption instantanée injustifiée.
+- Si possible sans complexifier le pack, éviter également de placer un fragment directement sur les quatre segments visuels actuels.
+- Il n'existe encore aucun obstacle : ne pas inventer de système d'évitement d'obstacle.
+- Le générateur aléatoire doit être isolable/injectable ou autrement testable de façon déterministe.
+- Les marges/rayons exacts sont provisoires et centralisés.
+
+4. ABSORPTION MINIMALE
+- Détecter uniquement le chevauchement/proximité entre la TÊTE de Nyr et un fragment normal.
+- Cette détection est une mécanique d'absorption de collectible, PAS le début d'un système général de collisions/dégâts.
+- Lorsqu'un fragment est absorbé :
+  a) il disparaît immédiatement ;
+  b) il est replacé/réapparait proprement à une nouvelle position sûre ;
+  c) un signal/callback interne neutre peut être émis pour permettre les tests et les futurs packs.
+- NE PAS ajouter de score.
+- NE PAS ajouter de compteur visible de fragments.
+- NE PAS augmenter le nombre de segments.
+- NE PAS changer de Forme.
+- NE PAS modifier la vitesse de Nyr.
+- NE PAS ajouter de combo, animation de récompense, texte flottant, particules complexes ou son.
+
+5. SUSPENSION / ORIENTATION
+- Le système de fragments doit respecter le runtime validé au PACK 2 et utilisé au PACK 3.
+- En portrait suspendu :
+  - aucun mouvement de Nyr ;
+  - aucune absorption ;
+  - aucun respawn/repositionnement de fragment causé par le temps ;
+  - aucune simulation de collectible.
+- Au retour paysage : reprise depuis l'état exact, sans absorption fantôme ni bond temporel.
+
+6. REDIMENSIONNEMENT
+- Le système doit rester stable lors des redimensionnements du canvas.
+- Si un redimensionnement rend un fragment clairement hors surface ou invalide, le remettre proprement dans une position sûre sans créer de boucle ou d'erreur.
+- Ne pas réinitialiser toute la partie à chaque resize si ce n'est pas nécessaire.
+
+ARCHITECTURE CONSEILLÉE
+Work peut adapter les noms si l'architecture existante l'exige, mais garder les responsabilités séparées.
+Exemple minimal :
+- src/gameplay/fragmentPrototypeConfig.js : réglages provisoires du PACK 4 ;
+- src/gameplay/fragmentSystem.js : création, positions, absorption, respawn ;
+- src/gameplay/fragmentRenderer.js : rendu du fragment normal ;
+- src/main.js : assemblage uniquement ;
+- nyrMovement.js ne doit être modifié que si une petite API de lecture de la tête est réellement nécessaire. Éviter toute refonte.
+
+CONTRAINTES DE CODE
+- JavaScript natif uniquement, comme les packs précédents.
+- Aucun npm, framework, bundler ou CDN.
+- Aucun chemin absolu.
+- Aucune ressource distante obligatoire.
+- Garder les paramètres provisoires centralisés et commentés comme non finaux.
+- Ne pas modifier les autres projets CJAJLK.
+- Ne pas modifier le canon.
+- Ne pas introduire de système générique surdimensionné pour les futurs collectibles : faire seulement ce qui est nécessaire au Fragment normal.
+
+TESTS OBLIGATOIRES
+Effectuer et consigner au minimum :
+
+A. CHARGEMENT / SYNTAXE
+- ouverture par serveur HTTP local temporaire ;
+- aucun chargement distant obligatoire ;
+- validation syntaxique de tous les modules ajoutés/modifiés ;
+- aucune erreur JavaScript bloquante.
+
+B. DESKTOP 1366 x 768
+- Nyr Forme I continue de se déplacer/piloter comme au PACK 3 ;
+- 6 fragments visibles avec le réglage provisoire choisi ;
+- absorption d'au moins 10 fragments successifs sans erreur ;
+- chaque fragment absorbé réapparait à une position sûre ;
+- aucun score ou segment supplémentaire n'apparait.
+
+C. MOBILE PAYSAGE 844 x 390
+- toucher/glisser de Nyr inchangé ;
+- fragments visibles et lisibles ;
+- au moins 5 absorptions successives ;
+- aucun conflit évident entre Pointer Events et collecte.
+
+D. MOBILE PORTRAIT 390 x 844
+- runtime suspendu ;
+- positions de Nyr ET des fragments strictement stables pendant la suspension ;
+- aucune absorption pendant la suspension.
+
+E. REPRISE PAYSAGE
+- au moins 2 cycles paysage -> portrait -> paysage ;
+- reprise sans bond ;
+- aucun fragment absorbé/repositionné spontanément à cause du temps suspendu ;
+- collecte normale après reprise.
+
+F. SPAWN SÛR / DÉTERMINISTE
+- test avec RNG contrôlé ou méthode équivalente ;
+- aucun fragment initial directement sur la tête de Nyr ;
+- après absorption, le fragment respawné respecte la marge de sécurité prévue ;
+- le système ne boucle pas indéfiniment si une position aléatoire candidate est rejetée : prévoir un nombre d'essais borné et un fallback propre si nécessaire.
+
+G. RESIZE / DPR
+- redimensionnements successifs sans erreur ;
+- DPR 1 et DPR 2 au minimum ;
+- logique d'absorption indépendante du DPR ;
+- fragments restant dans une zone valide ou repositionnés proprement si nécessaire.
+
+H. NON-RÉGRESSION PACK 3
+- avance automatique toujours fonctionnelle ;
+- souris sans clic toujours fonctionnelle ;
+- tactile toucher/glisser toujours fonctionnel ;
+- cap conservé au relâchement ;
+- pas de demi-tour instantané à 180° ;
+- 4 segments visuels fixes ;
+- suspension/reprise toujours correcte.
+
+INTERDICTIONS STRICTES — NE PAS COMMENCER
+- score, record, combo, multiplicateur ;
+- compteur HUD de fragments ;
+- croissance dynamique ;
+- ajout de segment à l'absorption ;
+- Forme II, III ou IV ;
+- évolution visuelle liée au nombre de fragments ;
+- vitesse progressive ;
+- Orbe rare, Énergie, Éclat rare, Fragment pur, Corruption ;
+- Dash ;
+- collisions de danger, dégâts, stabilité, mort, game over ;
+- HUD gameplay ;
+- caméra ;
+- zones ;
+- dangers ou événements ;
+- mini-carte ;
+- pause manuelle/menu ;
+- CJ, profil global, sauvegarde joueur ;
+- audio ou vibration ;
+- réseau, serveur, multijoueur ;
+- Capacitor ;
+- GitHub ;
+- publication ou déploiement.
+
+CHECKPOINT OBLIGATOIRE
+Créer : docs/checkpoints/CHECKPOINT_PACK_4.md
+
+Le checkpoint doit indiquer :
+- fichiers créés/modifiés ;
+- architecture retenue ;
+- réglages provisoires exacts (nombre de fragments, rayon d'absorption, marge de spawn, etc.) ;
+- méthode de spawn et garanties anti-boucle ;
+- comportement d'absorption ;
+- comportement suspension/reprise ;
+- résultats de TOUS les tests ci-dessus ;
+- confirmation explicite que score et croissance restent absents ;
+- confirmation qu'aucun système interdit n'a été commencé ;
+- mention explicite : PACK 5 NON COMMENCÉ.
+
+ARRÊT STRICT
+Après création et vérification de CHECKPOINT_PACK_4.md, arrêter complètement le travail.
+Ne pas anticiper, créer ou amorcer le PACK 5.

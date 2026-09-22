@@ -1,0 +1,182 @@
+NYR — WORK PACK 3 — NYR FORME I + MOUVEMENT DE BASE
+Date : 2026-09-10
+
+SOURCE DE VERITE
+- Projet : /CJAJLK Games/NYR/
+- Lire AVANT toute modification :
+  - docs/canon/NYR_DIRECTION_V1_CANON_2026-09-09.txt
+  - docs/work/WORK_RULES.md
+  - docs/checkpoints/CHECKPOINT_PACK_0.md
+  - docs/checkpoints/CHECKPOINT_PACK_1.md
+  - docs/checkpoints/CHECKPOINT_PACK_2.md
+- Respecter strictement le canon et les règles de quota/crédits déjà établies.
+
+REGLE QUOTA / CREDITS — PRIORITAIRE
+- Ce pack doit rester atomique, entièrement terminable, testable et checkpointable.
+- Si Work signale une limite, un quota faible, une capacité réduite ou une incertitude sérieuse AVANT de commencer : NE PAS COMMENCER LE PACK 3.
+- Si une limite apparaît pendant l’exécution : ne commencer aucune étape supplémentaire ; laisser uniquement un état propre et cohérent, vérifier ce qui peut l’être et checkpoint­er honnêtement l’état atteint.
+- Ne jamais prétendre connaître un pourcentage de quota/crédits si cette information n’est pas réellement disponible.
+- Ne pas commencer le PACK 4, même si le PACK 3 est terminé et qu’il reste du quota.
+
+OBJECTIF UNIQUE DU PACK 3
+Créer le tout premier déplacement jouable de Nyr, en Forme I uniquement :
+- Nyr avance en permanence lorsque le runtime est actif ;
+- le joueur peut orienter progressivement sa trajectoire à la souris sur PC ;
+- le joueur peut orienter progressivement sa trajectoire au toucher/glisser sur mobile ;
+- aucun demi-tour instantané à 180° ;
+- la suspension runtime du PACK 2 gèle réellement la simulation et la reprise ne provoque aucun bond.
+
+CE PACK N’EST PAS UN PACK DE JEU COMPLET.
+Il doit seulement permettre de vérifier que Nyr se déplace et se pilote agréablement.
+
+PERIMETRE AUTORISE
+1. BOUCLE D’EXECUTION MINIMALE
+- Ajouter une boucle requestAnimationFrame strictement dédiée à ce prototype de mouvement/rendu.
+- La simulation ne doit avancer QUE si isRuntimeActive() est vrai.
+- Pendant une suspension, aucune position, direction, interpolation de déplacement ou temps de simulation ne doit progresser.
+- A la reprise, réinitialiser correctement la référence temporelle afin d’éviter tout grand delta / bond de Nyr.
+- Le rendu peut être rafraîchi si nécessaire, mais l’état de simulation doit rester figé pendant la suspension.
+
+2. NYR — FORME I UNIQUEMENT
+- Créer une représentation technique lisible de la Forme I conforme au canon : petite créature astrale dragon-serpent, tête reconnaissable, mini-cornes, yeux lumineux, corps très simple et petite queue.
+- Un petit nombre FIXE de segments visuels est autorisé uniquement pour donner la silhouette de la Forme I.
+- Aucun ajout/retrait de segment pendant la partie.
+- Aucun système de croissance, évolution ou changement de forme.
+- Utiliser des primitives canvas simples / rendu technique propre ; ne pas fabriquer maintenant un asset final ni intégrer de skin.
+- S’inspirer seulement des références présentes dans assets/images/references/ sans les altérer.
+
+3. MOUVEMENT
+- Nyr démarre dans une position de test raisonnable sur la surface actuelle.
+- Nyr avance automatiquement à vitesse constante provisoire lorsque le runtime est actif.
+- La tête possède une direction courante.
+- La direction désirée est déterminée par l’entrée joueur.
+- Le virage vers la direction désirée doit être progressif et limité.
+- Interdiction d’un changement instantané de cap à 180°.
+- Les valeurs de vitesse et vitesse angulaire sont PROVISOIRES et doivent être centralisées dans une petite configuration clairement identifiée comme réglage de prototype, afin qu’elles puissent être modifiées plus tard sans réécrire le système.
+- Ne pas présenter ces valeurs comme des valeurs canon/finales.
+
+4. CONTROLE PC
+- Souris comme contrôle principal.
+- Le mouvement du pointeur dans la surface de jeu met à jour la direction désirée vers la position du pointeur.
+- Aucun clic obligatoire pour piloter à la souris.
+- Aucun clavier dans ce pack : ZQSD/WASD/flèches restent pour une option future.
+
+5. CONTROLE MOBILE
+- Utiliser des Pointer Events ou une abstraction équivalente simple, sans dépendance externe.
+- Toucher/maintenir dans la surface indique une direction cible.
+- Glisser modifie cette direction cible en continu.
+- Au relâchement, Nyr conserve son cap courant ; il ne doit pas s’arrêter et ne doit pas revenir vers une ancienne cible.
+- Aucun joystick visible.
+- Aucun bouton Dash.
+- Empêcher uniquement les interactions navigateur gênantes nécessaires au bon pilotage de la surface, sans modifier le reste de la page inutilement.
+
+6. CORPS / SUIVI VISUEL
+- Le petit corps fixe de Forme I peut suivre la trajectoire de la tête avec un retard simple et fluide afin d’éviter un serpent rigide.
+- Ce suivi sert seulement au rendu et au ressenti du pilotage.
+- Aucun système de collision avec le corps.
+- Aucun historique illimité : borner les données nécessaires afin d’éviter une croissance mémoire.
+
+7. LIMITES DE LA SURFACE POUR CE PROTOTYPE
+- Ne PAS inventer de règle de gameplay permanente pour les bords.
+- Ne pas ajouter Frontière du Vide, dégâts, téléportation canonique, murs, mort ou collision.
+- Pour les tests, choisir une solution purement technique et explicitement provisoire qui permette de continuer à observer Nyr sans créer une nouvelle mécanique canonique (par exemple, maintenir le prototype dans une zone de test sûre ou réinitialiser proprement sa position uniquement dans le contexte de test si nécessaire).
+- Tout comportement technique de bord doit être isolé, documenté comme provisoire et facile à retirer dans un futur pack dédié à l’arène/caméra/frontière.
+
+FICHIERS / ARCHITECTURE
+Work peut créer les petits modules nécessaires dans les dossiers déjà préparés, par exemple :
+- src/core/gameLoop.js
+- src/gameplay/nyrMovement.js
+- src/gameplay/nyrRenderer.js
+- src/systems/pointerInput.js
+- éventuellement un petit fichier de réglages prototype dans src/gameplay/ ou src/core/
+- modifier src/main.js uniquement pour assembler ces éléments avec les fondations existantes.
+
+Ces noms sont indicatifs : garder une architecture simple, claire et modulaire. Ne pas multiplier inutilement les fichiers.
+
+INTERDICTIONS STRICTES — NE PAS COMMENCER
+- aucun fragment / collectible / spawn ;
+- aucun score / combo ;
+- aucune croissance ou ajout de segment dynamique ;
+- aucune Forme II/III/IV ;
+- aucun Dash ;
+- aucune collision, stabilité, dégâts, mort ou game over ;
+- aucun HUD gameplay ;
+- aucune caméra de monde ;
+- aucune zone, danger, événement, mini-carte ;
+- aucun skin ou sélection de skin fonctionnelle ;
+- aucun profil CJ, gain CJ, localStorage joueur ou raccord CJAJLK Games ;
+- aucun audio / vibration ;
+- aucun réseau / serveur / multijoueur ;
+- aucun Capacitor ;
+- aucune dépendance npm, framework, bundler ou CDN ;
+- aucun GitHub, publication ou déploiement ;
+- aucune modification d’un autre projet CJAJLK.
+
+TESTS OBLIGATOIRES
+Tester et consigner au minimum :
+
+A. CHARGEMENT / STRUCTURE
+- ouverture par serveur HTTP local ;
+- aucune erreur JavaScript bloquante ;
+- aucun chargement distant obligatoire ;
+- aucun chemin absolu ;
+- aucun fichier modifié hors de /CJAJLK Games/NYR/.
+
+B. DESKTOP 1366 x 768
+- Nyr Forme I est visible ;
+- il avance automatiquement ;
+- déplacer la souris change progressivement sa trajectoire ;
+- placer rapidement la souris derrière Nyr ne provoque PAS un demi-tour instantané à 180° ;
+- mouvement visuellement fluide et aucune explosion de delta temps.
+
+C. MOBILE PAYSAGE 844 x 390
+- Nyr est visible et avance ;
+- toucher/maintenir puis glisser change progressivement sa trajectoire ;
+- relâcher laisse Nyr poursuivre son cap courant ;
+- aucun joystick ou contrôle interdit affiché ;
+- les Pointer Events ne génèrent pas d’erreur.
+
+D. SUSPENSION PORTRAIT 390 x 844
+- passer du paysage au portrait affiche toujours l’overlay du PACK 2 ;
+- runtimeState indique bien suspended ;
+- noter position ET direction de Nyr avant/pendant la suspension ;
+- elles doivent rester strictement inchangées tant que le runtime est suspendu ;
+- aucune simulation cachée ne doit continuer.
+
+E. REPRISE PAYSAGE
+- revenir en paysage masque l’overlay et remet runtimeState active ;
+- Nyr reprend depuis exactement son état suspendu ;
+- aucun saut de position, bond, accélération anormale ni grand delta à la reprise ;
+- répéter au moins deux cycles paysage -> portrait -> paysage.
+
+F. RESIZE / DPR
+- vérifier qu’un redimensionnement de fenêtre pendant l’exécution ne provoque pas d’erreur ;
+- vérifier au moins DPR 1 et DPR 2 ;
+- le mouvement logique ne doit pas dépendre directement de la densité de pixels du canvas.
+
+G. CONTROLE DU PERIMETRE
+- rechercher explicitement et confirmer l’absence de fragments, score, croissance, Dash, collision, stabilité, HUD, caméra, zones, dangers, CJ, audio, réseau, Capacitor et déploiement.
+
+CHECKPOINT OBLIGATOIRE
+A la fin, créer :
+`docs/checkpoints/CHECKPOINT_PACK_3.md`
+
+Le checkpoint doit contenir :
+- date et statut ;
+- fichiers créés/modifiés ;
+- architecture retenue ;
+- valeurs PROVISOIRES utilisées pour vitesse/virage, clairement marquées comme non finales ;
+- comportement PC et mobile ;
+- méthode de suspension/reprise et résultat des tests ;
+- éventuel comportement technique provisoire utilisé aux bords ;
+- tous les tests réalisés et leurs résultats ;
+- confirmation détaillée des interdictions respectées ;
+- mention explicite : PACK 4 NON COMMENCE.
+
+ARRET STRICT
+Une fois CHECKPOINT_PACK_3.md créé et les tests terminés, s’arrêter.
+Ne pas améliorer spontanément le gameplay.
+Ne pas ajouter de fragments « pour essayer ».
+Ne pas commencer la croissance.
+Ne pas commencer le Dash.
+Ne pas commencer le PACK 4.

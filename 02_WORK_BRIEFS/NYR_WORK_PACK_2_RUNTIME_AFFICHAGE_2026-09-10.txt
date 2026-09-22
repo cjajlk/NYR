@@ -1,0 +1,135 @@
+NYR — WORK PACK 2 — SOCLE D’EXÉCUTION / AFFICHAGE
+Date : 10 septembre 2026
+
+OBJECTIF UNIQUE DU PACK 2
+Préparer le socle d’exécution visuel du jeu NYR sans commencer le gameplay.
+À la fin du pack, le projet doit disposer d’une surface de jeu locale, responsive et portable, ainsi que d’une gestion propre de l’orientation paysage et de l’état pause/reprise lié à l’orientation.
+
+SOURCE DE VÉRITÉ
+Avant toute modification, lire et respecter :
+- docs/canon/NYR_DIRECTION_V1_CANON_2026-09-09.txt
+- docs/work/WORK_RULES.md
+- docs/checkpoints/CHECKPOINT_PACK_0.md
+- docs/checkpoints/CHECKPOINT_PACK_1.md
+
+PÉRIMÈTRE STRICT
+Le PACK 2 doit rester un pack technique de fondation.
+
+AUTORISÉ
+1. Ajouter une surface de jeu statique de type canvas dans la page.
+2. Mettre en place le redimensionnement du canvas en fonction de la zone d’affichage et du devicePixelRatio, sans moteur de gameplay.
+3. Créer un petit module d’état d’exécution permettant uniquement de savoir si l’application est en état actif ou suspendu pour cause d’orientation.
+4. Détecter l’orientation portrait/paysage et la taille disponible.
+5. En mobile portrait :
+   - afficher un écran/overlay demandant de tourner l’appareil ;
+   - basculer l’état d’exécution sur suspendu ;
+   - ne lancer aucune logique future tant que l’état reste suspendu.
+6. En paysage :
+   - masquer l’overlay ;
+   - rétablir l’état actif.
+7. Préparer des fonctions/hooks propres et neutres que les futurs packs pourront interroger avant d’exécuter gameplay, timers, collisions, spawn, Dash ou CJ.
+8. Afficher uniquement un fond de test / repère visuel statique sur le canvas pour confirmer son dimensionnement. Aucun sprite de Nyr ni objet de gameplay.
+9. Mettre à jour le README pour refléter le PACK 2.
+10. Créer docs/checkpoints/CHECKPOINT_PACK_2.md et s’arrêter.
+
+INTERDIT DANS CE PACK
+- aucun déplacement de Nyr ;
+- aucun corps, segment, croissance, évolution ou animation de Nyr ;
+- aucun fragment, collectible, spawn, score ou combo ;
+- aucune stabilité, collision, dégâts ou mort ;
+- aucun Dash ;
+- aucun HUD gameplay ;
+- aucune caméra de suivi ;
+- aucune zone de gameplay, danger, événement ou mini-map ;
+- aucun timer de partie ;
+- aucune boucle de jeu contenant une mécanique ;
+- aucun requestAnimationFrame utilisé pour simuler un gameplay ;
+- aucun profil CJ, localStorage joueur ou gain CJ ;
+- aucun audio ;
+- aucun réseau, serveur ou multijoueur ;
+- aucun Capacitor ;
+- aucun npm, framework, bundler ou CDN ;
+- aucun GitHub, publication ou déploiement ;
+- aucune modification d’un autre projet CJAJLK.
+
+ARCHITECTURE CONSEILLÉE
+Rester simple. Work peut adapter légèrement les noms si nécessaire, mais ne doit pas multiplier les fichiers sans raison.
+
+Exemple acceptable :
+- index.html
+- assets/css/main.css
+- src/main.js
+- src/core/appConfig.js
+- src/core/runtimeState.js
+- src/core/displayManager.js
+- src/ui/orientationOverlay.js
+
+Le canvas peut être créé dans index.html ou par src/main.js. Ne pas ajouter de dépendance.
+
+RÈGLE DE PAUSE ORIENTATION — CRITIQUE
+Le but n’est pas simplement de masquer l’écran.
+L’état runtime doit réellement indiquer que l’application est suspendue lorsque l’affichage mobile est en portrait.
+
+Prévoir une API minimale du type :
+- isRuntimeActive()
+- suspendRuntime(reason)
+- resumeRuntime(reason)
+
+Les noms peuvent différer, mais l’intention doit être claire et testable.
+
+Aucune logique de jeu n’existe encore dans le PACK 2, donc il n’y a rien à “geler” concrètement. Le test doit néanmoins démontrer que l’état passe réellement de actif à suspendu puis revient à actif lors des changements d’orientation simulés.
+
+SURFACE DE JEU
+- conserver le format horizontal ;
+- utiliser une zone de jeu responsive ;
+- aucun chemin absolu ;
+- aucun asset distant obligatoire ;
+- tenir compte du devicePixelRatio afin que le canvas ne soit pas flou sur écran haute densité ;
+- éviter toute résolution fixe comme source de vérité ;
+- prévoir un minimum de sécurité pour les petites hauteurs paysage ;
+- ne pas dessiner de décor définitif : seulement un fond/repère technique discret.
+
+TESTS OBLIGATOIRES
+Work doit vérifier et consigner au minimum :
+1. ouverture par serveur HTTP local ;
+2. aucun chargement distant obligatoire ;
+3. aucune erreur JavaScript bloquante ;
+4. canvas présent et correctement dimensionné en desktop 1366 × 768 ;
+5. canvas correctement dimensionné en paysage mobile 844 × 390 ;
+6. simulation portrait mobile, par exemple 390 × 844 : overlay visible et runtime suspendu ;
+7. retour au paysage : overlay masqué et runtime redevenu actif ;
+8. plusieurs redimensionnements successifs sans erreur ;
+9. devicePixelRatio pris en compte sans modifier la taille CSS attendue ;
+10. aucun chemin absolu ;
+11. aucune logique de gameplay ou système interdit ;
+12. aucun fichier modifié hors /CJAJLK Games/NYR/.
+
+CHECKPOINT
+Créer :
+docs/checkpoints/CHECKPOINT_PACK_2.md
+
+Le checkpoint doit contenir :
+- fichiers créés ;
+- fichiers modifiés ;
+- architecture retenue ;
+- comportement de l’état actif/suspendu ;
+- résultats des tests ;
+- contrôle explicite des éléments interdits ;
+- mention claire que PACK 3 n’a pas été commencé.
+
+RÈGLE CRÉDITS / QUOTA — PRIORITAIRE
+Travailler en un seul petit pack entièrement terminable.
+
+Si une limite est signalée, si le quota devient faible, si la capacité disponible paraît réduite, ou si Work n’est pas certain de pouvoir terminer proprement le PACK 2, ne pas commencer ce pack.
+
+Si une limite apparaît pendant l’exécution :
+- ne lancer aucune nouvelle sous-tâche ;
+- ne pas démarrer de fonctionnalité supplémentaire ;
+- ne laisser aucun fichier essentiel dans un état partiellement refactoré ;
+- terminer/checkpointer uniquement l’état qui peut être laissé entièrement propre et cohérent.
+
+Si le quota précis n’est pas accessible, ne jamais prétendre connaître un pourcentage ou un solde exact.
+
+ARRÊT OBLIGATOIRE
+Une fois les tests terminés et CHECKPOINT_PACK_2.md créé, s’arrêter strictement.
+Ne pas commencer le mouvement de Nyr, même si du temps ou du quota semble rester disponible.

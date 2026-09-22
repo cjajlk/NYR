@@ -1,0 +1,142 @@
+import { NYR_PROTOTYPE_CONFIG } from "./nyrPrototypeConfig.js";
+
+const FULL_TURN = Math.PI * 2;
+
+function normalizeAngle(angle) {
+  return ((angle + Math.PI) % FULL_TURN + FULL_TURN) % FULL_TURN - Math.PI;
+}
+
+export function shortestAngleDelta(from, to) {
+  return normalizeAngle(to - from);
+}
+
+export function createNyrMovement(config = NYR_PROTOTYPE_CONFIG) {
+  const state = {
+    x: 0,
+    y: 0,
+    heading: 0,
+    desiredHeading: 0,
+    simulationTime: 0,
+    segmentCount: config.initialSegmentCount,
+    trailSamples: [],
+    distanceSinceTrailSample: 0
+  };
+
+  function reset(width, height) {
+    state.x = width * 0.38;
+    state.y = height * 0.5;
+    state.heading = 0;
+    state.desiredHeading = 0;
+    state.simulationTime = 0;
+    state.segmentCount = config.initialSegmentCount;
+    state.trailSamples = [{ x: state.x, y: state.y }];
+    state.distanceSinceTrailSample = 0;
+  }
+
+  function aimAt(x, y) {
+    const deltaX = x - state.x;
+    const deltaY = y - state.y;
+    if (Math.hypot(deltaX, deltaY) < 1) return;
+    state.desiredHeading = Math.atan2(deltaY, deltaX);
+  }
+
+  function holdCurrentHeading() {
+    state.desiredHeading = state.heading;
+  }
+
+  function keepPrototypeObservable(width, height) {
+    const margin = config.safetyMarginPixels;
+    const outside = state.x < -margin || state.x > width + margin ||
+      state.y < -margin || state.y > height + margin;
+
+    if (outside) {
+      // Sécurité technique provisoire : recentrage, sans règle de bord canonique.
+      const elapsed = state.simulationTime;
+      const segmentCount = state.segmentCount;
+      reset(width, height);
+      state.simulationTime = elapsed;
+      state.segmentCount = segmentCount;
+    }
+  }
+
+  function addSegments(count = 1) {
+    const amount = Math.max(0, Math.trunc(count));
+    state.segmentCount += amount;
+    return state.segmentCount;
+  }
+
+  function recordTrail(previousX, previousY) {
+    const deltaX = state.x - previousX;
+    const deltaY = state.y - previousY;
+    const stepDistance = Math.hypot(deltaX, deltaY);
+    if (stepDistance <= 0) return;
+
+    const spacing = config.trailSampleSpacingPixels;
+    let distanceAlongStep = spacing - state.distanceSinceTrailSample;
+
+    while (distanceAlongStep <= stepDistance) {
+      const progress = distanceAlongStep / stepDistance;
+      state.trailSamples.unshift({
+        x: previousX + deltaX * progress,
+        y: previousY + deltaY * progress
+      });
+      distanceAlongStep += spacing;
+    }
+
+    state.distanceSinceTrailSample =
+      (state.distanceSinceTrailSample + stepDistance) % spacing;
+  }
+
+  function trimTrail() {
+    const requiredDistance =
+      state.segmentCount * config.segmentSpacingPixels + config.trailSafetyMarginPixels;
+    let travelled = 0;
+    let keepCount = state.trailSamples.length;
+
+    for (let index = 1; index < state.trailSamples.length; index += 1) {
+      const previous = state.trailSamples[index - 1];
+      const current = state.trailSamples[index];
+      travelled += Math.hypot(current.x - previous.x, current.y - previous.y);
+      if (travelled >= requiredDistance) {
+        keepCount = index + 1;
+        break;
+      }
+    }
+
+    if (keepCount < state.trailSamples.length) state.trailSamples.length = keepCount;
+  }
+
+  function update(deltaSeconds, width, height) {
+    const previousX = state.x;
+    const previousY = state.y;
+    const maxTurn = config.turnRadiansPerSecond * deltaSeconds;
+    const turnDelta = shortestAngleDelta(state.heading, state.desiredHeading);
+    state.heading = normalizeAngle(
+      state.heading + Math.max(-maxTurn, Math.min(maxTurn, turnDelta))
+    );
+
+    state.x += Math.cos(state.heading) * config.speedPixelsPerSecond * deltaSeconds;
+    state.y += Math.sin(state.heading) * config.speedPixelsPerSecond * deltaSeconds;
+    state.simulationTime += deltaSeconds;
+    recordTrail(previousX, previousY);
+    trimTrail();
+    keepPrototypeObservable(width, height);
+  }
+
+  function snapshot() {
+    return Object.freeze({
+      x: state.x,
+      y: state.y,
+      heading: state.heading,
+      desiredHeading: state.desiredHeading,
+      simulationTime: state.simulationTime,
+      segmentCount: state.segmentCount,
+      trail: [
+        { x: state.x, y: state.y },
+        ...state.trailSamples.map((point) => ({ ...point }))
+      ]
+    });
+  }
+
+  return Object.freeze({ reset, aimAt, holdCurrentHeading, addSegments, update, snapshot });
+}

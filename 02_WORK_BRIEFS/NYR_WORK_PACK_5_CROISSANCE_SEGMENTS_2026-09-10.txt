@@ -1,0 +1,66 @@
+NYR — WORK PACK 5 — CROISSANCE PAR SEGMENTS
+Date : 2026-09-10
+
+OBJECTIF UNIQUE
+Ajouter uniquement la première croissance visible de Nyr : chaque Fragment normal absorbé ajoute +1 segment visuel au corps.
+
+SOURCE DE VERITE
+- Lire avant modification : docs/canon/NYR_DIRECTION_V1_CANON_2026-09-09.txt
+- Lire : docs/work/WORK_RULES.md
+- Lire : docs/checkpoints/CHECKPOINT_PACK_4.md
+- Conserver tous les acquis des PACKS 0 à 4.
+
+PERIMETRE STRICT DU PACK 5
+1. Nyr reste en Forme I uniquement.
+2. Le nombre de segments visuels n'est plus fixe : il devient un état dynamique du prototype.
+3. Etat initial : conserver les 4 segments visibles actuels du prototype PACK 4.
+4. Chaque absorption d'un Fragment normal ajoute exactement +1 segment visuel.
+5. La croissance doit être visible immédiatement après l'absorption.
+6. Les nouveaux segments doivent suivre l'historique de trajectoire existant derrière la tête, sans téléportation ni empilement brutal.
+7. Ne pas modifier la vitesse, le virage, le rayon de courbure, le contrôle souris/tactile ou le comportement des fragments.
+8. Ne pas ajouter de score, compteur visible, combo, multiplicateur, Forme II/III/IV, évolution, Dash, collision, stabilité, HUD, caméra, zones, dangers, événements, CJ, audio, réseau, Capacitor, GitHub ou déploiement.
+9. Ne pas appliquer encore les +100 points du Fragment normal.
+10. Ne pas créer de système de progression permanente ou sauvegarde.
+
+ARCHITECTURE ATTENDUE
+- Garder les réglages provisoires centralisés.
+- Le nombre courant de segments doit appartenir à l'état du prototype de Nyr, pas être codé en dur dans le renderer.
+- Prévoir une méthode neutre et testable du type addSegments(count) ou équivalent.
+- Le renderer doit lire le nombre courant de segments depuis l'état/snapshot de Nyr.
+- Le callback d'absorption du Fragment normal peut maintenant appeler uniquement cette méthode de croissance.
+- Ne pas mélanger le score ou d'autres récompenses à ce callback.
+
+SUSPENSION / REPRISE
+- En portrait suspendu : aucune absorption, aucune croissance, aucun changement du nombre de segments.
+- Au retour paysage : conserver exactement le nombre de segments atteint avant suspension.
+- Aucune croissance fantôme à la première frame de reprise.
+
+TESTS MINIMUMS
+- Desktop 1366x768.
+- Mobile paysage 844x390.
+- Mobile portrait 390x844.
+- Vérifier l'état initial à 4 segments.
+- Réaliser au moins 10 absorptions successives : résultat attendu = 14 segments visibles.
+- Vérifier qu'une seule absorption ajoute exactement un segment.
+- Vérifier que les segments supplémentaires suivent la trajectoire et ne restent pas collés à la tête.
+- Vérifier souris et tactile sans régression.
+- Vérifier deux cycles paysage -> portrait -> paysage avec conservation du nombre de segments.
+- Vérifier aucun changement de segment pendant la suspension.
+- Vérifier DPR 1 et DPR 2.
+- Vérifier aucune erreur JavaScript bloquante.
+- Vérifier aucun chemin absolu ni ressource distante obligatoire.
+- Vérifier qu'aucun score, combo ou autre récompense n'a été introduit.
+
+DOCUMENTATION
+- Mettre à jour README.md uniquement pour refléter l'état PACK 5.
+- Créer docs/checkpoints/CHECKPOINT_PACK_5.md avec : fichiers créés/modifiés, architecture, valeurs provisoires, résultats de tests, contrôle des interdictions et mention explicite PACK 6 NON COMMENCE.
+
+REGLE CREDIT / QUOTA PRIORITAIRE
+- Travailler par pack atomique entièrement terminable.
+- Si une limite est signalée, si le quota devient faible, ou si la capacité à finir proprement ce pack est incertaine, ne pas commencer ce pack.
+- Si une limite apparaît pendant l'exécution, ne lancer aucune tâche supplémentaire ; laisser uniquement un état propre et checkpointé.
+- Ne jamais prétendre connaître un pourcentage de quota si cette information n'est pas réellement disponible.
+
+ARRET STRICT
+Une fois PACK 5 terminé et checkpointé, s'arrêter.
+NE PAS COMMENCER PACK 6.
