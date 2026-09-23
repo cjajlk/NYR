@@ -1,4 +1,4 @@
-import { NYR_PROTOTYPE_CONFIG } from "./nyrPrototypeConfig.js";
+import { MAX_VISIBLE_SEGMENTS, NYR_PROTOTYPE_CONFIG } from "./nyrPrototypeConfig.js";
 
 const FULL_TURN = Math.PI * 2;
 
@@ -17,7 +17,7 @@ export function createNyrMovement(config = NYR_PROTOTYPE_CONFIG) {
     heading: 0,
     desiredHeading: 0,
     simulationTime: 0,
-    segmentCount: config.initialSegmentCount,
+    segmentCount: Math.min(MAX_VISIBLE_SEGMENTS, config.initialSegmentCount),
     trailSamples: [],
     distanceSinceTrailSample: 0
   };
@@ -28,7 +28,7 @@ export function createNyrMovement(config = NYR_PROTOTYPE_CONFIG) {
     state.heading = 0;
     state.desiredHeading = 0;
     state.simulationTime = 0;
-    state.segmentCount = config.initialSegmentCount;
+    state.segmentCount = Math.min(MAX_VISIBLE_SEGMENTS, config.initialSegmentCount);
     state.trailSamples = [{ x: state.x, y: state.y }];
     state.distanceSinceTrailSample = 0;
   }
@@ -79,7 +79,7 @@ export function createNyrMovement(config = NYR_PROTOTYPE_CONFIG) {
 
   function addSegments(count = 1) {
     const amount = Math.max(0, Math.trunc(count));
-    state.segmentCount += amount;
+    state.segmentCount = Math.min(MAX_VISIBLE_SEGMENTS, state.segmentCount + amount);
     return state.segmentCount;
   }
 
