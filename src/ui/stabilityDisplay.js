@@ -1,4 +1,4 @@
-export function createStabilityDisplay(createElement = tag => document.createElement(tag)) {
+export function createStabilityDisplay(createElement = tag => document.createElement(tag), onReplay = () => {}) {
   const element = createElement("div");
   element.className = "stability-display";
   const label = createElement("span");
@@ -15,7 +15,19 @@ export function createStabilityDisplay(createElement = tag => document.createEle
   title.textContent = "GAME OVER";
   const detail = createElement("span");
   detail.textContent = "STABILITÉ ÉPUISÉE";
-  gameOverElement.append(title, detail);
+  const replay = createElement("button");
+  replay.type = "button";
+  replay.className = "replay-button";
+  replay.textContent = "REJOUER";
+  replay.hidden = true;
+  let canReplay = false;
+  replay.addEventListener("click", () => {
+    if (!canReplay) return;
+    canReplay = false;
+    replay.disabled = true;
+    onReplay();
+  });
+  gameOverElement.append(title, detail, replay);
   gameOverElement.hidden = true;
   let previousValue;
 
@@ -29,6 +41,9 @@ export function createStabilityDisplay(createElement = tag => document.createEle
     const portrait = runtimeState.suspensionReasons.includes("portrait-orientation");
     element.hidden = portrait;
     gameOverElement.hidden = portrait || !runtimeState.gameOver;
+    canReplay = runtimeState.gameOver && !portrait;
+    replay.hidden = !canReplay;
+    replay.disabled = !canReplay;
   }
 
   return Object.freeze({ element, gameOverElement, update });

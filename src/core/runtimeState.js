@@ -17,6 +17,13 @@ export function endGame() {
   notifyRuntimeState();
 }
 
+export function beginNewGame() {
+  if (!gameOver) return false;
+  gameOver = false;
+  notifyRuntimeState();
+  return true;
+}
+
 export function getRuntimeState() {
   return Object.freeze({
     active: isRuntimeActive(),

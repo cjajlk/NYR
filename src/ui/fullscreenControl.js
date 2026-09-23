@@ -40,11 +40,14 @@ export function createFullscreenControl(onDisplayChange, ownerDocument = documen
     }
   });
 
-  ownerDocument.addEventListener("fullscreenchange", () => {
+  function onFullscreenChange() {
     refused = false;
     refresh();
     onDisplayChange();
-  });
+  }
+  ownerDocument.addEventListener("fullscreenchange", onFullscreenChange);
   refresh();
-  return Object.freeze({ element });
+  return Object.freeze({ element, destroy() {
+    ownerDocument.removeEventListener("fullscreenchange", onFullscreenChange);
+  } });
 }

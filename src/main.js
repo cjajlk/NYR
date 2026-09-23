@@ -1,7 +1,7 @@
 import { APP_CONFIG } from "./core/appConfig.js";
 import { createDisplayManager } from "./core/displayManager.js";
 import { createGameLoop } from "./core/gameLoop.js";
-import { endGame, getRuntimeState, isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
+import { beginNewGame, endGame, getRuntimeState, isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
 import { createZoneOneBackground } from "./core/zoneOneBackground.js";
 import { createZoneBackgroundTransition } from "./core/zoneBackgroundTransition.js";
 import { createFarStarsParallax } from "./core/farStarsParallax.js";
@@ -57,7 +57,7 @@ function createPreproductionScreen() {
 
 const app = document.querySelector("#app");
 
-if (app) {
+function startGame() {
   const { screen, canvas } = createPreproductionScreen();
   const orientationOverlay = createOrientationOverlay();
   const displayManager = createDisplayManager(canvas, screen);
@@ -83,7 +83,7 @@ if (app) {
   });
   const score = createNyrScore();
   const scoreDisplay = createScoreDisplay();
-  const stabilityDisplay = createStabilityDisplay();
+  const stabilityDisplay = createStabilityDisplay(undefined, replayGame);
   scoreDisplay.update(score.snapshot());
   const absorptionFeedback = createNyrAbsorptionFeedback();
   const fragmentSystem = createFragmentSystem({
@@ -177,7 +177,20 @@ if (app) {
   const fullscreenControl = createFullscreenControl(requestDisplaySync);
   app.append(fullscreenControl.element);
   syncDisplayState();
-  createPointerInput(canvas, movement);
+  const pointerInput = createPointerInput(canvas, movement);
+
+  function replayGame() {
+    const state = getRuntimeState();
+    if (!state.gameOver || state.suspensionReasons.length) return;
+    gameLoop.stop();
+    pointerInput.destroy();
+    fullscreenControl.destroy();
+    window.removeEventListener("resize", requestDisplaySync);
+    window.removeEventListener("orientationchange", requestDisplaySync);
+    window.visualViewport?.removeEventListener("resize", requestDisplaySync);
+    beginNewGame();
+    startGame();
+  }
 
   const gameLoop = createGameLoop({
     isActive: isRuntimeActive,
@@ -243,3 +256,5 @@ if (app) {
 
   gameLoop.start();
 }
+
+if (app) startGame();

@@ -5,6 +5,7 @@ import { createNyrStability } from "../../src/gameplay/nyrStability.js";
 
 function element(tag) {
   return { tag, children: [], attributes: {}, hidden: false,
+    addEventListener() {},
     append(...children) { this.children.push(...children); },
     setAttribute(name, value) { this.attributes[name] = value; }
   };
