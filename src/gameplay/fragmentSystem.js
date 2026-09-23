@@ -1,5 +1,7 @@
 import { FRAGMENT_PROTOTYPE_CONFIG } from "./fragmentPrototypeConfig.js";
+import { NYR_ZONES } from "./nyrZoneProgression.js";
 export const PURE_FRAGMENT_INTERVAL = 10;
+export const CORRUPTION_CONFIG = Object.freeze({ firstAbsorption: 35, interval: 10 });
 
 function distanceBetween(first, second) {
   return Math.hypot(first.x - second.x, first.y - second.y);
@@ -22,11 +24,14 @@ export function createFragmentSystem({
   random = Math.random,
   config = FRAGMENT_PROTOTYPE_CONFIG,
   onAbsorbed = () => {},
-  onPureAbsorbed = null
+  onPureAbsorbed = null,
+  onCorruptionContact = null,
+  getCurrentZone = () => null
 } = {}) {
   const fragments = [];
   let pureFragment = null;
   let normalAbsorptions = 0;
+  let corruption = null;
 
   function isInsideSurface(point, width, height) {
     const margin = Math.min(config.spawnMarginPixels, width * 0.2, height * 0.2);
@@ -77,9 +82,9 @@ export function createFragmentSystem({
   }
 
   function placeFragment(fragment, headState, width, height) {
-    const otherFragments = [...fragments, ...(pureFragment ? [pureFragment] : [])]
+    const otherFragments = [...fragments, ...(pureFragment ? [pureFragment] : []), ...(corruption ? [corruption] : [])]
       .filter((candidate) => candidate !== fragment);
-    const position = (fragment.kind === "pure" ? fallbackPosition : findSafePosition)(
+    const position = (fragment.kind ? fallbackPosition : findSafePosition)(
       headState,
       bodyPointsFrom(headState),
       otherFragments,
@@ -94,6 +99,7 @@ export function createFragmentSystem({
     fragments.length = 0;
     pureFragment = null;
     normalAbsorptions = 0;
+    corruption = null;
     for (let index = 0; index < config.activeCount; index += 1) {
       const fragment = { id: index + 1, x: 0, y: 0 };
       fragments.push(fragment);
@@ -102,6 +108,14 @@ export function createFragmentSystem({
   }
 
   function update(headState, width, height) {
+    if (getCurrentZone() !== NYR_ZONES.ZONE_2) corruption = null;
+    if (corruption) {
+      const touching = distanceBetween(corruption, headState) <= config.absorptionRadiusPixels;
+      if (touching && !corruption.headContact) {
+        corruption.headContact = true;
+        if (onCorruptionContact() === false) return;
+      } else if (!touching) corruption.headContact = false;
+    }
     if (pureFragment && distanceBetween(pureFragment, headState) <= config.absorptionRadiusPixels) {
       pureFragment = null;
       onPureAbsorbed();
@@ -120,11 +134,18 @@ export function createFragmentSystem({
         pureFragment = { id: "pure", kind: "pure", x: 0, y: 0 };
         placeFragment(pureFragment, headState, width, height);
       }
+      if (onCorruptionContact && getCurrentZone() === NYR_ZONES.ZONE_2 &&
+          normalAbsorptions >= CORRUPTION_CONFIG.firstAbsorption &&
+          (normalAbsorptions - CORRUPTION_CONFIG.firstAbsorption) % CORRUPTION_CONFIG.interval === 0) {
+        corruption = { id: "corruption", kind: "corruption", generation: normalAbsorptions,
+          x: 0, y: 0, headContact: false };
+        placeFragment(corruption, headState, width, height);
+      }
     }
   }
 
   function revalidate(width, height, headState) {
-    for (const fragment of [...fragments, ...(pureFragment ? [pureFragment] : [])]) {
+    for (const fragment of [...fragments, ...(pureFragment ? [pureFragment] : []), ...(corruption ? [corruption] : [])]) {
       if (!isInsideSurface(fragment, width, height)) {
         placeFragment(fragment, headState, width, height);
       }
@@ -132,7 +153,7 @@ export function createFragmentSystem({
   }
 
   function snapshot() {
-    return [...fragments, ...(pureFragment ? [pureFragment] : [])]
+    return [...fragments, ...(pureFragment ? [pureFragment] : []), ...(corruption ? [corruption] : [])]
       .map((fragment) => Object.freeze({ ...fragment }));
   }
 
@@ -144,6 +165,10 @@ export function createFragmentSystem({
     if (pureFragment) {
       pureFragment.x += offset.x;
       pureFragment.y += offset.y;
+    }
+    if (corruption) {
+      corruption.x += offset.x;
+      corruption.y += offset.y;
     }
   }
 

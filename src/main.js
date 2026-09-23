@@ -85,6 +85,13 @@ if (app) {
   scoreDisplay.update(score.snapshot());
   const absorptionFeedback = createNyrAbsorptionFeedback();
   const fragmentSystem = createFragmentSystem({
+    getCurrentZone: () => zoneProgression.snapshot().currentZone,
+    onCorruptionContact() {
+      if (!isRuntimeActive()) return false;
+      stability.applyCorruptionContact();
+      if (stability.snapshot().stability === 0) endGame();
+      return isRuntimeActive();
+    },
     onPureAbsorbed() {
       if (isRuntimeActive()) stability.applyPureFragment();
     },
@@ -181,6 +188,7 @@ if (app) {
       absorptionFeedback.update(deltaSeconds);
       movement.update(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight);
       fragmentSystem.update(movement.snapshot(), displaySize.cssWidth, displaySize.cssHeight);
+      if (!isRuntimeActive()) return;
       mobileAsteroid.update(
         deltaSeconds,
         displaySize.cssWidth,

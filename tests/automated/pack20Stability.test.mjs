@@ -43,7 +43,7 @@ for (const refreshRate of [30, 60, 120]) {
       }
     });
 
-    assert.deepEqual(Object.keys(stability), ["snapshot", "applyAsteroidContact", "applyPureFragment"]);
+    assert.deepEqual(Object.keys(stability), ["snapshot", "applyAsteroidContact", "applyPureFragment", "applyCorruptionContact"]);
     assert.deepEqual(stability.snapshot(), { stability: 100 });
 
     for (let absorption = 1; absorption <= 26; absorption += 1) {
