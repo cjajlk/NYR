@@ -1,7 +1,7 @@
 import { APP_CONFIG } from "./core/appConfig.js";
 import { createDisplayManager } from "./core/displayManager.js";
 import { createGameLoop } from "./core/gameLoop.js";
-import { isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
+import { endGame, isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
 import { createZoneOneBackground } from "./core/zoneOneBackground.js";
 import { createZoneBackgroundTransition } from "./core/zoneBackgroundTransition.js";
 import { createFarStarsParallax } from "./core/farStarsParallax.js";
@@ -70,6 +70,7 @@ if (app) {
   const mobileAsteroid = createMobileAsteroidSystem({
     onHeadContactStarted() {
       stability.applyAsteroidContact();
+      if (stability.snapshot().stability === 0) endGame();
     }
   });
   const progression = createNyrProgression();

@@ -1,7 +1,10 @@
+import { isRuntimeActive } from "../core/runtimeState.js";
+
 export function createPointerInput(canvas, movement) {
   let activeTouchPointerId = null;
 
   function aimFromEvent(event) {
+    if (!isRuntimeActive()) return;
     const bounds = canvas.getBoundingClientRect();
     movement.aimAt(event.clientX - bounds.left, event.clientY - bounds.top);
   }
@@ -29,7 +32,7 @@ export function createPointerInput(canvas, movement) {
   function onPointerEnd(event) {
     if (event.pointerId !== activeTouchPointerId) return;
     activeTouchPointerId = null;
-    movement.holdCurrentHeading();
+    if (isRuntimeActive()) movement.holdCurrentHeading();
   }
 
   canvas.addEventListener("pointermove", onPointerMove);

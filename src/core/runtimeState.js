@@ -1,5 +1,6 @@
 const suspensionReasons = new Set();
 const listeners = new Set();
+let gameOver = false;
 
 function notifyRuntimeState() {
   const state = getRuntimeState();
@@ -7,12 +8,19 @@ function notifyRuntimeState() {
 }
 
 export function isRuntimeActive() {
-  return suspensionReasons.size === 0;
+  return !gameOver && suspensionReasons.size === 0;
+}
+
+export function endGame() {
+  if (gameOver) return;
+  gameOver = true;
+  notifyRuntimeState();
 }
 
 export function getRuntimeState() {
   return Object.freeze({
     active: isRuntimeActive(),
+    gameOver,
     suspensionReasons: Object.freeze([...suspensionReasons])
   });
 }
