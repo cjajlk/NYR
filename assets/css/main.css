@@ -145,6 +145,28 @@ body {
   line-height: 1.5;
 }
 
+.fullscreen-control {
+  position: fixed;
+  right: max(0.5rem, env(safe-area-inset-right));
+  bottom: max(0.25rem, env(safe-area-inset-bottom));
+  z-index: 12;
+  min-height: 44px;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid rgb(162 220 255 / 35%);
+  border-radius: 999px;
+  background: rgb(7 8 22 / 88%);
+  color: #e7f9ff;
+  font: inherit;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.fullscreen-control[hidden] { display: none; }
+.fullscreen-control:disabled { opacity: 0.55; cursor: default; }
+.fullscreen-control:focus-visible { outline: 2px solid #b9f5ff; outline-offset: 2px; }
+
 @media (max-height: 420px) and (orientation: landscape) {
   .app-shell {
     padding: 0.125rem 0.5rem;

@@ -1,7 +1,7 @@
 # CHECKPOINT — PACK 25 — Viewport mobile dynamique
 
 Date : 2026-09-23
-État : correctif après échec téléphone, PASS automatisé ; nouveau test CJ requis.
+État : rotation validée sur téléphone par CJ ; essai fullscreen ajouté, PASS automatisé.
 
 ## Base contrôlée
 
@@ -158,3 +158,49 @@ Game Over inchangé après les rotations. Les surfaces navigateur et dimensions
 du conteneur restent simulées ; un nouveau test réel Android par CJ est requis.
 
 Résultat PACKS 17 à 25 : **9 PASS, 0 échec**. Correctif non publié.
+
+## Extension PACK 25 — commande plein écran Android
+
+Base : `d64ad4f65cd9dd560553d4580e190bdea8bf5aca`, main, état propre.
+CJ confirme sur téléphone que Nyr est visible après rotation. La barre Chrome
+reste affichée : dvh ne masque pas l'interface du navigateur. CJ autorise ensuite
+une commande fullscreen minimale, et demande en fin de message commit/push après
+correction et tests. Cette extension remplace l'exclusion fullscreen des étapes
+précédentes ; elle reste dans PACK 25, sans PACK 26.
+
+### Comportement
+
+- Petit bouton PLEIN ÉCRAN, en bas à droite, palette NYR et cible tactile 44 px.
+- Vérification de document.fullscreenEnabled et de requestFullscreen.
+- Appel direct à document.documentElement.requestFullscreen() dans le gestionnaire
+  du clic, avant tout await : aucune demande automatique.
+- En plein écran, le même bouton propose QUITTER PLEIN ÉCRAN via exitFullscreen.
+  La sortie native du navigateur reste possible.
+- Demande en cours : bouton désactivé, taps répétés ignorés.
+- Refus synchrone ou Promise rejetée : erreur capturée, bouton réactivé avec
+  RÉESSAYER PLEIN ÉCRAN. Aucun effet sur le gameplay.
+- API absente ou désactivée : bouton masqué et désactivé.
+- fullscreenchange utilise requestDisplaySync existant, avec regroupement des
+  événements resize/visualViewport. Le conteneur reste la référence des dimensions.
+- Aucun verrouillage d'orientation, PWA, changement des règles de jeu ou reset.
+
+### Fichiers de cette extension
+
+- src/ui/fullscreenControl.js (nouveau)
+- src/main.js
+- assets/css/main.css
+- tests/automated/pack25DynamicViewport.test.mjs
+- docs/checkpoints/CHECKPOINT_PACK_25.md
+
+### Tests et validation réelle restante
+
+PACKS 17 à 25 : **9 PASS, 0 échec**. Aux fréquences 30/60/120 Hz : disponibilité,
+absence de méthode, API désactivée, appel uniquement pendant l'interaction,
+refus synchrones/asynchrones, taps multiples, entrée/sortie via fullscreenchange,
+canvas resynchronisé, snapshots gameplay conservés, contact astéroïde continu
+sans dégât supplémentaire, portrait toujours suspendu et Game Over verrouillé.
+
+Ces tests utilisent une API navigateur simulée : le masquage effectif des barres
+Chrome Android doit maintenant être testé sur le téléphone de CJ, avec le bouton,
+la sortie native, et des rotations dans les deux modes. Aucune garantie de plein
+écran HTML sur les navigateurs qui ne le proposent pas.

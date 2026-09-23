@@ -56,7 +56,7 @@ if (!hz) {
       if (!this.listeners.has(name)) this.listeners.set(name, []);
       this.listeners.get(name).push(fn);
     }
-    emit(name) { for (const fn of this.listeners.get(name) ?? []) fn(); }
+    emit(name) { return Promise.all((this.listeners.get(name) ?? []).map(fn => fn())); }
   }
   const portraitStart = process.argv[3] === "portrait-start";
   let bounds = portraitStart ? { width: 424, height: 908 } : { width: 828, height: 326 };
@@ -75,7 +75,19 @@ if (!hz) {
     set height(value) { this.bitmapHeight = value; bitmapWrites++; }
   }
   const app = new Element();
-  globalThis.document = { body: { dataset: {} }, createElement: () => new Element(), querySelector: () => app };
+  globalThis.document = Object.assign(new Surface(), { body: { dataset: {} },
+    createElement: () => new Element(), querySelector: () => app, documentElement: new Element(),
+    fullscreenEnabled: process.argv[3] !== "absent", fullscreenElement: null });
+  let interaction = false, fullscreenCalls = 0, rejectFullscreen = false, throwFullscreen = false;
+  document.documentElement.requestFullscreen = function () {
+    assert.equal(this, document.documentElement, "fullscreen target includes canvas and overlays");
+    assert.equal(interaction, true, "request must happen inside the user interaction");
+    fullscreenCalls++;
+    if (throwFullscreen) throw new Error("Synchronous refusal");
+    if (rejectFullscreen) return Promise.reject(new Error("Permission denied"));
+    return Promise.resolve();
+  };
+  document.exitFullscreen = () => Promise.resolve();
   globalThis.window = Object.assign(new Surface(), { innerWidth: portraitStart ? 440 : 844, innerHeight: portraitStart ? 956 : 330, devicePixelRatio: 2 });
   if (process.argv[3] === "available") window.visualViewport = Object.assign(new Surface(), { width: 1, height: 1 });
   globalThis.Image = class extends Surface {};
@@ -91,6 +103,15 @@ if (!hz) {
     gameLoop.start();`);
   await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
   const p = globalThis.probe;
+  const fullscreenButton = app.children.find(element => element.className === "fullscreen-control");
+  assert.ok(fullscreenButton);
+  assert.equal(fullscreenCalls, 0, "no automatic fullscreen request");
+  const clickFullscreen = () => {
+    interaction = true;
+    const result = fullscreenButton.emit("click");
+    interaction = false;
+    return result;
+  };
   const snapshot = () => Object.fromEntries(Object.entries(p)
     .filter(([, value]) => typeof value.snapshot === "function")
     .map(([name, value]) => [name, value.snapshot()]));
@@ -112,6 +133,50 @@ if (!hz) {
   frame(); frame();
   assert.ok(p.movement.snapshot().simulationTime > 0);
   assert.equal(p.canvas.bitmapHeight, 326 * 2, "container rect, never visualViewport dimensions");
+  if (!document.fullscreenEnabled) {
+    assert.equal(fullscreenButton.hidden, true);
+    await clickFullscreen();
+    assert.equal(fullscreenCalls, 0);
+  } else {
+    const before = snapshot();
+    assert.equal(fullscreenButton.hidden, false);
+    rejectFullscreen = true;
+    await clickFullscreen();
+    assert.equal(fullscreenButton.textContent, "RÉESSAYER PLEIN ÉCRAN");
+    assert.equal(fullscreenButton.disabled, false);
+    rejectFullscreen = false; throwFullscreen = true;
+    await clickFullscreen();
+    assert.equal(fullscreenButton.disabled, false);
+    throwFullscreen = false;
+    const clicked = clickFullscreen();
+    assert.equal(fullscreenButton.disabled, true);
+    const calls = fullscreenCalls;
+    await clickFullscreen();
+    assert.equal(fullscreenCalls, calls, "pending request ignores repeated taps");
+    await clicked;
+    document.fullscreenElement = document.documentElement;
+    bounds.height = 400;
+    const measured = measurements;
+    await document.emit("fullscreenchange");
+    window.emit("resize"); window.visualViewport?.emit("resize");
+    frame(0);
+    assert.equal(measurements, measured + 1);
+    assert.equal(p.canvas.bitmapHeight, 800);
+    assert.equal(fullscreenButton.textContent, "QUITTER PLEIN ÉCRAN");
+    assert.deepEqual(snapshot(), before);
+    await clickFullscreen();
+    document.fullscreenElement = null;
+    bounds.height = 326;
+    await document.emit("fullscreenchange"); frame(0);
+    assert.equal(p.canvas.bitmapHeight, 652, "fullscreenchange alone resizes after exit");
+    assert.deepEqual(snapshot(), before, "entry and exit preserve gameplay");
+    const request = document.documentElement.requestFullscreen;
+    delete document.documentElement.requestFullscreen;
+    await clickFullscreen();
+    assert.equal(fullscreenButton.hidden, true, "missing method is handled even with fullscreenEnabled");
+    document.documentElement.requestFullscreen = request;
+    await document.emit("fullscreenchange"); frame(0);
+  }
   for (const height of [380, 350, 390, 330, 370]) {
     const before = snapshot(), measured = measurements;
     resize(844, height);
@@ -138,6 +203,14 @@ if (!hz) {
   for (let i = 0; i < hz; i++) frame();
   assert.deepEqual(snapshot(), frozen);
   resize(390, 800); frame(10000);
+  if (document.fullscreenEnabled) {
+    await clickFullscreen();
+    document.fullscreenElement = document.documentElement;
+    await document.emit("fullscreenchange"); frame(10000);
+    assert.equal(isRuntimeActive(), false, "fullscreen never unlocks portrait");
+    document.fullscreenElement = null;
+    await document.emit("fullscreenchange"); frame(10000);
+  }
   assert.deepEqual(snapshot(), frozen);
   resize(844, 370); frame(10000);
   assert.equal(isRuntimeActive(), true);
@@ -158,6 +231,19 @@ if (!hz) {
   p.mobileAsteroid.translate({ x: contactHead.x - contactAsteroid.x, y: contactHead.y - contactAsteroid.y });
   p.mobileAsteroid.update(0, bounds.width, bounds.height, contactHead);
   assert.equal(p.stability.snapshot().stability, 75);
+  if (document.fullscreenEnabled) {
+    const before = snapshot(), previousHeight = bounds.height;
+    await clickFullscreen();
+    document.fullscreenElement = document.documentElement;
+    bounds.height += 60;
+    await document.emit("fullscreenchange"); frame(0);
+    assert.deepEqual(snapshot(), before, "fullscreen preserves a continuous asteroid contact");
+    await clickFullscreen();
+    document.fullscreenElement = null;
+    bounds.height = previousHeight;
+    await document.emit("fullscreenchange"); frame(0);
+    assert.deepEqual(snapshot(), before, "exiting fullscreen cannot add a damage event or absorption");
+  }
   for (const [width, height] of [[800, 360], [740, 260], [956, 440]]) {
     const before = snapshot();
     resize(440, 956); frame(10000);
@@ -198,6 +284,19 @@ if (!hz) {
   assert.equal(getRuntimeState().gameOver, true);
   assert.equal(p.stability.snapshot().stability, 0);
   const ended = snapshot();
+  if (document.fullscreenEnabled) {
+    await clickFullscreen();
+    document.fullscreenElement = document.documentElement;
+    bounds.height += 40;
+    await document.emit("fullscreenchange"); frame(10000);
+    assert.deepEqual(snapshot(), ended);
+    await clickFullscreen();
+    document.fullscreenElement = null;
+    bounds.height -= 40;
+    await document.emit("fullscreenchange"); frame(10000);
+    assert.equal(getRuntimeState().gameOver, true);
+    assert.deepEqual(snapshot(), ended, "fullscreen entry/exit never unlocks Game Over");
+  }
   for (const [width, height] of [[844, 330], [844, 390], [390, 844], [844, 370]]) {
     resize(width, height); frame(10000);
     for (let i = 0; i < hz; i++) frame();

@@ -22,6 +22,7 @@ import { renderNormalFragments } from "./gameplay/fragmentRenderer.js";
 import { createPointerInput } from "./systems/pointerInput.js";
 import { createOrientationOverlay } from "./ui/orientationOverlay.js";
 import { createScoreDisplay } from "./ui/scoreDisplay.js";
+import { createFullscreenControl } from "./ui/fullscreenControl.js";
 
 function createPreproductionScreen() {
   const screen = document.createElement("section");
@@ -159,6 +160,8 @@ if (app) {
   window.addEventListener("resize", requestDisplaySync);
   window.addEventListener("orientationchange", requestDisplaySync);
   window.visualViewport?.addEventListener("resize", requestDisplaySync);
+  const fullscreenControl = createFullscreenControl(requestDisplaySync);
+  app.append(fullscreenControl.element);
   syncDisplayState();
   createPointerInput(canvas, movement);
 
