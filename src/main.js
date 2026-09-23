@@ -1,3 +1,4 @@
+import { createMainMenu } from "./ui/mainMenu.js";
 import { APP_CONFIG } from "./core/appConfig.js";
 import { createDisplayManager } from "./core/displayManager.js";
 import { createGameLoop } from "./core/gameLoop.js";
@@ -59,6 +60,7 @@ const app = document.querySelector("#app");
 
 function startGame() {
   const { screen, canvas } = createPreproductionScreen();
+  const mainMenu = createMainMenu(replayGame);
   const orientationOverlay = createOrientationOverlay();
   const displayManager = createDisplayManager(canvas, screen);
   const zoneOneBackground = createZoneOneBackground();
@@ -118,6 +120,7 @@ function startGame() {
 
   app.replaceChildren(screen, orientationOverlay.element, scoreDisplay.element);
   app.append(stabilityDisplay.element, stabilityDisplay.gameOverElement);
+  app.append(mainMenu.element);
 
   function syncOrientationState(shouldSuspend) {
     orientationOverlay.setVisible(shouldSuspend);
@@ -130,6 +133,16 @@ function startGame() {
 
     document.body.dataset.runtimeState = isRuntimeActive() ? "active" : "suspended";
     stabilityDisplay.update(stability.snapshot(), getRuntimeState());
+    syncMenuDisplay();
+  }
+
+  function syncMenuDisplay() {
+    const state = getRuntimeState();
+    const menu = state.phase === "MENU";
+    mainMenu.update(menu, state.suspensionReasons.includes("portrait-orientation"));
+    scoreDisplay.element.hidden = menu;
+    if (menu) stabilityDisplay.element.hidden = true;
+    screen.children[1].hidden = menu;
   }
 
   function syncDisplayState() {
@@ -181,14 +194,16 @@ function startGame() {
 
   function replayGame() {
     const state = getRuntimeState();
-    if (!state.gameOver || state.suspensionReasons.length) return;
+    const menu = state.phase === "MENU";
+    if ((!state.gameOver && !menu) || state.suspensionReasons.some(reason => reason !== "main-menu")) return;
     gameLoop.stop();
     pointerInput.destroy();
     fullscreenControl.destroy();
     window.removeEventListener("resize", requestDisplaySync);
     window.removeEventListener("orientationchange", requestDisplaySync);
     window.visualViewport?.removeEventListener("resize", requestDisplaySync);
-    beginNewGame();
+    if (menu) resumeRuntime("main-menu");
+    else beginNewGame();
     startGame();
   }
 
@@ -243,6 +258,8 @@ function startGame() {
         displaySize.cssWidth,
         displaySize.cssHeight
       );
+      syncMenuDisplay();
+      if (getRuntimeState().phase === "MENU") return;
       renderMobileAsteroid(displayManager.context, mobileAsteroid.snapshot());
       renderNormalFragments(displayManager.context, fragmentSystem.snapshot());
       renderNyr(
@@ -257,4 +274,7 @@ function startGame() {
   gameLoop.start();
 }
 
-if (app) startGame();
+if (app) {
+  suspendRuntime("main-menu");
+  startGame();
+}

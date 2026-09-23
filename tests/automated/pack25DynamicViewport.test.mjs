@@ -101,6 +101,8 @@ if (!hz) {
       farStarsParallax, midNebulaParallax, nearParticlesParallax, decorativeAsteroidsParallax,
       zoneBackgroundTransition, absorptionFeedback, orientationOverlay, gameLoop };
     gameLoop.start();`);
+  // This viewport harness starts directly in gameplay; PACK 31 covers the menu.
+  source = source.replace('  suspendRuntime("main-menu");', "");
   await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
   const p = globalThis.probe;
   const fullscreenButton = app.children.find(element => element.className === "fullscreen-control");

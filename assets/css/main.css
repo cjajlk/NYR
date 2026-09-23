@@ -244,3 +244,23 @@ body {
     top: 0.72rem;
   }
 }
+
+.main-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: radial-gradient(ellipse at center, rgb(34 18 64 / 35%), rgb(5 5 13 / 65%));
+}
+.main-menu h1 {
+  margin: 0;
+  font-size: clamp(3rem, 12vh, 7rem);
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  text-shadow: 0 0 2rem rgb(150 115 255 / 55%);
+}
+.main-menu[hidden], .score-display[hidden], .foundation-label[hidden] { display: none; }

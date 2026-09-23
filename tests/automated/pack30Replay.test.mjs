@@ -49,6 +49,11 @@ if (!hz) {
   const snapshot = p => Object.fromEntries(Object.entries(p).filter(([, value]) => value.snapshot).map(([key, value]) => [key, value.snapshot()]));
   const frame = () => { timestamp += 1000 / hz; const callbacks = queue; queue = []; callbacks.forEach(fn => fn(timestamp)); };
   const button = p => p.stabilityDisplay.gameOverElement.children[2];
+  if (process.env.NYR_MENU_TEST) {
+    const { verifyMenu } = await import("./pack31MainMenu.test.mjs");
+    verifyMenu({ app, frame, snapshot, setBounds: value => { bounds = value; } });
+  }
+  app.children.find(item => item.className === "main-menu").children[1].emit("click");
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {
     const p = globalThis.probe;

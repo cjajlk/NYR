@@ -28,6 +28,7 @@ export function getRuntimeState() {
   return Object.freeze({
     active: isRuntimeActive(),
     gameOver,
+    phase: gameOver ? "GAME_OVER" : suspensionReasons.has("main-menu") ? "MENU" : "PLAYING",
     suspensionReasons: Object.freeze([...suspensionReasons])
   });
 }
