@@ -85,6 +85,9 @@ if (app) {
   scoreDisplay.update(score.snapshot());
   const absorptionFeedback = createNyrAbsorptionFeedback();
   const fragmentSystem = createFragmentSystem({
+    onPureAbsorbed() {
+      if (isRuntimeActive()) stability.applyPureFragment();
+    },
     onAbsorbed() {
       movement.addSegments(1);
       const progressionState = progression.recordNormalFragmentAbsorption();

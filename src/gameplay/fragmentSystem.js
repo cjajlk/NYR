@@ -1,4 +1,5 @@
 import { FRAGMENT_PROTOTYPE_CONFIG } from "./fragmentPrototypeConfig.js";
+export const PURE_FRAGMENT_INTERVAL = 10;
 
 function distanceBetween(first, second) {
   return Math.hypot(first.x - second.x, first.y - second.y);
@@ -20,9 +21,12 @@ function createFallbackCandidates(width, height, margin) {
 export function createFragmentSystem({
   random = Math.random,
   config = FRAGMENT_PROTOTYPE_CONFIG,
-  onAbsorbed = () => {}
+  onAbsorbed = () => {},
+  onPureAbsorbed = null
 } = {}) {
   const fragments = [];
+  let pureFragment = null;
+  let normalAbsorptions = 0;
 
   function isInsideSurface(point, width, height) {
     const margin = Math.min(config.spawnMarginPixels, width * 0.2, height * 0.2);
@@ -73,8 +77,9 @@ export function createFragmentSystem({
   }
 
   function placeFragment(fragment, headState, width, height) {
-    const otherFragments = fragments.filter((candidate) => candidate !== fragment);
-    const position = findSafePosition(
+    const otherFragments = [...fragments, ...(pureFragment ? [pureFragment] : [])]
+      .filter((candidate) => candidate !== fragment);
+    const position = (fragment.kind === "pure" ? fallbackPosition : findSafePosition)(
       headState,
       bodyPointsFrom(headState),
       otherFragments,
@@ -87,6 +92,8 @@ export function createFragmentSystem({
 
   function initialize(width, height, headState) {
     fragments.length = 0;
+    pureFragment = null;
+    normalAbsorptions = 0;
     for (let index = 0; index < config.activeCount; index += 1) {
       const fragment = { id: index + 1, x: 0, y: 0 };
       fragments.push(fragment);
@@ -95,6 +102,10 @@ export function createFragmentSystem({
   }
 
   function update(headState, width, height) {
+    if (pureFragment && distanceBetween(pureFragment, headState) <= config.absorptionRadiusPixels) {
+      pureFragment = null;
+      onPureAbsorbed();
+    }
     for (const fragment of fragments) {
       if (distanceBetween(fragment, headState) > config.absorptionRadiusPixels) continue;
       const previousPosition = { x: fragment.x, y: fragment.y };
@@ -104,11 +115,16 @@ export function createFragmentSystem({
         previousPosition,
         newPosition: { x: fragment.x, y: fragment.y }
       }));
+      normalAbsorptions++;
+      if (onPureAbsorbed && normalAbsorptions % PURE_FRAGMENT_INTERVAL === 0) {
+        pureFragment = { id: "pure", kind: "pure", x: 0, y: 0 };
+        placeFragment(pureFragment, headState, width, height);
+      }
     }
   }
 
   function revalidate(width, height, headState) {
-    for (const fragment of fragments) {
+    for (const fragment of [...fragments, ...(pureFragment ? [pureFragment] : [])]) {
       if (!isInsideSurface(fragment, width, height)) {
         placeFragment(fragment, headState, width, height);
       }
@@ -116,13 +132,18 @@ export function createFragmentSystem({
   }
 
   function snapshot() {
-    return fragments.map((fragment) => Object.freeze({ ...fragment }));
+    return [...fragments, ...(pureFragment ? [pureFragment] : [])]
+      .map((fragment) => Object.freeze({ ...fragment }));
   }
 
   function translate(offset) {
     for (const fragment of fragments) {
       fragment.x += offset.x;
       fragment.y += offset.y;
+    }
+    if (pureFragment) {
+      pureFragment.x += offset.x;
+      pureFragment.y += offset.y;
     }
   }
 

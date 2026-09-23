@@ -1,7 +1,8 @@
 export const NYR_STABILITY_CONFIG = Object.freeze({
   initial: 100,
   maximum: 100,
-  asteroidContactDamage: 25
+  asteroidContactDamage: 25,
+  pureFragmentRecovery: 20
 });
 
 export function createNyrStability(config = NYR_STABILITY_CONFIG) {
@@ -17,5 +18,13 @@ export function createNyrStability(config = NYR_STABILITY_CONFIG) {
     return Object.freeze({ stability });
   }
 
-  return Object.freeze({ snapshot, applyAsteroidContact });
+  function applyPureFragment() {
+    if (stability > 0) {
+      stability = Math.min(100, config.maximum,
+        stability + NYR_STABILITY_CONFIG.pureFragmentRecovery);
+    }
+    return snapshot();
+  }
+
+  return Object.freeze({ snapshot, applyAsteroidContact, applyPureFragment });
 }
