@@ -5,8 +5,8 @@ export const NYR_SCORE_CONFIG = Object.freeze({
 export function createNyrScore(config = NYR_SCORE_CONFIG) {
   let points = 0;
 
-  function awardNormalFragment() {
-    points += config.normalFragmentPoints;
+  function awardNormalFragment(multiplier = 1) {
+    points += config.normalFragmentPoints * multiplier;
     return snapshot();
   }
 

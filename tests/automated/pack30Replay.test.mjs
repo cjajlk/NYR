@@ -41,7 +41,7 @@ if (!hz) {
   const url = new URL("../../src/main.js", import.meta.url);
   let source = readFileSync(url, "utf8").replace(/from "(\.\/[^"]+)"/g, (_, path) => `from "${new URL(path, url).href}"`);
   source = source.replace("  gameLoop.start();", `
-    globalThis.probe = { movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
+    globalThis.probe = { combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
       absorptionFeedback, zoneBackgroundTransition, farStarsParallax, midNebulaParallax,
       nearParticlesParallax, decorativeAsteroidsParallax, stabilityDisplay, gameLoop, canvas };
     gameLoop.start();`);
@@ -62,6 +62,10 @@ if (!hz) {
     const { verifyReturnMenu } = await import("./pack33ReturnMenu.test.mjs");
     verifyReturnMenu({ app, frame, snapshot, setBounds: value => { bounds = value; } });
   }
+  if (process.env.NYR_COMBO_TEST) {
+    const { verifyCombo } = await import("./pack34Combo.test.mjs");
+    verifyCombo({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
+  }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {
     const p = globalThis.probe;
@@ -72,7 +76,7 @@ if (!hz) {
     for (let i = 0; i < 65; i++) {
       p.fragmentSystem.update({ ...p.fragmentSystem.snapshot()[0], trail: [] }, bounds.width, bounds.height);
     }
-    assert.equal(p.score.snapshot().points, 6500);
+    assert.equal(p.score.snapshot().points, 24800);
     assert.equal(p.progression.snapshot().normalFragmentsAbsorbed, 65);
     assert.equal(p.progression.snapshot().currentForm, "spectre");
     assert.equal(p.zoneProgression.snapshot().currentZone, "zone-2");

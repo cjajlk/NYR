@@ -15,7 +15,7 @@ export function verifyReturnMenu({ app, frame, snapshot, setBounds }) {
     for (let i = 0; i < 65; i++) old.fragmentSystem.update(
       { ...old.fragmentSystem.snapshot()[0], trail: [] }, 940, 392);
     old.stability.applyAsteroidContact();
-    assert.equal(old.score.snapshot().points, 6500);
+    assert.equal(old.score.snapshot().points, 24800);
     assert.equal(old.progression.snapshot().currentForm, "spectre");
     assert.ok(old.fragmentSystem.snapshot().some(f => f.kind === "corruption"));
     if (dead) {

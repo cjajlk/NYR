@@ -1,9 +1,11 @@
+import { createNyrCombo } from "./gameplay/nyrCombo.js";
+import { createComboDisplay } from "./ui/comboDisplay.js";
 import { createReturnMenu } from "./ui/returnMenu.js";
 import { createMainMenu } from "./ui/mainMenu.js";
 import { APP_CONFIG } from "./core/appConfig.js";
 import { createDisplayManager } from "./core/displayManager.js";
 import { createGameLoop } from "./core/gameLoop.js";
-import { beginNewGame, endGame, getRuntimeState, isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
+import { beginNewGame, endGame as endRuntimeGame, getRuntimeState, isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
 import { createZoneOneBackground } from "./core/zoneOneBackground.js";
 import { createZoneBackgroundTransition } from "./core/zoneBackgroundTransition.js";
 import { createFarStarsParallax } from "./core/farStarsParallax.js";
@@ -86,6 +88,12 @@ function startGame() {
       zoneBackgroundTransition.sync(zoneState);
     }
   });
+  const combo = createNyrCombo();
+  const comboDisplay = createComboDisplay();
+  function endGame() {
+    combo.reset();
+    endRuntimeGame();
+  }
   const score = createNyrScore();
   const scoreDisplay = createScoreDisplay();
   const stabilityDisplay = createStabilityDisplay(undefined, replayGame);
@@ -113,7 +121,7 @@ function startGame() {
         movement.snapshot(),
         fragmentSystem.snapshot()
       );
-      const updatedScore = score.awardNormalFragment();
+      const updatedScore = score.awardNormalFragment(combo.absorb());
       scoreDisplay.update(updatedScore);
       absorptionFeedback.trigger(progression.snapshot().currentForm);
     }
@@ -123,7 +131,7 @@ function startGame() {
 
   app.replaceChildren(screen, orientationOverlay.element, scoreDisplay.element);
   app.append(stabilityDisplay.element, stabilityDisplay.gameOverElement);
-  app.append(mainMenu.element, returnMenu.element);
+  app.append(mainMenu.element, returnMenu.element, comboDisplay.element);
 
   function syncOrientationState(shouldSuspend) {
     orientationOverlay.setVisible(shouldSuspend);
@@ -144,6 +152,8 @@ function startGame() {
     const menu = state.phase === "MENU";
     mainMenu.update(menu, state.suspensionReasons.includes("portrait-orientation"));
     returnMenu.update(state);
+    if (state.gameOver) combo.reset();
+    comboDisplay.update(combo.snapshot(), state);
     scoreDisplay.element.hidden = menu;
     if (menu) stabilityDisplay.element.hidden = true;
     screen.children[1].hidden = menu;
@@ -224,6 +234,7 @@ function startGame() {
     update(deltaSeconds) {
       flushDisplaySync();
       if (!isRuntimeActive()) return;
+      combo.update(deltaSeconds);
       zoneBackgroundTransition.update(deltaSeconds);
       farStarsParallax.update(deltaSeconds);
       midNebulaParallax.update(deltaSeconds);

@@ -84,7 +84,7 @@ const mainSource = await readFile(new URL("../../src/main.js", import.meta.url),
 const cssSource = await readFile(new URL("../../assets/css/main.css", import.meta.url), "utf8");
 const projectFiles = [mainSource, cssSource];
 
-assert.equal((mainSource.match(/score\.awardNormalFragment\(\)/g) ?? []).length, 1);
+assert.equal((mainSource.match(/score\.awardNormalFragment\(combo\.absorb\(\)\)/g) ?? []).length, 1);
 assert.match(mainSource, /scoreDisplay\.update\(updatedScore\)/);
 assert.match(mainSource, /scoreDisplay\.update\(score\.snapshot\(\)\)/);
 assert.match(cssSource, /\.score-display\s*\{[\s\S]*?z-index:\s*11;/);
