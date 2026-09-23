@@ -44,6 +44,20 @@ export function createNyrMovement(config = NYR_PROTOTYPE_CONFIG) {
     state.desiredHeading = state.heading;
   }
 
+  function fitViewport(width, height) {
+    const marginX = Math.min(24, width / 2);
+    const marginY = Math.min(24, height / 2);
+    const x = Math.min(width - marginX, Math.max(marginX, state.x)) - state.x;
+    const y = Math.min(height - marginY, Math.max(marginY, state.y)) - state.y;
+    state.x += x;
+    state.y += y;
+    for (const point of state.trailSamples) {
+      point.x += x;
+      point.y += y;
+    }
+    return Object.freeze({ x, y });
+  }
+
   function keepPrototypeObservable(width, height, previousX, previousY) {
     const margin = config.safetyMarginPixels;
     // Only crossing an edge by movement triggers this technical fallback.
@@ -142,5 +156,5 @@ export function createNyrMovement(config = NYR_PROTOTYPE_CONFIG) {
     });
   }
 
-  return Object.freeze({ reset, aimAt, holdCurrentHeading, addSegments, update, snapshot });
+  return Object.freeze({ reset, aimAt, holdCurrentHeading, fitViewport, addSegments, update, snapshot });
 }

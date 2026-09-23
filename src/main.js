@@ -101,16 +101,11 @@ if (app) {
     }
   });
   let displaySize = { cssWidth: 1, cssHeight: 1, pixelRatio: 1 };
+  let playableSize = null;
 
   app.replaceChildren(screen, orientationOverlay.element, scoreDisplay.element);
 
-  function syncOrientationState() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const isPortrait = height > width;
-    const isMobileViewport = Math.min(width, height) <= 600;
-    const shouldSuspend = isMobileViewport && isPortrait;
-
+  function syncOrientationState(shouldSuspend) {
     orientationOverlay.setVisible(shouldSuspend);
 
     if (shouldSuspend) {
@@ -123,12 +118,22 @@ if (app) {
   }
 
   function syncDisplayState() {
-    syncOrientationState();
-    const previousSize = displaySize;
     displaySize = displayManager.resize();
-    if (previousSize.cssWidth === displaySize.cssWidth &&
-        previousSize.cssHeight === displaySize.cssHeight) return;
+    syncOrientationState(window.innerHeight > window.innerWidth ||
+      displaySize.cssHeight > displaySize.cssWidth);
+    if (!isRuntimeActive()) return;
+    if (!playableSize) {
+      movement.reset(displaySize.cssWidth, displaySize.cssHeight);
+      fragmentSystem.initialize(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot());
+      playableSize = displaySize;
+      return;
+    }
+    if (playableSize.cssWidth === displaySize.cssWidth &&
+        playableSize.cssHeight === displaySize.cssHeight) return;
     if (isRuntimeActive() && movement.snapshot().trail.length) {
+      const offset = movement.fitViewport(displaySize.cssWidth, displaySize.cssHeight);
+      fragmentSystem.translate(offset);
+      mobileAsteroid.translate(offset);
       fragmentSystem.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot());
       mobileAsteroid.revalidate(
         displaySize.cssWidth,
@@ -137,12 +142,13 @@ if (app) {
         fragmentSystem.snapshot()
       );
     }
+    playableSize = displaySize;
   }
 
   let displaySyncPending = false;
   function requestDisplaySync() {
     /* Suspend portrait immediately, even before the next animation frame. */
-    syncOrientationState();
+    if (window.innerHeight > window.innerWidth) syncOrientationState(true);
     displaySyncPending = true;
   }
   function flushDisplaySync() {
@@ -154,14 +160,13 @@ if (app) {
   window.addEventListener("orientationchange", requestDisplaySync);
   window.visualViewport?.addEventListener("resize", requestDisplaySync);
   syncDisplayState();
-  movement.reset(displaySize.cssWidth, displaySize.cssHeight);
-  fragmentSystem.initialize(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot());
   createPointerInput(canvas, movement);
 
   const gameLoop = createGameLoop({
     isActive: isRuntimeActive,
     update(deltaSeconds) {
       flushDisplaySync();
+      if (!isRuntimeActive()) return;
       zoneBackgroundTransition.update(deltaSeconds);
       farStarsParallax.update(deltaSeconds);
       midNebulaParallax.update(deltaSeconds);

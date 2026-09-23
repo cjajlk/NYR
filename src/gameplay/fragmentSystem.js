@@ -119,5 +119,12 @@ export function createFragmentSystem({
     return fragments.map((fragment) => Object.freeze({ ...fragment }));
   }
 
-  return Object.freeze({ initialize, update, revalidate, snapshot });
+  function translate(offset) {
+    for (const fragment of fragments) {
+      fragment.x += offset.x;
+      fragment.y += offset.y;
+    }
+  }
+
+  return Object.freeze({ initialize, update, revalidate, translate, snapshot });
 }

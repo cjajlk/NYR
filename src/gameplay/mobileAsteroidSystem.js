@@ -148,5 +148,11 @@ export function createMobileAsteroidSystem({
     });
   }
 
-  return Object.freeze({ syncZone, update, revalidate, snapshot });
+  function translate(offset) {
+    if (!state.active) return;
+    state.x += offset.x;
+    state.y += offset.y;
+  }
+
+  return Object.freeze({ syncZone, update, revalidate, translate, snapshot });
 }

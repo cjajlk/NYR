@@ -26,9 +26,11 @@ if (!hz) {
     const movement = createNyrMovement();
     movement.reset(844, 700);
     const before = movement.snapshot();
+    const offset = movement.fitViewport(844, 280);
+    assert.deepEqual(offset, { x: 0, y: 256 - before.y });
     movement.update(1 / rate, 844, 280);
     const after = movement.snapshot();
-    assert.equal(after.y, before.y, "height reduction must not recenter an already out-of-view head");
+    assert.equal(after.y, 256, "head is kept visible at the nearest safe edge, not recentered");
     assert.ok(after.x > before.x && after.x - before.x < 10);
     assert.equal(after.segmentCount, before.segmentCount);
     assert.equal(after.simulationTime, 1 / rate);
@@ -39,7 +41,7 @@ if (!hz) {
       if (movement.snapshot().x < oldX) { recentered = true; break; }
     }
     assert.ok(recentered, "actual subsequent edge crossing retains the technical fallback");
-    for (const viewport of ["available", "absent"]) {
+    for (const viewport of ["available", "absent", "portrait-start"]) {
       const result = spawnSync(process.execPath, [fileURLToPath(import.meta.url), String(rate), viewport], { encoding: "utf8" });
       assert.equal(result.status, 0, result.stdout + result.stderr);
     }
@@ -56,7 +58,8 @@ if (!hz) {
     }
     emit(name) { for (const fn of this.listeners.get(name) ?? []) fn(); }
   }
-  let bounds = { width: 828, height: 326 };
+  const portraitStart = process.argv[3] === "portrait-start";
+  let bounds = portraitStart ? { width: 424, height: 908 } : { width: 828, height: 326 };
   let measurements = 0, bitmapWrites = 0;
   const context = new Proxy({}, { get(target, key) {
     return target[key] ?? (() => ({ addColorStop() {} }));
@@ -73,7 +76,7 @@ if (!hz) {
   }
   const app = new Element();
   globalThis.document = { body: { dataset: {} }, createElement: () => new Element(), querySelector: () => app };
-  globalThis.window = Object.assign(new Surface(), { innerWidth: 844, innerHeight: 330, devicePixelRatio: 2 });
+  globalThis.window = Object.assign(new Surface(), { innerWidth: portraitStart ? 440 : 844, innerHeight: portraitStart ? 956 : 330, devicePixelRatio: 2 });
   if (process.argv[3] === "available") window.visualViewport = Object.assign(new Surface(), { width: 1, height: 1 });
   globalThis.Image = class extends Surface {};
   const frames = [];
@@ -98,6 +101,14 @@ if (!hz) {
     bounds = { width: width - 16, height: height - 4 };
     window.emit("resize"); window.emit("orientationchange"); window.visualViewport?.emit("resize");
   };
+  if (portraitStart) {
+    const before = snapshot();
+    for (let i = 0; i < hz; i++) frame();
+    assert.equal(isRuntimeActive(), false);
+    assert.deepEqual(snapshot(), before);
+    resize(844, 330); frame(); frame();
+    assert.ok(p.movement.snapshot().y < 326, "portrait startup must not leave the head below the landscape canvas");
+  }
   frame(); frame();
   assert.ok(p.movement.snapshot().simulationTime > 0);
   assert.equal(p.canvas.bitmapHeight, 326 * 2, "container rect, never visualViewport dimensions");
@@ -132,13 +143,55 @@ if (!hz) {
   assert.equal(isRuntimeActive(), true);
   assert.deepEqual(snapshot(), frozen, "resume frame establishes baseline without catch-up");
   frame();
+  assert.deepEqual(snapshot(), frozen, "first active frame establishes the time baseline");
+  frame();
   assert.ok(Math.abs(p.movement.snapshot().simulationTime - frozen.movement.simulationTime - 1 / hz) < 1e-9);
   assert.equal(p.stability.snapshot().stability, 100);
   assert.equal(p.score.snapshot().points, frozen.score.points);
 
+  // Rotate after moving towards the bottom of a tall landscape world.
+  resize(956, 440); frame(0);
+  p.movement.aimAt(p.movement.snapshot().x, 10000);
+  for (let i = 0; i < hz * 2; i++) frame();
+  p.mobileAsteroid.syncZone({ currentZone: "zone-2" }, bounds.width, bounds.height, p.movement.snapshot());
+  const contactHead = p.movement.snapshot(), contactAsteroid = p.mobileAsteroid.snapshot();
+  p.mobileAsteroid.translate({ x: contactHead.x - contactAsteroid.x, y: contactHead.y - contactAsteroid.y });
+  p.mobileAsteroid.update(0, bounds.width, bounds.height, contactHead);
+  assert.equal(p.stability.snapshot().stability, 75);
+  for (const [width, height] of [[800, 360], [740, 260], [956, 440]]) {
+    const before = snapshot();
+    resize(440, 956); frame(10000);
+    resize(700, 1100); frame(10000);
+    assert.equal(isRuntimeActive(), false, "portrait is suspended even with large CSS viewport dimensions");
+    assert.deepEqual(snapshot(), before);
+    // Android can announce landscape before layout has finished rotating.
+    window.innerWidth = width; window.innerHeight = height;
+    window.emit("orientationchange"); frame(10000);
+    assert.equal(isRuntimeActive(), false, "do not resume into a still-portrait container");
+    assert.deepEqual(snapshot(), before);
+    resize(width, height); frame(10000);
+    const after = snapshot();
+    assert.equal(isRuntimeActive(), true);
+    assert.ok(after.movement.x >= 24 && after.movement.x <= bounds.width - 24);
+    assert.ok(after.movement.y >= 24 && after.movement.y <= bounds.height - 24);
+    for (const key of ["heading", "desiredHeading", "simulationTime", "segmentCount"]) {
+      assert.equal(after.movement[key], before.movement[key], `rotation preserves ${key}`);
+    }
+    const dx = after.movement.x - before.movement.x, dy = after.movement.y - before.movement.y;
+    assert.deepEqual(after.movement.trail, before.movement.trail.map(point => ({ x: point.x + dx, y: point.y + dy })), "whole trail translates rigidly, never resets or compresses");
+    assert.deepEqual(after.mobileAsteroid, { ...before.mobileAsteroid,
+      x: before.mobileAsteroid.x + dx, y: before.mobileAsteroid.y + dy }, "contact geometry and latch survive rotation");
+    assert.deepEqual(after.stability, before.stability);
+    assert.deepEqual(after.score, before.score);
+    assert.deepEqual(after.progression, before.progression);
+    frame(0); frame(0);
+    assert.deepEqual(p.stability.snapshot(), before.stability, "no resize-generated contact");
+    assert.deepEqual(p.score.snapshot(), before.score, "no resize-generated absorption");
+  }
+
   // Trigger actual fatal-contact wiring in main, without adding a production reset API.
   p.mobileAsteroid.syncZone({ currentZone: "zone-2" }, 828, 366, p.movement.snapshot());
-  for (let i = 0; i < 4; i++) {
+  while (p.stability.snapshot().stability > 0) {
     p.mobileAsteroid.update(0, 828, 366, { x: 10000, y: 10000 });
     p.mobileAsteroid.update(0, 828, 366, p.mobileAsteroid.snapshot());
   }
