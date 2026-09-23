@@ -104,7 +104,7 @@ if (app) {
 
   app.replaceChildren(screen, orientationOverlay.element, scoreDisplay.element);
 
-  function syncDisplayState() {
+  function syncOrientationState() {
     const width = window.innerWidth;
     const height = window.innerHeight;
     const isPortrait = height > width;
@@ -119,7 +119,15 @@ if (app) {
       resumeRuntime("portrait-orientation");
     }
 
+    document.body.dataset.runtimeState = isRuntimeActive() ? "active" : "suspended";
+  }
+
+  function syncDisplayState() {
+    syncOrientationState();
+    const previousSize = displaySize;
     displaySize = displayManager.resize();
+    if (previousSize.cssWidth === displaySize.cssWidth &&
+        previousSize.cssHeight === displaySize.cssHeight) return;
     if (isRuntimeActive() && movement.snapshot().trail.length) {
       fragmentSystem.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot());
       mobileAsteroid.revalidate(
@@ -129,11 +137,22 @@ if (app) {
         fragmentSystem.snapshot()
       );
     }
-    document.body.dataset.runtimeState = isRuntimeActive() ? "active" : "suspended";
   }
 
-  window.addEventListener("resize", syncDisplayState);
-  window.addEventListener("orientationchange", syncDisplayState);
+  let displaySyncPending = false;
+  function requestDisplaySync() {
+    /* Suspend portrait immediately, even before the next animation frame. */
+    syncOrientationState();
+    displaySyncPending = true;
+  }
+  function flushDisplaySync() {
+    if (!displaySyncPending) return;
+    displaySyncPending = false;
+    syncDisplayState();
+  }
+  window.addEventListener("resize", requestDisplaySync);
+  window.addEventListener("orientationchange", requestDisplaySync);
+  window.visualViewport?.addEventListener("resize", requestDisplaySync);
   syncDisplayState();
   movement.reset(displaySize.cssWidth, displaySize.cssHeight);
   fragmentSystem.initialize(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot());
@@ -142,6 +161,7 @@ if (app) {
   const gameLoop = createGameLoop({
     isActive: isRuntimeActive,
     update(deltaSeconds) {
+      flushDisplaySync();
       zoneBackgroundTransition.update(deltaSeconds);
       farStarsParallax.update(deltaSeconds);
       midNebulaParallax.update(deltaSeconds);
@@ -159,6 +179,8 @@ if (app) {
       );
     },
     render() {
+      /* Also resize while portrait or Game Over keeps update suspended. */
+      flushDisplaySync();
       zoneBackgroundTransition.render(
         displayManager.context,
         displaySize.cssWidth,

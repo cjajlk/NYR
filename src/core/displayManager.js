@@ -20,6 +20,7 @@ export function drawTechnicalMarker(context, width, height) {
 
 export function createDisplayManager(canvas, container, environment = window) {
   const context = canvas.getContext("2d");
+  let lastSize = null;
 
   function resize() {
     const bounds = container.getBoundingClientRect();
@@ -30,6 +31,9 @@ export function createDisplayManager(canvas, container, environment = window) {
       Math.max(1, environment.devicePixelRatio || 1)
     );
 
+    if (lastSize?.cssWidth === cssWidth && lastSize.cssHeight === cssHeight &&
+        lastSize.pixelRatio === pixelRatio) return lastSize;
+
     canvas.style.width = `${cssWidth}px`;
     canvas.style.height = `${cssHeight}px`;
     canvas.width = Math.round(cssWidth * pixelRatio);
@@ -37,7 +41,8 @@ export function createDisplayManager(canvas, container, environment = window) {
     context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     drawTechnicalMarker(context, cssWidth, cssHeight);
 
-    return Object.freeze({ cssWidth, cssHeight, pixelRatio });
+    lastSize = Object.freeze({ cssWidth, cssHeight, pixelRatio });
+    return lastSize;
   }
 
   return Object.freeze({ resize, context });

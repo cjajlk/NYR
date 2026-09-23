@@ -44,10 +44,14 @@ export function createNyrMovement(config = NYR_PROTOTYPE_CONFIG) {
     state.desiredHeading = state.heading;
   }
 
-  function keepPrototypeObservable(width, height) {
+  function keepPrototypeObservable(width, height, previousX, previousY) {
     const margin = config.safetyMarginPixels;
-    const outside = state.x < -margin || state.x > width + margin ||
-      state.y < -margin || state.y > height + margin;
+    // Only crossing an edge by movement triggers this technical fallback.
+    // A smaller viewport may leave the head outside without moving it.
+    const outside = (state.x < -margin && previousX >= -margin) ||
+      (state.x > width + margin && previousX <= width + margin) ||
+      (state.y < -margin && previousY >= -margin) ||
+      (state.y > height + margin && previousY <= height + margin);
 
     if (outside) {
       // Sécurité technique provisoire : recentrage, sans règle de bord canonique.
@@ -120,7 +124,7 @@ export function createNyrMovement(config = NYR_PROTOTYPE_CONFIG) {
     state.simulationTime += deltaSeconds;
     recordTrail(previousX, previousY);
     trimTrail();
-    keepPrototypeObservable(width, height);
+    keepPrototypeObservable(width, height, previousX, previousY);
   }
 
   function snapshot() {
