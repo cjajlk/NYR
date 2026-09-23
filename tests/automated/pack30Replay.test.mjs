@@ -53,6 +53,10 @@ if (!hz) {
     const { verifyMenu } = await import("./pack31MainMenu.test.mjs");
     verifyMenu({ app, frame, snapshot, setBounds: value => { bounds = value; } });
   }
+  if (process.env.NYR_NAVIGATION_TEST) {
+    const { verifyNavigation } = await import("./pack32MenuNavigation.test.mjs");
+    verifyNavigation({ app, frame, snapshot, setBounds: value => { bounds = value; } });
+  }
   app.children.find(item => item.className === "main-menu").children[1].emit("click");
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {

@@ -264,3 +264,11 @@ body {
   text-shadow: 0 0 2rem rgb(150 115 255 / 55%);
 }
 .main-menu[hidden], .score-display[hidden], .foundation-label[hidden] { display: none; }
+
+.main-menu { gap: 0.5rem; }
+.main-menu .replay-button { margin-top: 0; min-width: 10rem; }
+.main-menu p { margin: 0.25rem 0; letter-spacing: 0.22em; }
+@media (max-height: 400px) {
+  .main-menu h1 { font-size: 2rem; }
+  .main-menu { gap: 0.25rem; }
+}
