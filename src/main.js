@@ -1,3 +1,4 @@
+import { createReturnMenu } from "./ui/returnMenu.js";
 import { createMainMenu } from "./ui/mainMenu.js";
 import { APP_CONFIG } from "./core/appConfig.js";
 import { createDisplayManager } from "./core/displayManager.js";
@@ -61,6 +62,8 @@ const app = document.querySelector("#app");
 function startGame() {
   const { screen, canvas } = createPreproductionScreen();
   const mainMenu = createMainMenu(replayGame);
+  const returnMenu = createReturnMenu(() => replaceSession(true));
+  let disposed = false;
   const orientationOverlay = createOrientationOverlay();
   const displayManager = createDisplayManager(canvas, screen);
   const zoneOneBackground = createZoneOneBackground();
@@ -120,7 +123,7 @@ function startGame() {
 
   app.replaceChildren(screen, orientationOverlay.element, scoreDisplay.element);
   app.append(stabilityDisplay.element, stabilityDisplay.gameOverElement);
-  app.append(mainMenu.element);
+  app.append(mainMenu.element, returnMenu.element);
 
   function syncOrientationState(shouldSuspend) {
     orientationOverlay.setVisible(shouldSuspend);
@@ -140,6 +143,7 @@ function startGame() {
     const state = getRuntimeState();
     const menu = state.phase === "MENU";
     mainMenu.update(menu, state.suspensionReasons.includes("portrait-orientation"));
+    returnMenu.update(state);
     scoreDisplay.element.hidden = menu;
     if (menu) stabilityDisplay.element.hidden = true;
     screen.children[1].hidden = menu;
@@ -193,17 +197,25 @@ function startGame() {
   const pointerInput = createPointerInput(canvas, movement);
 
   function replayGame() {
+    replaceSession(false);
+  }
+
+  function replaceSession(toMenu) {
+    if (disposed) return;
     const state = getRuntimeState();
     const menu = state.phase === "MENU";
-    if ((!state.gameOver && !menu) || state.suspensionReasons.some(reason => reason !== "main-menu")) return;
+    if (state.suspensionReasons.some(reason => reason !== "main-menu")) return;
+    if (toMenu ? menu : (!state.gameOver && !menu)) return;
+    disposed = true;
     gameLoop.stop();
     pointerInput.destroy();
     fullscreenControl.destroy();
     window.removeEventListener("resize", requestDisplaySync);
     window.removeEventListener("orientationchange", requestDisplaySync);
     window.visualViewport?.removeEventListener("resize", requestDisplaySync);
-    if (menu) resumeRuntime("main-menu");
-    else beginNewGame();
+    if (toMenu) suspendRuntime("main-menu");
+    else if (menu) resumeRuntime("main-menu");
+    if (state.gameOver) beginNewGame();
     startGame();
   }
 

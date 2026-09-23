@@ -272,3 +272,23 @@ body {
   .main-menu h1 { font-size: 2rem; }
   .main-menu { gap: 0.25rem; }
 }
+
+.return-menu {
+  position: fixed;
+  left: max(0.5rem, env(safe-area-inset-left));
+  bottom: max(0.25rem, env(safe-area-inset-bottom));
+  z-index: 9;
+  min-height: 44px;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid rgb(162 220 255 / 35%);
+  border-radius: 999px;
+  background: rgb(7 8 22 / 88%);
+  color: #e7f9ff;
+  font: inherit;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.return-menu[hidden] { display: none; }
+.return-menu:focus-visible { outline: 2px solid #b9f5ff; outline-offset: 2px; }

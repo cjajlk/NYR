@@ -58,6 +58,10 @@ if (!hz) {
     verifyNavigation({ app, frame, snapshot, setBounds: value => { bounds = value; } });
   }
   app.children.find(item => item.className === "main-menu").children[1].emit("click");
+  if (process.env.NYR_RETURN_MENU_TEST) {
+    const { verifyReturnMenu } = await import("./pack33ReturnMenu.test.mjs");
+    verifyReturnMenu({ app, frame, snapshot, setBounds: value => { bounds = value; } });
+  }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {
     const p = globalThis.probe;
