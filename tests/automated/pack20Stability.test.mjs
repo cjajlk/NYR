@@ -99,7 +99,8 @@ const scoreDisplaySource = await readFile(
 assert.match(mainSource, /const stability = createNyrStability\(\)/);
 // PACK 22 adds asteroid damage; the no-contact foundation stays unchanged.
 assert.doesNotMatch(stabilitySource, /heal|recover|gameOver/);
-assert.doesNotMatch([indexSource, cssSource, scoreDisplaySource].join("\n"), /stabilit/i);
+// PACK 29 adds a read-only HUD; the score component remains independent.
+assert.doesNotMatch([indexSource, scoreDisplaySource].join("\n"), /stabilit/i);
 assert.doesNotMatch([stabilitySource, mainSource].join("\n"), /https?:\/\/|file:\/\//);
 
 console.log("PACK 20 stability foundation: tests OK");

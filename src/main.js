@@ -1,7 +1,7 @@
 import { APP_CONFIG } from "./core/appConfig.js";
 import { createDisplayManager } from "./core/displayManager.js";
 import { createGameLoop } from "./core/gameLoop.js";
-import { endGame, isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
+import { endGame, getRuntimeState, isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
 import { createZoneOneBackground } from "./core/zoneOneBackground.js";
 import { createZoneBackgroundTransition } from "./core/zoneBackgroundTransition.js";
 import { createFarStarsParallax } from "./core/farStarsParallax.js";
@@ -22,6 +22,7 @@ import { renderNormalFragments } from "./gameplay/fragmentRenderer.js";
 import { createPointerInput } from "./systems/pointerInput.js";
 import { createOrientationOverlay } from "./ui/orientationOverlay.js";
 import { createScoreDisplay } from "./ui/scoreDisplay.js";
+import { createStabilityDisplay } from "./ui/stabilityDisplay.js";
 import { createFullscreenControl } from "./ui/fullscreenControl.js";
 
 function createPreproductionScreen() {
@@ -82,6 +83,7 @@ if (app) {
   });
   const score = createNyrScore();
   const scoreDisplay = createScoreDisplay();
+  const stabilityDisplay = createStabilityDisplay();
   scoreDisplay.update(score.snapshot());
   const absorptionFeedback = createNyrAbsorptionFeedback();
   const fragmentSystem = createFragmentSystem({
@@ -115,6 +117,7 @@ if (app) {
   let playableSize = null;
 
   app.replaceChildren(screen, orientationOverlay.element, scoreDisplay.element);
+  app.append(stabilityDisplay.element, stabilityDisplay.gameOverElement);
 
   function syncOrientationState(shouldSuspend) {
     orientationOverlay.setVisible(shouldSuspend);
@@ -126,6 +129,7 @@ if (app) {
     }
 
     document.body.dataset.runtimeState = isRuntimeActive() ? "active" : "suspended";
+    stabilityDisplay.update(stability.snapshot(), getRuntimeState());
   }
 
   function syncDisplayState() {
@@ -200,6 +204,7 @@ if (app) {
     render() {
       /* Also resize while portrait or Game Over keeps update suspended. */
       flushDisplaySync();
+      stabilityDisplay.update(stability.snapshot(), getRuntimeState());
       zoneBackgroundTransition.render(
         displayManager.context,
         displaySize.cssWidth,

@@ -145,6 +145,41 @@ body {
   line-height: 1.5;
 }
 
+.stability-display {
+  position: fixed;
+  top: max(0.5rem, env(safe-area-inset-top));
+  right: max(0.5rem, env(safe-area-inset-right));
+  z-index: 9;
+  width: min(9rem, 25vw);
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgb(162 220 255 / 25%);
+  border-radius: 0.6rem;
+  background: rgb(7 8 22 / 78%);
+  color: #e7f9ff;
+  font-size: clamp(0.6rem, 1.4vw, 0.75rem);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.stability-display meter { display: block; width: 100%; height: 0.6rem; accent-color: #a0ffc4; }
+.game-over-indication {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #f4f1ff;
+  text-align: center;
+  text-shadow: 0 2px 8px #070713;
+  background: rgb(7 7 19 / 55%);
+  pointer-events: none;
+}
+.game-over-indication strong { font-size: clamp(1.6rem, 5vw, 3rem); letter-spacing: 0.12em; }
+.game-over-indication span { font-size: 0.8rem; letter-spacing: 0.1em; }
+.stability-display[hidden], .game-over-indication[hidden] { display: none; }
+
 .fullscreen-control {
   position: fixed;
   right: max(0.5rem, env(safe-area-inset-right));
