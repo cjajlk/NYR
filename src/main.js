@@ -1,3 +1,4 @@
+import { ZONE_THREE_SPEED_MULTIPLIER } from "./gameplay/nyrPrototypeConfig.js";
 import { createZoneTwoObjective, ZONE_TWO_TARGET } from "./gameplay/zoneTwoObjective.js";
 import { createCorruptionPocket, renderCorruptionPocket } from "./gameplay/corruptionPocket.js";
 import { createZoneExitPortal, renderZoneExitPortal } from "./gameplay/zoneExitPortal.js";
@@ -19,7 +20,7 @@ import { createNyrMovement } from "./gameplay/nyrMovement.js";
 import { createNyrProgression } from "./gameplay/nyrProgression.js";
 import { createNyrScore } from "./gameplay/nyrScore.js";
 import { createNyrStability } from "./gameplay/nyrStability.js";
-import { createNyrZoneProgression } from "./gameplay/nyrZoneProgression.js";
+import { createNyrZoneProgression, NYR_ZONES } from "./gameplay/nyrZoneProgression.js";
 import { createMobileAsteroidSystem } from "./gameplay/mobileAsteroidSystem.js";
 import { renderMobileAsteroid } from "./gameplay/mobileAsteroidRenderer.js";
 import { renderNyr } from "./gameplay/nyrRenderer.js";
@@ -283,7 +284,8 @@ function startGame() {
       nearParticlesParallax.update(deltaSeconds);
       decorativeAsteroidsParallax.update(deltaSeconds);
       absorptionFeedback.update(deltaSeconds);
-      movement.update(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight);
+      movement.update(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight,
+        zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_3 ? ZONE_THREE_SPEED_MULTIPLIER : 1);
       fragmentSystem.advanceCorruption(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight);
       fragmentSystem.update(movement.snapshot(), displaySize.cssWidth, displaySize.cssHeight);
       if (!isRuntimeActive()) return;

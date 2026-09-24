@@ -1,7 +1,8 @@
 import { MOBILE_ASTEROID_CONFIG } from "./mobileAsteroidSystem.js";
 import { NYR_ZONES } from "./nyrZoneProgression.js";
-export const POCKET_CONFIG = Object.freeze({ radius: 52, warning: 1, active: 4, cooldown: 5 });
+export const POCKET_CONFIG = Object.freeze({ radius: 52, warning: 1, active: 4, cooldown: 5, zoneThreeCooldown: 4 });
 export function createCorruptionPocket(onContact) {
+  let cooldownDuration = POCKET_CONFIG.cooldown;
   const state = { phase: "inactive", remaining: 0, x: 0, y: 0, radius: 0, generation: 0, contact: false };
   function place(width, height, head, obstacles) {
     state.radius = Math.min(POCKET_CONFIG.radius, Math.min(width, height) / 5);
@@ -31,13 +32,18 @@ export function createCorruptionPocket(onContact) {
   function update(delta, zone, width, height, head, obstacles = []) {
     if (![NYR_ZONES.ZONE_2, NYR_ZONES.ZONE_3].includes(zone) || !Number.isFinite(delta) || delta < 0) return;
     if (state.phase === "inactive") { warn(width, height, head, obstacles); return; }
+    const nextCooldown = zone === NYR_ZONES.ZONE_3 ? POCKET_CONFIG.zoneThreeCooldown : POCKET_CONFIG.cooldown;
+    if (state.phase === "cooldown" && cooldownDuration !== nextCooldown) {
+      state.remaining = Math.max(0, state.remaining + nextCooldown - cooldownDuration);
+    }
+    cooldownDuration = nextCooldown;
     let elapsed = delta;
     while (elapsed + 1e-9 >= state.remaining) {
       elapsed = Math.max(0, elapsed - state.remaining);
       if (state.phase === "warning") {
         state.phase = "active"; state.remaining = POCKET_CONFIG.active;
       } else if (state.phase === "active") {
-        state.phase = "cooldown"; state.remaining = POCKET_CONFIG.cooldown; state.contact = false;
+        state.phase = "cooldown"; state.remaining = cooldownDuration; state.contact = false;
       } else warn(width, height, head, obstacles);
     }
     state.remaining -= elapsed;

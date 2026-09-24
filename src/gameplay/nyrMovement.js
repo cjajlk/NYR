@@ -124,7 +124,7 @@ export function createNyrMovement(config = NYR_PROTOTYPE_CONFIG) {
     if (keepCount < state.trailSamples.length) state.trailSamples.length = keepCount;
   }
 
-  function update(deltaSeconds, width, height) {
+  function update(deltaSeconds, width, height, speedMultiplier = 1) {
     const previousX = state.x;
     const previousY = state.y;
     const maxTurn = config.turnRadiansPerSecond * deltaSeconds;
@@ -133,8 +133,8 @@ export function createNyrMovement(config = NYR_PROTOTYPE_CONFIG) {
       state.heading + Math.max(-maxTurn, Math.min(maxTurn, turnDelta))
     );
 
-    state.x += Math.cos(state.heading) * config.speedPixelsPerSecond * deltaSeconds;
-    state.y += Math.sin(state.heading) * config.speedPixelsPerSecond * deltaSeconds;
+    state.x += Math.cos(state.heading) * config.speedPixelsPerSecond * speedMultiplier * deltaSeconds;
+    state.y += Math.sin(state.heading) * config.speedPixelsPerSecond * speedMultiplier * deltaSeconds;
     state.simulationTime += deltaSeconds;
     recordTrail(previousX, previousY);
     trimTrail();

@@ -86,6 +86,10 @@ if (!hz) {
     const { verifyZoneThree } = await import("./pack39ZoneThree.test.mjs");
     verifyZoneThree({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
   }
+  if (process.env.NYR_INTENSITY_TEST) {
+    const { verifyIntensity } = await import("./pack40ZoneThreeIntensity.test.mjs");
+    verifyIntensity({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
+  }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {
     const p = globalThis.probe;

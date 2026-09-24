@@ -1,3 +1,4 @@
+export const ZONE_THREE_SPEED_MULTIPLIER = 1.15;
 // Plafond canonique du corps visible, indépendant de la progression.
 export const MAX_VISIBLE_SEGMENTS = 120;
 
