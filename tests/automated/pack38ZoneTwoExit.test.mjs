@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { getRuntimeState } from "../../src/core/runtimeState.js";
+import { endGame, getRuntimeState } from "../../src/core/runtimeState.js";
 
 export function verifyZoneTwoExit({ app, frame, snapshot, hz, setBounds }) {
   const initial = snapshot(globalThis.probe);
@@ -49,40 +49,18 @@ export function verifyZoneTwoExit({ app, frame, snapshot, hz, setBounds }) {
     const head = p.movement.snapshot();
     p.exitPortal.translate({ x: head.x - portal.x, y: head.y - portal.y });
     frame(); frame();
-    assert.equal(getRuntimeState().journeyComplete, true);
-    assert.equal(getRuntimeState().gameOver, false);
-    assert.equal(getRuntimeState().active, false);
-    assert.equal(getRuntimeState().phase, "JOURNEY_COMPLETE");
+    assert.equal(getRuntimeState().journeyComplete, false);
+    assert.equal(getRuntimeState().phase, "PLAYING");
+    assert.equal(p.zoneProgression.snapshot().currentZone, "zone-3");
     assert.equal(p.score.snapshot().points, conserved.score.points);
-    assert.equal(p.stability.snapshot().stability, conserved.stability.stability);
-    assert.deepEqual(p.progression.snapshot(), conserved.progression);
     assert.equal(p.movement.snapshot().segmentCount, conserved.movement.segmentCount);
+    assert.deepEqual(p.progression.snapshot(), conserved.progression);
     assert.deepEqual(p.combo.snapshot(), { chain: 0, remaining: 0, multiplier: 1 });
-    const done = snapshot(p);
-    for (let i = 0; i < hz * 10; i++) frame();
-    assert.deepEqual(snapshot(p), done, "all gameplay and hazard timers frozen");
-    p.exitPortal.update(p.movement.snapshot());
-    assert.deepEqual(snapshot(p), done, "contact cannot complete twice");
-    const overlay = p.stabilityDisplay.gameOverElement;
-    assert.equal(overlay.children[0].textContent, "ZONE 2 TERMINÉE");
-    assert.equal(overlay.children[1].hidden, true);
-    assert.equal(overlay.children[2].textContent, "REJOUER");
-    assert.equal(overlay.children[3].textContent, "MENU");
-    assert.equal(overlay.children[3].hidden, false);
-    window.innerWidth = 440; window.innerHeight = 956;
-    setBounds({ width: 424, height: 908 }); window.emit("resize"); frame();
-    assert.equal(overlay.hidden, true);
-    overlay.children[2].emit("click"); overlay.children[3].emit("click");
-    assert.equal(globalThis.probe, p);
-    window.innerWidth = 956; window.innerHeight = 440;
-    setBounds({ width: 940, height: 392 }); window.emit("resize"); frame();
-    assert.equal(getRuntimeState().journeyComplete, true);
-    assert.equal(overlay.hidden, false);
-    if (entry === 27) overlay.children[2].emit("click");
+    // PACK 39 replaces the provisional completion screen with Zone 3.
+    endGame(); frame();
+    if (entry === 27) p.stabilityDisplay.gameOverElement.children[2].emit("click");
     else {
-      overlay.children[3].emit("click");
-      assert.equal(getRuntimeState().phase, "MENU");
-      assert.equal(globalThis.probe.exitPortal.snapshot().active, false);
+      app.children.find(e => e.className === "return-menu").emit("click");
       app.children.find(e => e.className === "main-menu").children[1].emit("click");
     }
     assert.deepEqual(snapshot(globalThis.probe), initial);

@@ -62,7 +62,7 @@ for (const refreshRate of [30, 60, 120]) {
       const zoneTwoImage = createFakeImage();
       const transition = createZoneBackgroundTransition({
         zoneOneBackground,
-        createImage: () => zoneTwoImage,
+        createImage: () => zoneTwoImage.loadedSource ? createFakeImage() : zoneTwoImage,
         onTransitionStarted() {
           transitionSignals += 1;
         }

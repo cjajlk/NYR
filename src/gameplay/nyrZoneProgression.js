@@ -4,7 +4,8 @@ export const NYR_ZONE_PROGRESSION_CONFIG = Object.freeze({
 
 export const NYR_ZONES = Object.freeze({
   ZONE_1: "zone-1",
-  ZONE_2: "zone-2"
+  ZONE_2: "zone-2",
+  ZONE_3: "zone-3"
 });
 
 export function createNyrZoneProgression({
@@ -31,9 +32,14 @@ export function createNyrZoneProgression({
     return snapshot();
   }
 
+  function enterZoneThree() {
+    if (currentZone === NYR_ZONES.ZONE_2) currentZone = NYR_ZONES.ZONE_3;
+    return snapshot();
+  }
+
   function snapshot() {
     return Object.freeze({ currentZone });
   }
 
-  return Object.freeze({ sync, snapshot });
+  return Object.freeze({ sync, enterZoneThree, snapshot });
 }

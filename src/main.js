@@ -8,7 +8,7 @@ import { createMainMenu } from "./ui/mainMenu.js";
 import { APP_CONFIG } from "./core/appConfig.js";
 import { createDisplayManager } from "./core/displayManager.js";
 import { createGameLoop } from "./core/gameLoop.js";
-import { beginNewGame, completeJourney, endGame as endRuntimeGame, getRuntimeState, isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
+import { beginNewGame, endGame as endRuntimeGame, getRuntimeState, isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
 import { createZoneOneBackground } from "./core/zoneOneBackground.js";
 import { createZoneBackgroundTransition } from "./core/zoneBackgroundTransition.js";
 import { createFarStarsParallax } from "./core/farStarsParallax.js";
@@ -101,7 +101,7 @@ function startGame() {
   });
   const exitPortal = createZoneExitPortal(() => {
     combo.reset();
-    completeJourney();
+    zoneBackgroundTransition.sync(zoneProgression.enterZoneThree());
   }, ZONE_TWO_TARGET);
   const pocket = createCorruptionPocket(() => {
     if (!isRuntimeActive()) return;
