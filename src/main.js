@@ -242,6 +242,7 @@ function startGame() {
       decorativeAsteroidsParallax.update(deltaSeconds);
       absorptionFeedback.update(deltaSeconds);
       movement.update(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight);
+      fragmentSystem.advanceCorruption(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight);
       fragmentSystem.update(movement.snapshot(), displaySize.cssWidth, displaySize.cssHeight);
       if (!isRuntimeActive()) return;
       mobileAsteroid.update(

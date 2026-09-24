@@ -66,6 +66,10 @@ if (!hz) {
     const { verifyCombo } = await import("./pack34Combo.test.mjs");
     verifyCombo({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
   }
+  if (process.env.NYR_CORRUPTION_MOTION_TEST) {
+    const { verifyMotion } = await import("./pack35CorruptionMotion.test.mjs");
+    verifyMotion({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
+  }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {
     const p = globalThis.probe;

@@ -1,5 +1,6 @@
 import { FRAGMENT_PROTOTYPE_CONFIG } from "./fragmentPrototypeConfig.js";
 import { NYR_ZONES } from "./nyrZoneProgression.js";
+export const CORRUPTION_MOTION = Object.freeze({ amplitudeX: 40, amplitudeY: 20, period: 4 });
 export const PURE_FRAGMENT_INTERVAL = 10;
 export const CORRUPTION_CONFIG = Object.freeze({ firstAbsorption: 35, interval: 10 });
 
@@ -93,6 +94,11 @@ export function createFragmentSystem({
     );
     fragment.x = position.x;
     fragment.y = position.y;
+    if (fragment.kind === "corruption") {
+      fragment.anchorX = position.x;
+      fragment.anchorY = position.y;
+      fragment.motionTime = 0;
+    }
   }
 
   function initialize(width, height, headState) {
@@ -105,6 +111,19 @@ export function createFragmentSystem({
       fragments.push(fragment);
       placeFragment(fragment, headState, width, height);
     }
+  }
+
+  function advanceCorruption(delta, width, height) {
+    if (!corruption || !Number.isFinite(delta) || delta <= 0) return;
+    const margin = Math.min(config.spawnMarginPixels, width * 0.2, height * 0.2);
+    const amplitudeX = Math.max(0, Math.min(CORRUPTION_MOTION.amplitudeX,
+      corruption.anchorX - margin, width - margin - corruption.anchorX));
+    const amplitudeY = Math.max(0, Math.min(CORRUPTION_MOTION.amplitudeY,
+      corruption.anchorY - margin, height - margin - corruption.anchorY));
+    corruption.motionTime = (corruption.motionTime + delta) % CORRUPTION_MOTION.period;
+    const phase = corruption.motionTime * Math.PI * 2 / CORRUPTION_MOTION.period;
+    corruption.x = corruption.anchorX + amplitudeX * Math.sin(phase);
+    corruption.y = corruption.anchorY + amplitudeY * Math.sin(phase * 2);
   }
 
   function update(headState, width, height) {
@@ -146,7 +165,8 @@ export function createFragmentSystem({
 
   function revalidate(width, height, headState) {
     for (const fragment of [...fragments, ...(pureFragment ? [pureFragment] : []), ...(corruption ? [corruption] : [])]) {
-      if (!isInsideSurface(fragment, width, height)) {
+      if (!isInsideSurface(fragment, width, height) ||
+          (fragment.kind === "corruption" && !isInsideSurface({ x: fragment.anchorX, y: fragment.anchorY }, width, height))) {
         placeFragment(fragment, headState, width, height);
       }
     }
@@ -169,8 +189,10 @@ export function createFragmentSystem({
     if (corruption) {
       corruption.x += offset.x;
       corruption.y += offset.y;
+      corruption.anchorX += offset.x;
+      corruption.anchorY += offset.y;
     }
   }
 
-  return Object.freeze({ initialize, update, revalidate, translate, snapshot });
+  return Object.freeze({ initialize, update, advanceCorruption, revalidate, translate, snapshot });
 }
