@@ -7,6 +7,8 @@ export const NYR_ABSORPTION_FEEDBACK_CONFIG = Object.freeze({
   endRadiusPixels: 25,
   eclatAlpha: 0.46,
   spectreAlpha: 0.72,
+  nocturneAlpha: 0.9,
+  nocturneLineWidthPixels: 3,
   eclatLineWidthPixels: 1.6,
   spectreLineWidthPixels: 2.3
 });
@@ -22,7 +24,7 @@ export function createNyrAbsorptionFeedback(config = NYR_ABSORPTION_FEEDBACK_CON
   function trigger(form = NYR_FORMS.ECLAT) {
     state.active = true;
     state.elapsedSeconds = 0;
-    state.form = form === NYR_FORMS.SPECTRE ? NYR_FORMS.SPECTRE : NYR_FORMS.ECLAT;
+    state.form = Object.values(NYR_FORMS).includes(form) ? form : NYR_FORMS.ECLAT;
     state.triggerCount += 1;
     return snapshot();
   }

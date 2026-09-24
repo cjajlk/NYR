@@ -18,7 +18,7 @@ export function verifyReturnMenu({ app, frame, snapshot, setBounds }) {
     }
     old.stability.applyAsteroidContact();
     assert.equal(old.score.snapshot().points, 23600);
-    assert.equal(old.progression.snapshot().currentForm, "spectre");
+    assert.equal(old.progression.snapshot().currentForm, "nocturne");
     assert.ok(old.fragmentSystem.snapshot().some(f => f.kind === "corruption"));
     if (dead) {
       while (old.stability.snapshot().stability) old.stability.applyAsteroidContact();

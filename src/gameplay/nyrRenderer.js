@@ -60,7 +60,7 @@ function drawEnergyLinks(context, head, poses, isSpectre, visualConfig) {
   context.restore();
 }
 
-function drawOrganicSegment(context, pose, lengthRadius, widthRadius, alpha, isSpectre) {
+function drawOrganicSegment(context, pose, lengthRadius, widthRadius, alpha, isSpectre, isNocturne) {
   context.save();
   context.translate(pose.x, pose.y);
   context.rotate(pose.angle);
@@ -80,6 +80,18 @@ function drawOrganicSegment(context, pose, lengthRadius, widthRadius, alpha, isS
     context.lineTo(lengthRadius * 0.64, 0);
     context.strokeStyle = `rgba(127, 235, 255, ${Math.max(0.35, alpha)})`;
     context.lineWidth = 1.2;
+    context.stroke();
+  }
+  if (isNocturne) {
+    context.beginPath();
+    context.moveTo(-lengthRadius, 0);
+    context.lineTo(0, -widthRadius * 0.85);
+    context.lineTo(lengthRadius * 0.7, 0);
+    context.lineTo(0, widthRadius * 0.85);
+    context.closePath();
+    context.fillStyle = "#111c30";
+    context.fill();
+    context.strokeStyle = "#8971ff";
     context.stroke();
   }
   context.restore();
@@ -117,10 +129,11 @@ function drawAbsorptionFeedback(context, tailPose, feedback, feedbackConfig) {
 
   const progress = Math.max(0, Math.min(1, feedback.progress));
   const remaining = 1 - progress;
-  const isSpectre = feedback.form === NYR_FORMS.SPECTRE;
+  const isNocturne = feedback.form === NYR_FORMS.NOCTURNE;
+  const isSpectre = feedback.form === NYR_FORMS.SPECTRE || isNocturne;
   const radius = feedbackConfig.startRadiusPixels +
     (feedbackConfig.endRadiusPixels - feedbackConfig.startRadiusPixels) * progress;
-  const alpha = (isSpectre ? feedbackConfig.spectreAlpha : feedbackConfig.eclatAlpha) *
+  const alpha = (isNocturne ? feedbackConfig.nocturneAlpha : isSpectre ? feedbackConfig.spectreAlpha : feedbackConfig.eclatAlpha) *
     remaining * remaining;
 
   context.save();
@@ -129,13 +142,19 @@ function drawAbsorptionFeedback(context, tailPose, feedback, feedbackConfig) {
   context.strokeStyle = isSpectre
     ? `rgba(116, 235, 255, ${alpha})`
     : `rgba(143, 118, 255, ${alpha})`;
-  context.lineWidth = isSpectre
+  context.lineWidth = isNocturne ? feedbackConfig.nocturneLineWidthPixels : isSpectre
     ? feedbackConfig.spectreLineWidthPixels
     : feedbackConfig.eclatLineWidthPixels;
   context.beginPath();
   context.arc(tailPose.x, tailPose.y, radius, 0, Math.PI * 2);
   context.stroke();
 
+  if (isNocturne) {
+    context.strokeStyle = `rgba(140, 110, 255, ${alpha})`;
+    context.beginPath();
+    context.arc(tailPose.x, tailPose.y, radius * 1.3, 0, Math.PI * 2);
+    context.stroke();
+  }
   context.fillStyle = isSpectre
     ? `rgba(105, 229, 255, ${alpha * 0.28})`
     : `rgba(132, 103, 255, ${alpha * 0.22})`;
@@ -206,6 +225,45 @@ function drawSpectreHead(context) {
   context.stroke();
 }
 
+/* Decorative geometry only: collision and movement use their existing configuration. */
+function drawNocturneHead(context) {
+  context.shadowColor = "#7864ff";
+  context.shadowBlur = 24;
+  context.fillStyle = "#111b2b";
+  context.strokeStyle = "#708dff";
+  context.lineWidth = 2.5;
+  context.beginPath();
+  context.ellipse(-3, 0, 24, 14, 0, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+  for (const side of [-1, 1]) {
+    context.beginPath();
+    context.moveTo(-9, side * 10);
+    context.quadraticCurveTo(-24, side * 33, -5, side * 31);
+    context.quadraticCurveTo(-14, side * 23, 1, side * 12);
+    context.closePath();
+    context.fillStyle = "#564394";
+    context.fill();
+    context.stroke();
+    context.beginPath();
+    context.moveTo(-18, side * 8);
+    context.lineTo(-32, side * 22);
+    context.quadraticCurveTo(-25, side * 12, -34, side * 10);
+    context.closePath();
+    context.fillStyle = "rgba(104, 95, 232, 0.38)";
+    context.fill();
+    context.stroke();
+  }
+  context.beginPath();
+  context.moveTo(-17, 0);
+  context.lineTo(-4, -5);
+  context.lineTo(14, 0);
+  context.lineTo(-4, 5);
+  context.closePath();
+  context.strokeStyle = "#94dcff";
+  context.stroke();
+}
+
 export function renderNyr(
   context,
   state,
@@ -215,7 +273,8 @@ export function renderNyr(
   visualConfig = NYR_BODY_VISUAL_CONFIG,
   feedbackConfig = NYR_ABSORPTION_FEEDBACK_CONFIG
 ) {
-  const isSpectre = progression.currentForm === NYR_FORMS.SPECTRE;
+  const isNocturne = progression.currentForm === NYR_FORMS.NOCTURNE;
+  const isSpectre = progression.currentForm === NYR_FORMS.SPECTRE || isNocturne;
   const poses = Array.from({ length: state.segmentCount }, (_, index) =>
     findTrailPose(state.trail, (index + 1) * config.segmentSpacingPixels)
   );
@@ -236,7 +295,8 @@ export function renderNyr(
       visualConfig.segmentLengthRadius - tailProgress * 1.25,
       visualConfig.segmentWidthRadius - tailProgress * 1.8,
       alpha,
-      isSpectre
+      isSpectre,
+      isNocturne
     );
   }
 
@@ -244,7 +304,8 @@ export function renderNyr(
   context.translate(state.x, state.y);
   context.rotate(state.heading);
 
-  if (isSpectre) drawSpectreHead(context);
+  if (isNocturne) drawNocturneHead(context);
+  else if (isSpectre) drawSpectreHead(context);
   else drawEclatHead(context);
 
   context.fillStyle = "#b9f5ff";

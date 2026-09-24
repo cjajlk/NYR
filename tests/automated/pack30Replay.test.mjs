@@ -90,6 +90,10 @@ if (!hz) {
     const { verifyIntensity } = await import("./pack40ZoneThreeIntensity.test.mjs");
     verifyIntensity({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
   }
+  if (process.env.NYR_NOCTURNE_TEST) {
+    const { verifyNocturne } = await import("./pack41Nocturne.test.mjs");
+    verifyNocturne({ app, frame, snapshot, hz });
+  }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {
     const p = globalThis.probe;
@@ -103,7 +107,7 @@ if (!hz) {
     }
     assert.equal(p.score.snapshot().points, 23600);
     assert.equal(p.progression.snapshot().normalFragmentsAbsorbed, 65);
-    assert.equal(p.progression.snapshot().currentForm, "spectre");
+    assert.equal(p.progression.snapshot().currentForm, "nocturne");
     assert.equal(p.zoneProgression.snapshot().currentZone, "zone-2");
     assert.equal(p.movement.snapshot().segmentCount, 69);
     assert.equal(p.mobileAsteroid.snapshot().active, true);
