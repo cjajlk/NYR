@@ -1,3 +1,4 @@
+import { createCorruptionPocket, renderCorruptionPocket } from "./gameplay/corruptionPocket.js";
 import { createZoneExitPortal, renderZoneExitPortal } from "./gameplay/zoneExitPortal.js";
 import { createNyrCombo } from "./gameplay/nyrCombo.js";
 import { createComboDisplay } from "./ui/comboDisplay.js";
@@ -94,6 +95,14 @@ function startGame() {
     mobileAsteroid.syncZone(zoneState, displaySize.cssWidth, displaySize.cssHeight,
       movement.snapshot(), fragmentSystem.snapshot());
   });
+  const pocket = createCorruptionPocket(() => {
+    if (!isRuntimeActive()) return;
+    stability.applyCorruptionContact();
+    if (stability.snapshot().stability === 0) endGame();
+  });
+  function pocketObstacles() {
+    return [...fragmentSystem.snapshot(), ...[mobileAsteroid.snapshot(), portal.snapshot()].filter(o => o.active)];
+  }
   const combo = createNyrCombo();
   const comboDisplay = createComboDisplay();
   function endGame() {
@@ -185,6 +194,8 @@ function startGame() {
       fragmentSystem.translate(offset);
       mobileAsteroid.translate(offset);
       portal.translate(offset);
+      pocket.translate(offset);
+      pocket.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(), pocketObstacles());
       portal.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(),
         fragmentSystem.snapshot(), mobileAsteroid.snapshot());
       fragmentSystem.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot());
@@ -264,6 +275,9 @@ function startGame() {
         movement.snapshot(),
         fragmentSystem.snapshot()
       );
+      if (!isRuntimeActive()) return;
+      pocket.update(deltaSeconds, zoneProgression.snapshot().currentZone,
+        displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(), pocketObstacles());
     },
     render() {
       /* Also resize while portrait or Game Over keeps update suspended. */
@@ -296,6 +310,7 @@ function startGame() {
       );
       syncMenuDisplay();
       if (getRuntimeState().phase === "MENU") return;
+      renderCorruptionPocket(displayManager.context, pocket.snapshot());
       renderZoneExitPortal(displayManager.context, portal.snapshot());
       renderMobileAsteroid(displayManager.context, mobileAsteroid.snapshot());
       renderNormalFragments(displayManager.context, fragmentSystem.snapshot());

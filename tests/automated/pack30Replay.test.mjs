@@ -41,7 +41,7 @@ if (!hz) {
   const url = new URL("../../src/main.js", import.meta.url);
   let source = readFileSync(url, "utf8").replace(/from "(\.\/[^"]+)"/g, (_, path) => `from "${new URL(path, url).href}"`);
   source = source.replace("  gameLoop.start();", `
-    globalThis.probe = { portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
+    globalThis.probe = { pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
       absorptionFeedback, zoneBackgroundTransition, farStarsParallax, midNebulaParallax,
       nearParticlesParallax, decorativeAsteroidsParallax, stabilityDisplay, gameLoop, canvas };
     gameLoop.start();`);
@@ -73,6 +73,10 @@ if (!hz) {
   if (process.env.NYR_PORTAL_TEST) {
     const { verifyPortal } = await import("./pack36ZonePortal.test.mjs");
     verifyPortal({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
+  }
+  if (process.env.NYR_POCKET_TEST) {
+    const { verifyPocket } = await import("./pack37CorruptionPocket.test.mjs");
+    verifyPocket({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
   }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {
