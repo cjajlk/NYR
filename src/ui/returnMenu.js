@@ -12,7 +12,7 @@ export function createReturnMenu(onMenu) {
     onMenu();
   });
   function update(state) {
-    available = state.phase !== "MENU" && state.suspensionReasons.length === 0;
+    available = state.phase !== "MENU" && !state.journeyComplete && state.suspensionReasons.length === 0;
     element.hidden = !available;
     element.disabled = !available;
   }

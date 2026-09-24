@@ -1,4 +1,4 @@
-export function createStabilityDisplay(createElement = tag => document.createElement(tag), onReplay = () => {}) {
+export function createStabilityDisplay(createElement = tag => document.createElement(tag), onReplay = () => {}, onMenu = () => {}) {
   const element = createElement("div");
   element.className = "stability-display";
   const label = createElement("span");
@@ -27,7 +27,19 @@ export function createStabilityDisplay(createElement = tag => document.createEle
     replay.disabled = true;
     onReplay();
   });
-  gameOverElement.append(title, detail, replay);
+  const menu = createElement("button");
+  menu.type = "button";
+  menu.className = "replay-button";
+  menu.textContent = "MENU";
+  menu.hidden = true;
+  let canMenu = false;
+  menu.addEventListener("click", () => {
+    if (!canMenu) return;
+    canMenu = false;
+    menu.disabled = true;
+    onMenu();
+  });
+  gameOverElement.append(title, detail, replay, menu);
   gameOverElement.hidden = true;
   let previousValue;
 
@@ -40,8 +52,14 @@ export function createStabilityDisplay(createElement = tag => document.createEle
     }
     const portrait = runtimeState.suspensionReasons.includes("portrait-orientation");
     element.hidden = portrait;
-    gameOverElement.hidden = portrait || !runtimeState.gameOver;
-    canReplay = runtimeState.gameOver && !portrait;
+    const finished = runtimeState.gameOver || runtimeState.journeyComplete;
+    title.textContent = runtimeState.journeyComplete ? "ZONE 2 TERMINÉE" : "GAME OVER";
+    detail.hidden = Boolean(runtimeState.journeyComplete);
+    gameOverElement.hidden = portrait || !finished;
+    canMenu = Boolean(runtimeState.journeyComplete) && !portrait;
+    menu.hidden = !canMenu;
+    menu.disabled = !canMenu;
+    canReplay = finished && !portrait;
     replay.hidden = !canReplay;
     replay.disabled = !canReplay;
   }

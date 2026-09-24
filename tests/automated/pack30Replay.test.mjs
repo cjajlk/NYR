@@ -41,7 +41,7 @@ if (!hz) {
   const url = new URL("../../src/main.js", import.meta.url);
   let source = readFileSync(url, "utf8").replace(/from "(\.\/[^"]+)"/g, (_, path) => `from "${new URL(path, url).href}"`);
   source = source.replace("  gameLoop.start();", `
-    globalThis.probe = { pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
+    globalThis.probe = { zoneTwoObjective, exitPortal, pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
       absorptionFeedback, zoneBackgroundTransition, farStarsParallax, midNebulaParallax,
       nearParticlesParallax, decorativeAsteroidsParallax, stabilityDisplay, gameLoop, canvas };
     gameLoop.start();`);
@@ -78,6 +78,10 @@ if (!hz) {
     const { verifyPocket } = await import("./pack37CorruptionPocket.test.mjs");
     verifyPocket({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
   }
+  if (process.env.NYR_ZONE_TWO_EXIT_TEST) {
+    const { verifyZoneTwoExit } = await import("./pack38ZoneTwoExit.test.mjs");
+    verifyZoneTwoExit({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
+  }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {
     const p = globalThis.probe;
@@ -89,7 +93,7 @@ if (!hz) {
       p.fragmentSystem.update({ ...p.fragmentSystem.snapshot()[0], trail: [] }, bounds.width, bounds.height);
       if (p.portal.snapshot().active) p.portal.update(p.portal.snapshot());
     }
-    assert.equal(p.score.snapshot().points, 24800);
+    assert.equal(p.score.snapshot().points, 23600);
     assert.equal(p.progression.snapshot().normalFragmentsAbsorbed, 65);
     assert.equal(p.progression.snapshot().currentForm, "spectre");
     assert.equal(p.zoneProgression.snapshot().currentZone, "zone-2");

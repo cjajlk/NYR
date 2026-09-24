@@ -1,6 +1,7 @@
 const suspensionReasons = new Set();
 const listeners = new Set();
 let gameOver = false;
+let journeyComplete = false;
 
 function notifyRuntimeState() {
   const state = getRuntimeState();
@@ -8,18 +9,25 @@ function notifyRuntimeState() {
 }
 
 export function isRuntimeActive() {
-  return !gameOver && suspensionReasons.size === 0;
+  return !gameOver && !journeyComplete && suspensionReasons.size === 0;
 }
 
 export function endGame() {
-  if (gameOver) return;
+  if (gameOver || journeyComplete) return;
   gameOver = true;
   notifyRuntimeState();
 }
 
+export function completeJourney() {
+  if (!isRuntimeActive()) return;
+  journeyComplete = true;
+  notifyRuntimeState();
+}
+
 export function beginNewGame() {
-  if (!gameOver) return false;
+  if (!gameOver && !journeyComplete) return false;
   gameOver = false;
+  journeyComplete = false;
   notifyRuntimeState();
   return true;
 }
@@ -28,7 +36,8 @@ export function getRuntimeState() {
   return Object.freeze({
     active: isRuntimeActive(),
     gameOver,
-    phase: gameOver ? "GAME_OVER" : suspensionReasons.has("main-menu") ? "MENU" : "PLAYING",
+    journeyComplete,
+    phase: journeyComplete ? "JOURNEY_COMPLETE" : gameOver ? "GAME_OVER" : suspensionReasons.has("main-menu") ? "MENU" : "PLAYING",
     suspensionReasons: Object.freeze([...suspensionReasons])
   });
 }

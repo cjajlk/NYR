@@ -1,6 +1,6 @@
 import { NYR_ZONE_PROGRESSION_CONFIG } from "./nyrZoneProgression.js";
 export const PORTAL_CONFIG = Object.freeze({ radius: 28, contactRadius: 24, margin: 56 });
-export function createZoneExitPortal(onEnter) {
+export function createZoneExitPortal(onEnter, threshold = NYR_ZONE_PROGRESSION_CONFIG.zoneTwoThresholdFragments) {
   let state = { active: false, used: false, x: 0, y: 0 };
   let readyForContact = true;
   function place(width, height, head, fragments, asteroid) {
@@ -12,7 +12,7 @@ export function createZoneExitPortal(onEnter) {
       const point = { x: margin + (width - 2 * margin) * column / 6,
         y: margin + (height - 2 * margin) * row / 4 };
       const distance = Math.hypot(point.x - head.x, point.y - head.y);
-      const clearance = Math.min(...occupied.map(p => Math.hypot(point.x - p.x, point.y - p.y)), 1000);
+      const clearance = Math.min(...occupied.map(p => Math.hypot(point.x - p.x, point.y - p.y) - (p.radius ?? 0)), 1000);
       const safe = distance >= 140 && clearance >= 60;
       const rank = (safe ? 10000 : 0) + Math.min(distance, 250) + Math.min(clearance, 120);
       if (!best || rank > best.rank) best = { ...point, rank };
@@ -20,7 +20,7 @@ export function createZoneExitPortal(onEnter) {
     state.x = best.x; state.y = best.y;
   }
   function unlock(count, width, height, head, fragments, asteroid) {
-    if (state.active || state.used || count < NYR_ZONE_PROGRESSION_CONFIG.zoneTwoThresholdFragments) return;
+    if (state.active || state.used || count < threshold) return;
     place(width, height, head, fragments, asteroid);
     state.active = true;
   }

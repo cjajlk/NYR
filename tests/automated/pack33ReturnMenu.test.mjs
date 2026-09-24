@@ -17,7 +17,7 @@ export function verifyReturnMenu({ app, frame, snapshot, setBounds }) {
       if (old.portal.snapshot().active) old.portal.update(old.portal.snapshot());
     }
     old.stability.applyAsteroidContact();
-    assert.equal(old.score.snapshot().points, 24800);
+    assert.equal(old.score.snapshot().points, 23600);
     assert.equal(old.progression.snapshot().currentForm, "spectre");
     assert.ok(old.fragmentSystem.snapshot().some(f => f.kind === "corruption"));
     if (dead) {

@@ -56,12 +56,13 @@ export function verifyPortal({ app, frame, snapshot, hz, setBounds }) {
   setBounds({ width: 940, height: 392 }); window.emit("resize"); frame();
   assert.equal(p.zoneProgression.snapshot().currentZone, "zone-1");
   p.stability.applyAsteroidContact();
-  const preserved = { stability: p.stability.snapshot(), combo: p.combo.snapshot(),
+  const preserved = { stability: p.stability.snapshot(),
     score: p.score.snapshot(), movement: p.movement.snapshot(), progression: p.progression.snapshot() };
   p.portal.update(p.portal.snapshot());
   assert.equal(p.zoneProgression.snapshot().currentZone, "zone-2");
-  assert.deepEqual({ stability: p.stability.snapshot(), combo: p.combo.snapshot(),
+  assert.deepEqual({ stability: p.stability.snapshot(),
     score: p.score.snapshot(), movement: p.movement.snapshot(), progression: p.progression.snapshot() }, preserved);
+  assert.deepEqual(p.combo.snapshot(), { chain: 0, remaining: 0, multiplier: 1 });
   assert.equal(p.mobileAsteroid.snapshot().active, true);
   for (let i = 32; i < 35; i++) normal();
   assert.equal(p.fragmentSystem.snapshot().find(f => f.kind === "corruption").generation, 35);

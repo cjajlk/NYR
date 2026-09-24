@@ -1,3 +1,4 @@
+import { createZoneTwoObjective, ZONE_TWO_TARGET } from "./gameplay/zoneTwoObjective.js";
 import { createCorruptionPocket, renderCorruptionPocket } from "./gameplay/corruptionPocket.js";
 import { createZoneExitPortal, renderZoneExitPortal } from "./gameplay/zoneExitPortal.js";
 import { createNyrCombo } from "./gameplay/nyrCombo.js";
@@ -7,7 +8,7 @@ import { createMainMenu } from "./ui/mainMenu.js";
 import { APP_CONFIG } from "./core/appConfig.js";
 import { createDisplayManager } from "./core/displayManager.js";
 import { createGameLoop } from "./core/gameLoop.js";
-import { beginNewGame, endGame as endRuntimeGame, getRuntimeState, isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
+import { beginNewGame, completeJourney, endGame as endRuntimeGame, getRuntimeState, isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
 import { createZoneOneBackground } from "./core/zoneOneBackground.js";
 import { createZoneBackgroundTransition } from "./core/zoneBackgroundTransition.js";
 import { createFarStarsParallax } from "./core/farStarsParallax.js";
@@ -85,8 +86,11 @@ function startGame() {
     }
   });
   const progression = createNyrProgression();
+  const zoneTwoObjective = createZoneTwoObjective();
   const zoneProgression = createNyrZoneProgression({
     onZoneTwoReached(zoneState) {
+      zoneTwoObjective.enter(progression.snapshot().normalFragmentsAbsorbed);
+      combo.reset();
       zoneBackgroundTransition.sync(zoneState);
     }
   });
@@ -95,13 +99,17 @@ function startGame() {
     mobileAsteroid.syncZone(zoneState, displaySize.cssWidth, displaySize.cssHeight,
       movement.snapshot(), fragmentSystem.snapshot());
   });
+  const exitPortal = createZoneExitPortal(() => {
+    combo.reset();
+    completeJourney();
+  }, ZONE_TWO_TARGET);
   const pocket = createCorruptionPocket(() => {
     if (!isRuntimeActive()) return;
     stability.applyCorruptionContact();
     if (stability.snapshot().stability === 0) endGame();
   });
   function pocketObstacles() {
-    return [...fragmentSystem.snapshot(), ...[mobileAsteroid.snapshot(), portal.snapshot()].filter(o => o.active)];
+    return [...fragmentSystem.snapshot(), ...[mobileAsteroid.snapshot(), portal.snapshot(), exitPortal.snapshot()].filter(o => o.active)];
   }
   const combo = createNyrCombo();
   const comboDisplay = createComboDisplay();
@@ -111,7 +119,7 @@ function startGame() {
   }
   const score = createNyrScore();
   const scoreDisplay = createScoreDisplay();
-  const stabilityDisplay = createStabilityDisplay(undefined, replayGame);
+  const stabilityDisplay = createStabilityDisplay(undefined, replayGame, () => replaceSession(true));
   scoreDisplay.update(score.snapshot());
   const absorptionFeedback = createNyrAbsorptionFeedback();
   const fragmentSystem = createFragmentSystem({
@@ -138,6 +146,13 @@ function startGame() {
       );
       portal.unlock(progressionState.normalFragmentsAbsorbed, displaySize.cssWidth, displaySize.cssHeight,
         movement.snapshot(), fragmentSystem.snapshot(), mobileAsteroid.snapshot());
+      const objective = zoneTwoObjective.sync(progressionState.normalFragmentsAbsorbed);
+      if (objective.entryCount !== null) {
+        const hazard = pocket.snapshot();
+        exitPortal.unlock(objective.absorbed, displaySize.cssWidth, displaySize.cssHeight,
+          movement.snapshot(), [...fragmentSystem.snapshot(),
+            ...(["warning", "active"].includes(hazard.phase) ? [hazard] : [])], mobileAsteroid.snapshot());
+      }
       const updatedScore = score.awardNormalFragment(combo.absorb());
       scoreDisplay.update(updatedScore);
       absorptionFeedback.trigger(progression.snapshot().currentForm);
@@ -169,7 +184,7 @@ function startGame() {
     const menu = state.phase === "MENU";
     mainMenu.update(menu, state.suspensionReasons.includes("portrait-orientation"));
     returnMenu.update(state);
-    if (state.gameOver) combo.reset();
+    if (state.gameOver || state.journeyComplete) combo.reset();
     comboDisplay.update(combo.snapshot(), state);
     scoreDisplay.element.hidden = menu;
     if (menu) stabilityDisplay.element.hidden = true;
@@ -195,6 +210,11 @@ function startGame() {
       mobileAsteroid.translate(offset);
       portal.translate(offset);
       pocket.translate(offset);
+      exitPortal.translate(offset);
+      const hazard = pocket.snapshot();
+      exitPortal.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(),
+        [...fragmentSystem.snapshot(), ...(["warning", "active"].includes(hazard.phase) ? [hazard] : [])],
+        mobileAsteroid.snapshot());
       pocket.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(), pocketObstacles());
       portal.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(),
         fragmentSystem.snapshot(), mobileAsteroid.snapshot());
@@ -237,7 +257,7 @@ function startGame() {
     const state = getRuntimeState();
     const menu = state.phase === "MENU";
     if (state.suspensionReasons.some(reason => reason !== "main-menu")) return;
-    if (toMenu ? menu : (!state.gameOver && !menu)) return;
+    if (toMenu ? menu : (!state.gameOver && !state.journeyComplete && !menu)) return;
     disposed = true;
     gameLoop.stop();
     pointerInput.destroy();
@@ -247,7 +267,7 @@ function startGame() {
     window.visualViewport?.removeEventListener("resize", requestDisplaySync);
     if (toMenu) suspendRuntime("main-menu");
     else if (menu) resumeRuntime("main-menu");
-    if (state.gameOver) beginNewGame();
+    if (state.gameOver || state.journeyComplete) beginNewGame();
     startGame();
   }
 
@@ -268,6 +288,8 @@ function startGame() {
       fragmentSystem.update(movement.snapshot(), displaySize.cssWidth, displaySize.cssHeight);
       if (!isRuntimeActive()) return;
       portal.update(movement.snapshot());
+      exitPortal.update(movement.snapshot());
+      if (!isRuntimeActive()) return;
       mobileAsteroid.update(
         deltaSeconds,
         displaySize.cssWidth,
@@ -312,6 +334,7 @@ function startGame() {
       if (getRuntimeState().phase === "MENU") return;
       renderCorruptionPocket(displayManager.context, pocket.snapshot());
       renderZoneExitPortal(displayManager.context, portal.snapshot());
+      renderZoneExitPortal(displayManager.context, exitPortal.snapshot());
       renderMobileAsteroid(displayManager.context, mobileAsteroid.snapshot());
       renderNormalFragments(displayManager.context, fragmentSystem.snapshot());
       renderNyr(
