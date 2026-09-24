@@ -19,7 +19,7 @@ if (!hz) {
   const main = readFileSync(new URL("../../src/main.js", import.meta.url), "utf8");
   assert.match(main, /getCurrentZone: \(\) => zoneProgression.snapshot\(\).currentZone/);
   assert.match(main, /stability.applyCorruptionContact\(\);\s*if \(stability.snapshot\(\).stability === 0\) endGame\(\);\s*return isRuntimeActive\(\)/);
-  assert.match(main, /fragmentSystem.update\([^;]+;\s*if \(!isRuntimeActive\(\)\) return;\s*mobileAsteroid.update/);
+  assert.match(main, /fragmentSystem.update\([^;]+;\s*if \(!isRuntimeActive\(\)\) return;\s*portal.update\([^;]+;\s*mobileAsteroid.update/);
   for (const rate of [30, 60, 120]) {
     const result = spawnSync(process.execPath, [fileURLToPath(import.meta.url), String(rate)], { encoding: "utf8" });
     assert.equal(result.status, 0, result.stdout + result.stderr);
@@ -32,7 +32,7 @@ if (!hz) {
   let contacts = 0, pureAbsorptions = 0;
   const system = createFragmentSystem({ random: () => 0.4,
     getCurrentZone: () => zone.snapshot().currentZone,
-    onAbsorbed() { movement.addSegments(); zone.sync(progression.recordNormalFragmentAbsorption()); score.awardNormalFragment(); },
+    onAbsorbed() { movement.addSegments(); zone.sync(progression.recordNormalFragmentAbsorption(), true); score.awardNormalFragment(); },
     onPureAbsorbed() { pureAbsorptions++; stability.applyPureFragment(); },
     onCorruptionContact() {
       contacts++; stability.applyCorruptionContact();

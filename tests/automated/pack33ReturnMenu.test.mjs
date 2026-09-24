@@ -12,8 +12,10 @@ export function verifyReturnMenu({ app, frame, snapshot, setBounds }) {
     assert.equal(button.hidden, false);
     assert.equal(button.type, "button");
     frame(); frame();
-    for (let i = 0; i < 65; i++) old.fragmentSystem.update(
+    for (let i = 0; i < 65; i++) { old.fragmentSystem.update(
       { ...old.fragmentSystem.snapshot()[0], trail: [] }, 940, 392);
+      if (old.portal.snapshot().active) old.portal.update(old.portal.snapshot());
+    }
     old.stability.applyAsteroidContact();
     assert.equal(old.score.snapshot().points, 24800);
     assert.equal(old.progression.snapshot().currentForm, "spectre");

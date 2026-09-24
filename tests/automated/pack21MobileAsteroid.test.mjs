@@ -49,7 +49,7 @@ for (const viewport of viewports) {
       ];
 
       for (let absorption = 1; absorption <= 24; absorption += 1) {
-        const zoneState = zoneProgression.sync(progression.recordNormalFragmentAbsorption());
+        const zoneState = zoneProgression.sync(progression.recordNormalFragmentAbsorption(), true);
         asteroid.syncZone(zoneState, viewport.width, viewport.height, head, fragments);
         score.awardNormalFragment();
       }
@@ -58,7 +58,7 @@ for (const viewport of viewports) {
 
       const zoneAtTwentyFive = zoneProgression.sync(
         progression.recordNormalFragmentAbsorption()
-      );
+      , true);
       asteroid.syncZone(zoneAtTwentyFive, viewport.width, viewport.height, head, fragments);
       score.awardNormalFragment();
       const spawnState = asteroid.snapshot();
@@ -92,7 +92,7 @@ for (const viewport of viewports) {
       ) < 1e-8, `${viewport.name} ${refreshRate} Hz DPR ${dpr} movement`);
 
       asteroid.syncZone(
-        zoneProgression.sync(progression.recordNormalFragmentAbsorption()),
+        zoneProgression.sync(progression.recordNormalFragmentAbsorption(), true),
         viewport.width,
         viewport.height,
         head,

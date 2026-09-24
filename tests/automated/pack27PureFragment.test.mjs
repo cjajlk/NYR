@@ -31,7 +31,7 @@ if (!hz) {
   const progression = createNyrProgression(), zone = createNyrZoneProgression(), score = createNyrScore();
   let pureAbsorptions = 0, randomCalls = 0;
   const fragments = createFragmentSystem({ random: () => { randomCalls++; return 0.4; },
-    onAbsorbed() { movement.addSegments(); zone.sync(progression.recordNormalFragmentAbsorption()); score.awardNormalFragment(); },
+    onAbsorbed() { movement.addSegments(); zone.sync(progression.recordNormalFragmentAbsorption(), true); score.awardNormalFragment(); },
     onPureAbsorbed() { if (isRuntimeActive()) { pureAbsorptions++; stability.applyPureFragment(); } }
   });
   fragments.initialize(956, 440, movement.snapshot());

@@ -44,7 +44,8 @@ export function verifyMotion({ app, frame, snapshot, hz, setBounds }) {
   assert.ok(Math.abs(danger(reference).y - danger(other).y) < 1e-8);
 
   const initial = snapshot(globalThis.probe), p = globalThis.probe;
-  for (let i = 0; i < 35; i++) p.fragmentSystem.update({ ...p.fragmentSystem.snapshot()[0], trail: [] }, 940, 392);
+  for (let i = 0; i < 35; i++) { p.fragmentSystem.update({ ...p.fragmentSystem.snapshot()[0], trail: [] }, 940, 392);
+    if (p.portal.snapshot().active) p.portal.update(p.portal.snapshot()); }
   frame(); frame();
   const before = danger(p.fragmentSystem);
   frame(); assert.notEqual(danger(p.fragmentSystem).x, before.x);

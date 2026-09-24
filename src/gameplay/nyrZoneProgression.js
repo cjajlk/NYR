@@ -13,9 +13,9 @@ export function createNyrZoneProgression({
 } = {}) {
   let currentZone = NYR_ZONES.ZONE_1;
 
-  function sync(progressionSnapshot) {
+  function sync(progressionSnapshot, portalContact = false) {
     const normalFragmentsAbsorbed = progressionSnapshot?.normalFragmentsAbsorbed;
-    const reachedNow = currentZone === NYR_ZONES.ZONE_1 &&
+    const reachedNow = portalContact && currentZone === NYR_ZONES.ZONE_1 &&
       Number.isFinite(normalFragmentsAbsorbed) &&
       normalFragmentsAbsorbed >= config.zoneTwoThresholdFragments;
 

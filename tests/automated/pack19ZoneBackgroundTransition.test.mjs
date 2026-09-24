@@ -78,7 +78,7 @@ for (const refreshRate of [30, 60, 120]) {
       const score = createNyrScore();
 
       for (let absorption = 1; absorption <= 24; absorption += 1) {
-        zoneProgression.sync(progression.recordNormalFragmentAbsorption());
+        zoneProgression.sync(progression.recordNormalFragmentAbsorption(), true);
         score.awardNormalFragment();
       }
 
@@ -86,7 +86,7 @@ for (const refreshRate of [30, 60, 120]) {
       assert.equal(transition.snapshot().targetZone, NYR_ZONES.ZONE_1);
       assert.equal(score.snapshot().points, 2400);
 
-      zoneProgression.sync(progression.recordNormalFragmentAbsorption());
+      zoneProgression.sync(progression.recordNormalFragmentAbsorption(), true);
       score.awardNormalFragment();
       assert.equal(zoneProgression.snapshot().currentZone, NYR_ZONES.ZONE_2);
       assert.equal(transitionSignals, 1);
@@ -116,7 +116,7 @@ for (const refreshRate of [30, 60, 120]) {
       assert.equal(transition.snapshot().progress, 1);
       assert.equal(transition.snapshot().activeTransitionSeconds, 1);
 
-      zoneProgression.sync(progression.recordNormalFragmentAbsorption());
+      zoneProgression.sync(progression.recordNormalFragmentAbsorption(), true);
       score.awardNormalFragment();
       assert.equal(zoneProgression.snapshot().currentZone, NYR_ZONES.ZONE_2);
       assert.equal(transitionSignals, 1);

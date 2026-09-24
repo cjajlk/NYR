@@ -1,3 +1,4 @@
+import { createZoneExitPortal, renderZoneExitPortal } from "./gameplay/zoneExitPortal.js";
 import { createNyrCombo } from "./gameplay/nyrCombo.js";
 import { createComboDisplay } from "./ui/comboDisplay.js";
 import { createReturnMenu } from "./ui/returnMenu.js";
@@ -88,6 +89,11 @@ function startGame() {
       zoneBackgroundTransition.sync(zoneState);
     }
   });
+  const portal = createZoneExitPortal(() => {
+    const zoneState = zoneProgression.sync(progression.snapshot(), true);
+    mobileAsteroid.syncZone(zoneState, displaySize.cssWidth, displaySize.cssHeight,
+      movement.snapshot(), fragmentSystem.snapshot());
+  });
   const combo = createNyrCombo();
   const comboDisplay = createComboDisplay();
   function endGame() {
@@ -121,6 +127,8 @@ function startGame() {
         movement.snapshot(),
         fragmentSystem.snapshot()
       );
+      portal.unlock(progressionState.normalFragmentsAbsorbed, displaySize.cssWidth, displaySize.cssHeight,
+        movement.snapshot(), fragmentSystem.snapshot(), mobileAsteroid.snapshot());
       const updatedScore = score.awardNormalFragment(combo.absorb());
       scoreDisplay.update(updatedScore);
       absorptionFeedback.trigger(progression.snapshot().currentForm);
@@ -176,6 +184,9 @@ function startGame() {
       const offset = movement.fitViewport(displaySize.cssWidth, displaySize.cssHeight);
       fragmentSystem.translate(offset);
       mobileAsteroid.translate(offset);
+      portal.translate(offset);
+      portal.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(),
+        fragmentSystem.snapshot(), mobileAsteroid.snapshot());
       fragmentSystem.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot());
       mobileAsteroid.revalidate(
         displaySize.cssWidth,
@@ -245,6 +256,7 @@ function startGame() {
       fragmentSystem.advanceCorruption(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight);
       fragmentSystem.update(movement.snapshot(), displaySize.cssWidth, displaySize.cssHeight);
       if (!isRuntimeActive()) return;
+      portal.update(movement.snapshot());
       mobileAsteroid.update(
         deltaSeconds,
         displaySize.cssWidth,
@@ -284,6 +296,7 @@ function startGame() {
       );
       syncMenuDisplay();
       if (getRuntimeState().phase === "MENU") return;
+      renderZoneExitPortal(displayManager.context, portal.snapshot());
       renderMobileAsteroid(displayManager.context, mobileAsteroid.snapshot());
       renderNormalFragments(displayManager.context, fragmentSystem.snapshot());
       renderNyr(

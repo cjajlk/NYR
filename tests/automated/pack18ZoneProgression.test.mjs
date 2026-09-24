@@ -29,7 +29,7 @@ for (const refreshRate of [30, 60, 120]) {
 
     for (let absorption = 1; absorption <= 24; absorption += 1) {
       const progressionState = progression.recordNormalFragmentAbsorption();
-      zoneProgression.sync(progressionState);
+      zoneProgression.sync(progressionState, true);
       score.awardNormalFragment();
     }
 
@@ -41,7 +41,7 @@ for (const refreshRate of [30, 60, 120]) {
     assert.equal(spectreSignals, 1);
 
     const atTwentyFive = progression.recordNormalFragmentAbsorption();
-    zoneProgression.sync(atTwentyFive);
+    zoneProgression.sync(atTwentyFive, true);
     score.awardNormalFragment();
     assert.equal(zoneProgression.snapshot().currentZone, NYR_ZONES.ZONE_2);
     assert.equal(zoneTwoSignals, 1);
@@ -49,7 +49,7 @@ for (const refreshRate of [30, 60, 120]) {
     assert.equal(formatScore(score.snapshot()), "SCORE 002500");
 
     const atTwentySix = progression.recordNormalFragmentAbsorption();
-    zoneProgression.sync(atTwentySix);
+    zoneProgression.sync(atTwentySix, true);
     score.awardNormalFragment();
     assert.equal(zoneProgression.snapshot().currentZone, NYR_ZONES.ZONE_2);
     assert.equal(zoneTwoSignals, 1);
@@ -62,7 +62,7 @@ for (const refreshRate of [30, 60, 120]) {
     }
     assert.deepEqual(zoneProgression.snapshot(), frozenZone, `${refreshRate} Hz DPR ${dpr}`);
 
-    zoneProgression.sync(progression.snapshot());
+    zoneProgression.sync(progression.snapshot(), true);
     assert.equal(zoneProgression.snapshot().currentZone, NYR_ZONES.ZONE_2);
     assert.equal(zoneTwoSignals, 1, `${refreshRate} Hz DPR ${dpr} reprise`);
     assert.equal(score.snapshot().points, 2600);
@@ -81,7 +81,7 @@ const backgroundSource = await readFile(
 
 assert.doesNotMatch(zoneSource, /score|segmentCount|addSegments/);
 assert.doesNotMatch(zoneSource, /state\.normalFragmentsAbsorbed/);
-assert.equal((mainSource.match(/zoneProgression\.sync\(/g) ?? []).length, 1);
+assert.equal((mainSource.match(/zoneProgression\.sync\(/g) ?? []).length, 2);
 assert.match(mainSource, /zoneProgression\.sync\(progressionState\)/);
 assert.match(backgroundSource, /NYR_ZONE_01_ESPACE_NOCTURNE_V1\.png/);
 assert.doesNotMatch(mainSource, /NYR_ZONE_02_NEBULEUSE_V1/);

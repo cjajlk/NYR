@@ -48,7 +48,7 @@ for (const refreshRate of [30, 60, 120]) {
 
     for (let absorption = 1; absorption <= 26; absorption += 1) {
       const progressionState = progression.recordNormalFragmentAbsorption();
-      zoneProgression.sync(progressionState);
+      zoneProgression.sync(progressionState, true);
       score.awardNormalFragment();
 
       if (absorption === 25) {

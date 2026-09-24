@@ -22,7 +22,8 @@ export function verifyCombo({ app, frame, snapshot, hz, setBounds }) {
 
   const initial = snapshot(globalThis.probe);
   const p = globalThis.probe;
-  const normal = () => p.fragmentSystem.update({ ...p.fragmentSystem.snapshot()[0], trail: [] }, 940, 392);
+  const normal = () => { p.fragmentSystem.update({ ...p.fragmentSystem.snapshot()[0], trail: [] }, 940, 392);
+    if (p.portal.snapshot().active) p.portal.update(p.portal.snapshot()); };
   for (let i = 0; i < 10; i++) normal();
   assert.equal(p.combo.snapshot().chain, 10);
   assert.equal(p.score.snapshot().points, 2800);

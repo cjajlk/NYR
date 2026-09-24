@@ -41,7 +41,7 @@ if (!hz) {
   const url = new URL("../../src/main.js", import.meta.url);
   let source = readFileSync(url, "utf8").replace(/from "(\.\/[^"]+)"/g, (_, path) => `from "${new URL(path, url).href}"`);
   source = source.replace("  gameLoop.start();", `
-    globalThis.probe = { combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
+    globalThis.probe = { portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
       absorptionFeedback, zoneBackgroundTransition, farStarsParallax, midNebulaParallax,
       nearParticlesParallax, decorativeAsteroidsParallax, stabilityDisplay, gameLoop, canvas };
     gameLoop.start();`);
@@ -70,6 +70,10 @@ if (!hz) {
     const { verifyMotion } = await import("./pack35CorruptionMotion.test.mjs");
     verifyMotion({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
   }
+  if (process.env.NYR_PORTAL_TEST) {
+    const { verifyPortal } = await import("./pack36ZonePortal.test.mjs");
+    verifyPortal({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
+  }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {
     const p = globalThis.probe;
@@ -79,6 +83,7 @@ if (!hz) {
     assert.ok(p.movement.snapshot().simulationTime > 0);
     for (let i = 0; i < 65; i++) {
       p.fragmentSystem.update({ ...p.fragmentSystem.snapshot()[0], trail: [] }, bounds.width, bounds.height);
+      if (p.portal.snapshot().active) p.portal.update(p.portal.snapshot());
     }
     assert.equal(p.score.snapshot().points, 24800);
     assert.equal(p.progression.snapshot().normalFragmentsAbsorbed, 65);
