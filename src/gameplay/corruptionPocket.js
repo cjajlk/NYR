@@ -30,9 +30,9 @@ export function createCorruptionPocket(onContact) {
     state.phase = "warning"; state.remaining = POCKET_CONFIG.warning; state.contact = false;
   }
   function update(delta, zone, width, height, head, obstacles = []) {
-    if (![NYR_ZONES.ZONE_2, NYR_ZONES.ZONE_3].includes(zone) || !Number.isFinite(delta) || delta < 0) return;
+    if (![NYR_ZONES.ZONE_2, NYR_ZONES.ZONE_3, NYR_ZONES.ZONE_4].includes(zone) || !Number.isFinite(delta) || delta < 0) return;
     if (state.phase === "inactive") { warn(width, height, head, obstacles); return; }
-    const nextCooldown = zone === NYR_ZONES.ZONE_3 ? POCKET_CONFIG.zoneThreeCooldown : POCKET_CONFIG.cooldown;
+    const nextCooldown = [NYR_ZONES.ZONE_3, NYR_ZONES.ZONE_4].includes(zone) ? POCKET_CONFIG.zoneThreeCooldown : POCKET_CONFIG.cooldown;
     if (state.phase === "cooldown" && cooldownDuration !== nextCooldown) {
       state.remaining = Math.max(0, state.remaining + nextCooldown - cooldownDuration);
     }

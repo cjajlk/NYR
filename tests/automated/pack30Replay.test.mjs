@@ -41,7 +41,7 @@ if (!hz) {
   const url = new URL("../../src/main.js", import.meta.url);
   let source = readFileSync(url, "utf8").replace(/from "(\.\/[^"]+)"/g, (_, path) => `from "${new URL(path, url).href}"`);
   source = source.replace("  gameLoop.start();", `
-    globalThis.probe = { zoneTwoObjective, exitPortal, pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
+    globalThis.probe = { zoneThreeObjective, zoneThreePortal, zoneTwoObjective, exitPortal, pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
       absorptionFeedback, zoneBackgroundTransition, farStarsParallax, midNebulaParallax,
       nearParticlesParallax, decorativeAsteroidsParallax, stabilityDisplay, gameLoop, canvas };
     gameLoop.start();`);
@@ -93,6 +93,10 @@ if (!hz) {
   if (process.env.NYR_NOCTURNE_TEST) {
     const { verifyNocturne } = await import("./pack41Nocturne.test.mjs");
     verifyNocturne({ app, frame, snapshot, hz });
+  }
+  if (process.env.NYR_ZONE_FOUR_TEST) {
+    const { verifyZoneFour } = await import("./pack42ZoneFourEntry.test.mjs");
+    verifyZoneFour({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
   }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {

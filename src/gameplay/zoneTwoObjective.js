@@ -1,5 +1,7 @@
 export const ZONE_TWO_TARGET = 15;
-export function createZoneTwoObjective() {
+export const ZONE_THREE_TARGET = 20;
+export const createZoneTwoObjective = createRelativeZoneObjective;
+export function createRelativeZoneObjective() {
   let entryCount = null;
   let absorbed = 0;
   function enter(globalCount) {

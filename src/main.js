@@ -1,5 +1,5 @@
 import { ZONE_THREE_SPEED_MULTIPLIER } from "./gameplay/nyrPrototypeConfig.js";
-import { createZoneTwoObjective, ZONE_TWO_TARGET } from "./gameplay/zoneTwoObjective.js";
+import { createZoneTwoObjective, createRelativeZoneObjective, ZONE_TWO_TARGET, ZONE_THREE_TARGET } from "./gameplay/zoneTwoObjective.js";
 import { createCorruptionPocket, renderCorruptionPocket } from "./gameplay/corruptionPocket.js";
 import { createZoneExitPortal, renderZoneExitPortal } from "./gameplay/zoneExitPortal.js";
 import { createNyrCombo } from "./gameplay/nyrCombo.js";
@@ -88,6 +88,7 @@ function startGame() {
   });
   const progression = createNyrProgression();
   const zoneTwoObjective = createZoneTwoObjective();
+  const zoneThreeObjective = createRelativeZoneObjective();
   const zoneProgression = createNyrZoneProgression({
     onZoneTwoReached(zoneState) {
       zoneTwoObjective.enter(progression.snapshot().normalFragmentsAbsorbed);
@@ -101,16 +102,22 @@ function startGame() {
       movement.snapshot(), fragmentSystem.snapshot());
   });
   const exitPortal = createZoneExitPortal(() => {
+    zoneThreeObjective.enter(progression.snapshot().normalFragmentsAbsorbed);
     combo.reset();
     zoneBackgroundTransition.sync(zoneProgression.enterZoneThree());
   }, ZONE_TWO_TARGET);
+  const zoneThreePortal = createZoneExitPortal(() => {
+    if (!isRuntimeActive() || zoneProgression.snapshot().currentZone !== NYR_ZONES.ZONE_3) return;
+    combo.reset();
+    zoneBackgroundTransition.sync(zoneProgression.enterZoneFour());
+  }, ZONE_THREE_TARGET);
   const pocket = createCorruptionPocket(() => {
     if (!isRuntimeActive()) return;
     stability.applyCorruptionContact();
     if (stability.snapshot().stability === 0) endGame();
   });
   function pocketObstacles() {
-    return [...fragmentSystem.snapshot(), ...[mobileAsteroid.snapshot(), portal.snapshot(), exitPortal.snapshot()].filter(o => o.active)];
+    return [...fragmentSystem.snapshot(), ...[mobileAsteroid.snapshot(), portal.snapshot(), exitPortal.snapshot(), zoneThreePortal.snapshot()].filter(o => o.active)];
   }
   const combo = createNyrCombo();
   const comboDisplay = createComboDisplay();
@@ -151,6 +158,13 @@ function startGame() {
       if (objective.entryCount !== null) {
         const hazard = pocket.snapshot();
         exitPortal.unlock(objective.absorbed, displaySize.cssWidth, displaySize.cssHeight,
+          movement.snapshot(), [...fragmentSystem.snapshot(),
+            ...(["warning", "active"].includes(hazard.phase) ? [hazard] : [])], mobileAsteroid.snapshot());
+      }
+      if (zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_3) {
+        const objectiveThree = zoneThreeObjective.sync(progressionState.normalFragmentsAbsorbed);
+        const hazard = pocket.snapshot();
+        zoneThreePortal.unlock(objectiveThree.absorbed, displaySize.cssWidth, displaySize.cssHeight,
           movement.snapshot(), [...fragmentSystem.snapshot(),
             ...(["warning", "active"].includes(hazard.phase) ? [hazard] : [])], mobileAsteroid.snapshot());
       }
@@ -212,8 +226,12 @@ function startGame() {
       portal.translate(offset);
       pocket.translate(offset);
       exitPortal.translate(offset);
+      zoneThreePortal.translate(offset);
       const hazard = pocket.snapshot();
       exitPortal.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(),
+        [...fragmentSystem.snapshot(), ...(["warning", "active"].includes(hazard.phase) ? [hazard] : [])],
+        mobileAsteroid.snapshot());
+      zoneThreePortal.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(),
         [...fragmentSystem.snapshot(), ...(["warning", "active"].includes(hazard.phase) ? [hazard] : [])],
         mobileAsteroid.snapshot());
       pocket.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(), pocketObstacles());
@@ -285,12 +303,13 @@ function startGame() {
       decorativeAsteroidsParallax.update(deltaSeconds);
       absorptionFeedback.update(deltaSeconds);
       movement.update(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight,
-        zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_3 ? ZONE_THREE_SPEED_MULTIPLIER : 1);
+        [NYR_ZONES.ZONE_3, NYR_ZONES.ZONE_4].includes(zoneProgression.snapshot().currentZone) ? ZONE_THREE_SPEED_MULTIPLIER : 1);
       fragmentSystem.advanceCorruption(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight);
       fragmentSystem.update(movement.snapshot(), displaySize.cssWidth, displaySize.cssHeight);
       if (!isRuntimeActive()) return;
       portal.update(movement.snapshot());
       exitPortal.update(movement.snapshot());
+      zoneThreePortal.update(movement.snapshot());
       if (!isRuntimeActive()) return;
       mobileAsteroid.update(
         deltaSeconds,
@@ -337,6 +356,7 @@ function startGame() {
       renderCorruptionPocket(displayManager.context, pocket.snapshot());
       renderZoneExitPortal(displayManager.context, portal.snapshot());
       renderZoneExitPortal(displayManager.context, exitPortal.snapshot());
+      renderZoneExitPortal(displayManager.context, zoneThreePortal.snapshot());
       renderMobileAsteroid(displayManager.context, mobileAsteroid.snapshot());
       renderNormalFragments(displayManager.context, fragmentSystem.snapshot());
       renderNyr(

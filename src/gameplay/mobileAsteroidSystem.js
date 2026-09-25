@@ -95,7 +95,7 @@ export function createMobileAsteroidSystem({
   }
 
   function syncZone(zoneSnapshot, width, height, headState, fragments = []) {
-    if (state.active || ![NYR_ZONES.ZONE_2, NYR_ZONES.ZONE_3].includes(zoneSnapshot?.currentZone)) return snapshot();
+    if (state.active || ![NYR_ZONES.ZONE_2, NYR_ZONES.ZONE_3, NYR_ZONES.ZONE_4].includes(zoneSnapshot?.currentZone)) return snapshot();
     state.active = true;
     spawn(width, height, headState, fragments);
     return snapshot();

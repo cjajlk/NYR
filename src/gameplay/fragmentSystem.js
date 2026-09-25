@@ -127,7 +127,7 @@ export function createFragmentSystem({
   }
 
   function update(headState, width, height) {
-    if (![NYR_ZONES.ZONE_2, NYR_ZONES.ZONE_3].includes(getCurrentZone())) corruption = null;
+    if (![NYR_ZONES.ZONE_2, NYR_ZONES.ZONE_3, NYR_ZONES.ZONE_4].includes(getCurrentZone())) corruption = null;
     if (corruption) {
       const touching = distanceBetween(corruption, headState) <= config.absorptionRadiusPixels;
       if (touching && !corruption.headContact) {
@@ -153,7 +153,7 @@ export function createFragmentSystem({
         pureFragment = { id: "pure", kind: "pure", x: 0, y: 0 };
         placeFragment(pureFragment, headState, width, height);
       }
-      if (onCorruptionContact && [NYR_ZONES.ZONE_2, NYR_ZONES.ZONE_3].includes(getCurrentZone()) &&
+      if (onCorruptionContact && [NYR_ZONES.ZONE_2, NYR_ZONES.ZONE_3, NYR_ZONES.ZONE_4].includes(getCurrentZone()) &&
           normalAbsorptions >= CORRUPTION_CONFIG.firstAbsorption &&
           (normalAbsorptions - CORRUPTION_CONFIG.firstAbsorption) % CORRUPTION_CONFIG.interval === 0) {
         corruption = { id: "corruption", kind: "corruption", generation: normalAbsorptions,
