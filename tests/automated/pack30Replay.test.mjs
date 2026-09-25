@@ -98,6 +98,10 @@ if (!hz) {
     const { verifyZoneFour } = await import("./pack42ZoneFourEntry.test.mjs");
     verifyZoneFour({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
   }
+  if (process.env.NYR_DEVOREUR_TEST) {
+    const { verifyDevoreur } = await import("./pack43Devoreur.test.mjs");
+    verifyDevoreur({ app, frame, snapshot, hz });
+  }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {
     const p = globalThis.probe;

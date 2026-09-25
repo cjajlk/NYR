@@ -35,7 +35,7 @@ for (let i = 1; i <= 200; i++) {
   assert.equal(movement.snapshot().segmentCount, 120);
   assert.equal(progression.snapshot().normalFragmentsAbsorbed, i);
   assert.equal(score.snapshot().points, i * 100);
-  assert.equal(progression.snapshot().currentForm, i < 20 ? "eclat" : i < 50 ? "spectre" : "nocturne");
+  assert.equal(progression.snapshot().currentForm, i < 20 ? "eclat" : i < 50 ? "spectre" : i < 100 ? "nocturne" : "devoreur");
   assert.notDeepEqual(fragments.snapshot()[0], target, "absorbed fragment respawns after the body cap");
 }
 

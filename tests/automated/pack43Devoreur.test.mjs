@@ -6,7 +6,7 @@ import { renderNyr } from "../../src/gameplay/nyrRenderer.js";
 import { createNyrAbsorptionFeedback } from "../../src/gameplay/nyrAbsorptionFeedback.js";
 import { endGame } from "../../src/core/runtimeState.js";
 
-export function verifyNocturne({ app, frame, snapshot, hz }) {
+export function verifyDevoreur({ app, frame, snapshot, hz }) {
   const progression = createNyrProgression();
   for (let i = 0; i <= 125; i++) {
     assert.equal(progression.snapshot().currentForm, i < 20 ? "eclat" : i < 50 ? "spectre" : i < 100 ? "nocturne" : "devoreur");
@@ -16,19 +16,24 @@ export function verifyNocturne({ app, frame, snapshot, hz }) {
   for (const earlyPortals of [false, true]) {
     const p = globalThis.probe;
     const normal = () => p.fragmentSystem.update({ ...p.fragmentSystem.snapshot()[0], trail: [] }, 940, 392);
-    for (let i = 1; i <= 105; i++) {
+    for (let i = 1; i <= 125; i++) {
       const before = snapshot(p);
       normal();
       assert.equal(p.progression.snapshot().normalFragmentsAbsorbed, i);
       assert.equal(p.progression.snapshot().currentForm, i < 20 ? "eclat" : i < 50 ? "spectre" : i < 100 ? "nocturne" : "devoreur");
-      assert.equal(p.movement.snapshot().segmentCount, 4 + i);
+      assert.equal(p.movement.snapshot().segmentCount, Math.min(120, 4 + i));
       assert.equal(p.stability.snapshot().stability, before.stability.stability);
       assert.equal(p.movement.snapshot().heading, before.movement.heading);
       assert.equal(p.movement.snapshot().x, before.movement.x);
       assert.equal(p.score.snapshot().points - before.score.points, 100 * (before.combo.chain < 2 ? 1 : before.combo.chain < 4 ? 2 : before.combo.chain < 6 ? 3 : 4));
-      if (i === 50) {
+      if (i === 100) {
         assert.equal(p.combo.snapshot().chain, before.combo.chain + 1);
-        assert.equal(p.absorptionFeedback.snapshot().form, "nocturne");
+        assert.equal(p.absorptionFeedback.snapshot().form, "devoreur");
+      }
+      if (earlyPortals && i === 62) {
+        const before = p.progression.snapshot();
+        p.zoneThreePortal.update(p.zoneThreePortal.snapshot());
+        assert.deepEqual(p.progression.snapshot(), before);
       }
       if (earlyPortals && (i === 27 || i === 42)) {
         const conserved = p.progression.snapshot();
@@ -36,7 +41,7 @@ export function verifyNocturne({ app, frame, snapshot, hz }) {
         assert.deepEqual(p.progression.snapshot(), conserved);
       }
     }
-    assert.equal(p.zoneProgression.snapshot().currentZone, earlyPortals ? "zone-3" : "zone-1");
+    assert.equal(p.zoneProgression.snapshot().currentZone, earlyPortals ? "zone-4" : "zone-1");
     const protectedState = () => ({ progression: p.progression.snapshot(), score: p.score.snapshot(), movement: p.movement.snapshot(), combo: p.combo.snapshot() });
     const beforeSpecial = protectedState();
     for (const kind of ["pure", "corruption"]) {
@@ -45,7 +50,7 @@ export function verifyNocturne({ app, frame, snapshot, hz }) {
     }
     assert.deepEqual(protectedState(), beforeSpecial);
     const traces = new Map();
-    for (const form of ["eclat", "spectre", "nocturne"]) {
+    for (const form of ["eclat", "spectre", "nocturne", "devoreur"]) {
       const calls = [];
       const context = new Proxy({}, {
         get: (_, key) => (...args) => calls.push([key, ...args]),
@@ -57,15 +62,23 @@ export function verifyNocturne({ app, frame, snapshot, hz }) {
       assert.deepEqual(state, copy, "renderer cannot change physics");
       traces.set(form, calls);
     }
-    assert.notDeepEqual(traces.get("nocturne"), traces.get("spectre"));
+    assert.notDeepEqual(traces.get("devoreur"), traces.get("nocturne"));
     assert.ok(traces.get("nocturne").some(call => call[0] === "quadraticCurveTo"));
-    const colors = traces.get("nocturne").filter(call => /Style|Color/.test(call[0])).map(call => call[1]);
-    for (const color of colors) {
-      const rgb = color.startsWith("#") ? color.slice(1).match(/../g).map(v => parseInt(v, 16)) : color.match(/[\d.]+/g).slice(0, 3).map(Number);
-      assert.ok(rgb[2] >= rgb[0], `cool palette: ${color}`);
-    }
+    const colors = traces.get("devoreur").filter(call => /Style|Color/.test(call[0])).map(call => call[1]);
+    const gold = colors.filter(color => color.includes("203, 177, 114"));
+    assert.ok(gold.length > 0 && gold.length / colors.length < 0.15, "gold stays an accent");
+    const traceAt = time => {
+      const calls = [];
+      const context = new Proxy({}, { get: (_, key) => (...args) => calls.push([key, ...args]),
+        set: (_, key, value) => { calls.push([key, value]); return true; } });
+      renderNyr(context, { ...p.movement.snapshot(), simulationTime: time }, { currentForm: "devoreur" });
+      return calls;
+    };
+    assert.notDeepEqual(traceAt(0), traceAt(1), "energy travels along the body");
+    assert.deepEqual(traceAt(1), traceAt(1), "same active time gives identical render");
+
     const feedback = createNyrAbsorptionFeedback();
-    feedback.trigger("nocturne");
+    feedback.trigger("devoreur");
     assert.equal(feedback.snapshot().active, true);
     const arcs = [];
     const context = new Proxy({}, { get: (_, key) => (...args) => { if (key === "arc") arcs.push(args); }, set: () => true });
@@ -73,6 +86,10 @@ export function verifyNocturne({ app, frame, snapshot, hz }) {
     assert.equal(arcs.length, 5, "two pulse rings, pulse core and two eyes");
     for (let i = 0; i < hz; i++) feedback.update(1 / hz);
     assert.equal(feedback.snapshot().active, false);
+    frame(); frame();
+    const beforeMove = p.movement.snapshot(); frame();
+    const afterMove = p.movement.snapshot();
+    assert.ok(Math.abs(Math.hypot(afterMove.x - beforeMove.x, afterMove.y - beforeMove.y) - (earlyPortals ? 109.25 : 95) / hz) < 1e-8);
     endGame(); frame();
     const frozen = snapshot(p);
     for (let i = 0; i < hz; i++) frame();
@@ -85,11 +102,11 @@ export function verifyNocturne({ app, frame, snapshot, hz }) {
     assert.equal(globalThis.probe.progression.snapshot().currentForm, "eclat");
   }
 }
-if (!process.env.NYR_NOCTURNE_TEST) {
+if (!process.env.NYR_DEVOREUR_TEST) {
   for (const hz of [30, 60, 120]) {
     const result = spawnSync(process.execPath, [fileURLToPath(new URL("./pack30Replay.test.mjs", import.meta.url)), String(hz)],
-      { encoding: "utf8", env: { ...process.env, NYR_NOCTURNE_TEST: "1" } });
+      { encoding: "utf8", env: { ...process.env, NYR_DEVOREUR_TEST: "1" } });
     assert.equal(result.status, 0, result.stdout + result.stderr);
   }
-  console.log("PACK 41 Nocturne: tests OK");
+  console.log("PACK 43 Devoreur: tests OK");
 }

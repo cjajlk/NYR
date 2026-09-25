@@ -129,7 +129,7 @@ function drawAbsorptionFeedback(context, tailPose, feedback, feedbackConfig) {
 
   const progress = Math.max(0, Math.min(1, feedback.progress));
   const remaining = 1 - progress;
-  const isNocturne = feedback.form === NYR_FORMS.NOCTURNE;
+  const isNocturne = [NYR_FORMS.NOCTURNE, NYR_FORMS.DEVOREUR].includes(feedback.form);
   const isSpectre = feedback.form === NYR_FORMS.SPECTRE || isNocturne;
   const radius = feedbackConfig.startRadiusPixels +
     (feedbackConfig.endRadiusPixels - feedbackConfig.startRadiusPixels) * progress;
@@ -264,6 +264,68 @@ function drawNocturneHead(context) {
   context.stroke();
 }
 
+/* All additions are decorative; active simulation time freezes energy on suspension. */
+function drawDevoreurBody(context, poses, simulationTime = 0) {
+  const phase = (simulationTime / 4) % 1;
+  for (let index = 0; index < poses.length; index++) {
+    const pose = poses[index];
+    const distance = Math.abs(index / Math.max(1, poses.length - 1) - phase);
+    const energy = Math.max(0, 1 - Math.min(distance, 1 - distance) * 8);
+    context.save();
+    context.translate(pose.x, pose.y);
+    context.rotate(pose.angle);
+    context.strokeStyle = `rgba(110, 215, 255, ${0.15 + energy * 0.6})`;
+    context.shadowColor = "#727dff";
+    context.shadowBlur = 3 + energy * 6;
+    context.lineWidth = 1.3;
+    context.beginPath();
+    context.moveTo(-5, 0); context.lineTo(5, 0); context.stroke();
+    if (index % 6 === 0) {
+      context.beginPath();
+      for (const side of [-1, 1]) {
+        context.moveTo(-4, side * 3);
+        context.lineTo(-7, side * 9);
+        context.lineTo(2, side * 4);
+      }
+      context.fillStyle = "#242a51"; context.fill();
+      context.strokeStyle = "rgba(203, 177, 114, 0.55)";
+      context.lineWidth = 0.8; context.stroke();
+    }
+    if (index === poses.length - 1) {
+      context.beginPath();
+      context.moveTo(4, 0);
+      context.quadraticCurveTo(-8, -13, -18, -5);
+      context.lineTo(-10, 0);
+      context.lineTo(-18, 5);
+      context.quadraticCurveTo(-8, 13, 4, 0);
+      context.fillStyle = "rgba(100, 80, 210, 0.35)";
+      context.fill(); context.strokeStyle = "#8ba9ff"; context.stroke();
+    }
+    context.restore();
+  }
+}
+function drawDevoreurHead(context) {
+  context.save();
+  context.scale(1.18, 1.18);
+  drawNocturneHead(context);
+  context.restore();
+  for (const side of [-1, 1]) {
+    context.beginPath();
+    context.moveTo(-20, side * 9);
+    context.quadraticCurveTo(-30, side * 24, -46, side * 29);
+    context.quadraticCurveTo(-37, side * 15, -44, side * 10);
+    context.closePath();
+    context.fillStyle = "rgba(97, 97, 220, 0.28)";
+    context.strokeStyle = "rgba(131, 176, 255, 0.65)";
+    context.lineWidth = 1.2; context.fill(); context.stroke();
+    context.beginPath();
+    context.moveTo(-12, side * 14);
+    context.quadraticCurveTo(-24, side * 35, -7, side * 37);
+    context.strokeStyle = "rgba(203, 177, 114, 0.65)";
+    context.lineWidth = 1; context.stroke();
+  }
+}
+
 export function renderNyr(
   context,
   state,
@@ -273,7 +335,8 @@ export function renderNyr(
   visualConfig = NYR_BODY_VISUAL_CONFIG,
   feedbackConfig = NYR_ABSORPTION_FEEDBACK_CONFIG
 ) {
-  const isNocturne = progression.currentForm === NYR_FORMS.NOCTURNE;
+  const isDevoreur = progression.currentForm === NYR_FORMS.DEVOREUR;
+  const isNocturne = progression.currentForm === NYR_FORMS.NOCTURNE || isDevoreur;
   const isSpectre = progression.currentForm === NYR_FORMS.SPECTRE || isNocturne;
   const poses = Array.from({ length: state.segmentCount }, (_, index) =>
     findTrailPose(state.trail, (index + 1) * config.segmentSpacingPixels)
@@ -300,20 +363,23 @@ export function renderNyr(
     );
   }
 
+  if (isDevoreur) drawDevoreurBody(context, poses, state.simulationTime);
+
   context.save();
   context.translate(state.x, state.y);
   context.rotate(state.heading);
 
-  if (isNocturne) drawNocturneHead(context);
+  if (isDevoreur) drawDevoreurHead(context);
+  else if (isNocturne) drawNocturneHead(context);
   else if (isSpectre) drawSpectreHead(context);
   else drawEclatHead(context);
 
   context.fillStyle = "#b9f5ff";
   context.shadowColor = "#65dcff";
-  context.shadowBlur = 10;
+  context.shadowBlur = isDevoreur ? 18 : 10;
   for (const eyeY of [-5, 5]) {
     context.beginPath();
-    context.arc(7, eyeY, 2.7, 0, Math.PI * 2);
+    context.arc(7, eyeY, isDevoreur ? 3.3 : 2.7, 0, Math.PI * 2);
     context.fill();
   }
 

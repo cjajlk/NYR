@@ -1,13 +1,15 @@
 export const NYR_PROGRESSION_CONFIG = Object.freeze({
   // Seuils des formes visuelles sur le compteur normal global.
   spectreThresholdFragments: 20,
-  nocturneThresholdFragments: 50
+  nocturneThresholdFragments: 50,
+  devoreurThresholdFragments: 100
 });
 
 export const NYR_FORMS = Object.freeze({
   ECLAT: "eclat",
   SPECTRE: "spectre",
-  NOCTURNE: "nocturne"
+  NOCTURNE: "nocturne",
+  DEVOREUR: "devoreur"
 });
 
 export function createNyrProgression({
@@ -39,7 +41,9 @@ export function createNyrProgression({
   function snapshot() {
     return Object.freeze({
       ...state,
-      currentForm: state.normalFragmentsAbsorbed >= (config.nocturneThresholdFragments ?? NYR_PROGRESSION_CONFIG.nocturneThresholdFragments)
+      currentForm: state.normalFragmentsAbsorbed >= (config.devoreurThresholdFragments ?? NYR_PROGRESSION_CONFIG.devoreurThresholdFragments)
+        ? NYR_FORMS.DEVOREUR
+        : state.normalFragmentsAbsorbed >= (config.nocturneThresholdFragments ?? NYR_PROGRESSION_CONFIG.nocturneThresholdFragments)
         ? NYR_FORMS.NOCTURNE
         : state.spectreThresholdReached ? NYR_FORMS.SPECTRE : NYR_FORMS.ECLAT
     });
