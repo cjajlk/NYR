@@ -41,5 +41,5 @@ export function createGameLoop({ isActive, update, render, requestFrame = reques
     previousTimestamp = null;
   }
 
-  return Object.freeze({ start, stop });
+  return Object.freeze({ start, stop, resetClock() { previousTimestamp = null; } });
 }

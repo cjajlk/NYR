@@ -201,15 +201,15 @@ body {
   position: fixed;
   right: max(0.5rem, env(safe-area-inset-right));
   bottom: max(0.25rem, env(safe-area-inset-bottom));
-  z-index: 12;
+  z-index: 9;
   min-height: 44px;
-  padding: 0.4rem 0.7rem;
-  border: 1px solid rgb(162 220 255 / 35%);
+  padding: 0.3rem 0.5rem;
+  border: 1px solid rgb(162 220 255 / 18%);
   border-radius: 999px;
   background: rgb(7 8 22 / 88%);
-  color: #e7f9ff;
+  color: #b2bbce;
   font: inherit;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   letter-spacing: 0.08em;
   cursor: pointer;
   touch-action: manipulation;
@@ -356,8 +356,39 @@ body {
   max-height: calc(100vh - 7rem);
   max-height: calc(100dvh - 7rem);
   overflow-y: auto;
-  padding: 0.25rem 0.5rem;
+  min-height: 0;
+  padding: 0.25rem 0.5rem 2rem;
+  scroll-padding-bottom: 2rem;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   color: #e7f9ff;
+}
+.main-menu > .menu-back { flex-shrink: 0; margin-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+.main-menu > h1 { flex-shrink: 0; }
+.pause-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.65rem;
+  background: rgb(7 7 19 / 85%);
+}
+.pause-overlay strong { font-size: clamp(1.5rem, 5vw, 3rem); letter-spacing: 0.15em; }
+.pause-overlay[hidden], .fragments-display[hidden] { display: none; }
+.fragments-display {
+  position: fixed;
+  top: 3.5rem;
+  right: max(0.5rem, env(safe-area-inset-right));
+  z-index: 9;
+  color: #b2bbce;
+  font-size: 0.65rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+  text-shadow: 0 1px 4px #070713;
 }
 .challenges-panel[hidden] { display: none; }
 .shards-balance { text-align: center; color: #c9b5ff; font-size: 0.95rem; }

@@ -85,8 +85,9 @@ export function verifyStatistics({ app, frame, snapshot, hz, setBounds }) {
   assert.deepEqual(snapshot(globalThis.probe),initial);assert.deepEqual(globalThis.probe.readTotals(),persistent);
   const abandoned=globalThis.probe;
   abandoned.fragmentSystem.update({...abandoned.fragmentSystem.snapshot()[0],trail:[]},940,392);
-  app.children.find(e=>e.className==="return-menu").emit("click");
-  assert.deepEqual(globalThis.probe.readTotals(),persistent,"abandoned run not committed");
+  globalThis.quitToMenu();
+  assert.equal(globalThis.probe.readTotals().completedRuns,persistent.completedRuns+1,"explicit quit records the run since PACK 48");
+  assert.equal(globalThis.probe.readTotals().normalFragments,persistent.normalFragments+1);
   const menu=app.children.find(e=>e.className==="main-menu");
   menu.children.find(e=>e.textContent==="STATISTIQUES").emit("click");
   const panel=menu.children.find(e=>e.className==="statistics-grid");

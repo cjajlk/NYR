@@ -98,7 +98,7 @@ export function verifyZoneThree({ app, frame, snapshot, hz, setBounds }) {
     assert.equal(p.zoneBackgroundTransition.snapshot().targetZone, "zone-3");
     endGame(); frame();
     if (useMenu) {
-      app.children.find(e => e.className === "return-menu").emit("click");
+      globalThis.quitToMenu();
       app.children.find(e => e.className === "main-menu").children[1].emit("click");
     } else p.stabilityDisplay.gameOverElement.children[2].emit("click");
     assert.deepEqual(snapshot(globalThis.probe), initial);

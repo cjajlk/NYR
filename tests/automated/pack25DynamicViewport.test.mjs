@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { getRuntimeState, isRuntimeActive } from "../../src/core/runtimeState.js";
 import { createNyrMovement } from "../../src/gameplay/nyrMovement.js";
+import { createFullscreenControl } from "../../src/ui/fullscreenControl.js";
 
 const hz = Number(process.argv[2]);
 if (!hz) {
@@ -105,8 +106,10 @@ if (!hz) {
   source = source.replace('  suspendRuntime("main-menu");', "");
   await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
   const p = globalThis.probe;
-  const fullscreenButton = app.children.find(element => element.className === "fullscreen-control");
-  assert.ok(fullscreenButton);
+  const gameplayFullscreen = app.children.find(element => element.className === "fullscreen-control");
+  assert.equal(gameplayFullscreen.hidden, true, "PACK 48 hides fullscreen controls during gameplay");
+  // Exercise the API separately; external fullscreen changes must still resize gameplay.
+  const fullscreenButton = createFullscreenControl(() => {}, document).element;
   assert.equal(fullscreenCalls, 0, "no automatic fullscreen request");
   const clickFullscreen = () => {
     interaction = true;

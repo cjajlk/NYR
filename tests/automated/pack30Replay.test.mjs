@@ -49,6 +49,12 @@ if (!hz) {
   const snapshot = p => Object.fromEntries(Object.entries(p).filter(([, value]) => value.snapshot).map(([key, value]) => [key, value.snapshot()]));
   const frame = () => { timestamp += 1000 / hz; const callbacks = queue; queue = []; callbacks.forEach(fn => fn(timestamp)); };
   const button = p => p.stabilityDisplay.gameOverElement.children[2];
+  // Earlier packs exercise cleanup through the current explicit quit flow.
+  globalThis.quitToMenu = () => {
+    app.children.find(e => e.className === "return-menu").emit("click");
+    const pause = app.children.find(e => e.className === "pause-overlay");
+    if (!pause.hidden) pause.children[2].emit("click");
+  };
   if (process.env.NYR_MENU_TEST) {
     const { verifyMenu } = await import("./pack31MainMenu.test.mjs");
     verifyMenu({ app, frame, snapshot, setBounds: value => { bounds = value; } });
@@ -117,6 +123,10 @@ if (!hz) {
   if (process.env.NYR_WEEKLY_TEST) {
     const { verifyWeeklyRuntime } = await import("./pack47WeeklyChallenges.test.mjs");
     verifyWeeklyRuntime({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
+  }
+  if (process.env.NYR_PAUSE_TEST) {
+    const { verifyPause } = await import("./pack48Pause.test.mjs");
+    verifyPause({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
   }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {

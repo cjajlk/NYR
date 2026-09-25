@@ -1,4 +1,5 @@
 import { createWeeklyChallenges } from "./gameplay/weeklyChallenges.js";
+import { createPauseDisplay } from "./ui/pauseDisplay.js";
 import { createRunStatistics, createStatisticsStore } from "./gameplay/runStatistics.js";
 import { createTimeDisplay } from "./ui/timeDisplay.js";
 import { createVoidDifficulty } from "./gameplay/voidDifficulty.js";
@@ -76,7 +77,32 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) weekl
 function startGame() {
   const { screen, canvas } = createPreproductionScreen();
   const mainMenu = createMainMenu(replayGame, statisticsStore.snapshot, weeklyChallenges);
-  const returnMenu = createReturnMenu(() => replaceSession(true));
+  const returnMenu = createReturnMenu(() => {
+    if (disposed) return;
+    if (getRuntimeState().gameOver) { replaceSession(true); return; }
+    if (!isRuntimeActive()) return;
+    suspendRuntime("user-pause");
+    gameLoop.resetClock();
+    observeWeekly();
+    weeklyChallenges.flush();
+    syncMenuDisplay();
+  });
+  const pauseDisplay = createPauseDisplay(() => {
+    if (!canLeavePause()) return;
+    resumeRuntime("user-pause");
+    gameLoop.resetClock();
+    requestDisplaySync();
+    syncMenuDisplay();
+  }, () => {
+    if (!canLeavePause()) return;
+    runStatistics.finish();
+    replaceSession(true);
+  });
+  function canLeavePause() {
+    const state = getRuntimeState();
+    return !disposed && !state.gameOver && state.suspensionReasons.includes("user-pause") &&
+      state.suspensionReasons.every(reason => reason === "user-pause");
+  }
   let disposed = false;
   const orientationOverlay = createOrientationOverlay();
   const displayManager = createDisplayManager(canvas, screen);
@@ -164,6 +190,9 @@ function startGame() {
   const score = createNyrScore();
   const scoreDisplay = createScoreDisplay();
   const timeDisplay = createTimeDisplay();
+  const fragmentsDisplay = document.createElement("output");
+  fragmentsDisplay.className = "fragments-display";
+  fragmentsDisplay.setAttribute("aria-label", "Fragments normaux");
   const stabilityDisplay = createStabilityDisplay(undefined, replayGame, () => replaceSession(true));
   scoreDisplay.update(score.snapshot());
   const absorptionFeedback = createNyrAbsorptionFeedback();
@@ -225,6 +254,7 @@ function startGame() {
   app.replaceChildren(screen, orientationOverlay.element, scoreDisplay.element);
   app.append(stabilityDisplay.element, stabilityDisplay.gameOverElement);
   app.append(mainMenu.element, returnMenu.element, comboDisplay.element, timeDisplay.element);
+  app.append(pauseDisplay.element, fragmentsDisplay);
 
   function syncOrientationState(shouldSuspend) {
     orientationOverlay.setVisible(shouldSuspend);
@@ -245,6 +275,10 @@ function startGame() {
     const menu = state.phase === "MENU";
     mainMenu.update(menu, state.suspensionReasons.includes("portrait-orientation"));
     returnMenu.update(state);
+    pauseDisplay.update(state);
+    fullscreenControl.update(state);
+    fragmentsDisplay.textContent = `FRAGMENTS ${progression.snapshot().normalFragmentsAbsorbed}`;
+    fragmentsDisplay.hidden = menu || state.suspensionReasons.includes("portrait-orientation");
     if (state.gameOver || state.journeyComplete) combo.reset();
     comboDisplay.update(combo.snapshot(), state);
     scoreDisplay.element.hidden = menu;
@@ -326,7 +360,7 @@ function startGame() {
     if (disposed) return;
     const state = getRuntimeState();
     const menu = state.phase === "MENU";
-    if (state.suspensionReasons.some(reason => reason !== "main-menu")) return;
+    if (state.suspensionReasons.some(reason => reason !== "main-menu" && !(toMenu && reason === "user-pause"))) return;
     if (toMenu ? menu : (!state.gameOver && !state.journeyComplete && !menu)) return;
     observeWeekly();
     weeklyChallenges.flush();
@@ -339,6 +373,7 @@ function startGame() {
     window.visualViewport?.removeEventListener("resize", requestDisplaySync);
     if (toMenu) suspendRuntime("main-menu");
     else if (menu) resumeRuntime("main-menu");
+    resumeRuntime("user-pause");
     if (state.gameOver || state.journeyComplete) beginNewGame();
     startGame();
   }

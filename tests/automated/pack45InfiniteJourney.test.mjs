@@ -84,7 +84,7 @@ export function verifyInfinite({ app, frame, snapshot, hz, setBounds }) {
     assert.deepEqual(snapshot(p), dead); assert.equal(p.timeDisplay.element.textContent, finalLabel);
     assert.equal(p.timeDisplay.element.hidden, false);
     if (menu) {
-      app.children.find(e => e.className === "return-menu").emit("click");
+      globalThis.quitToMenu();
       const idle = snapshot(globalThis.probe); for (let i = 0; i < hz; i++) frame();
       assert.deepEqual(snapshot(globalThis.probe), idle);
       assert.equal(globalThis.probe.timeDisplay.element.hidden, true);

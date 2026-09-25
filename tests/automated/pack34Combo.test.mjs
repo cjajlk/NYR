@@ -64,7 +64,7 @@ export function verifyCombo({ app, frame, snapshot, hz, setBounds }) {
   }
   assert.deepEqual(p.combo.snapshot(), { chain: 0, remaining: 0, multiplier: 1 });
   frame(); assert.equal(p.comboDisplay.element.hidden, true);
-  app.children.find(e => e.className === "return-menu").emit("click");
+  globalThis.quitToMenu();
   assert.deepEqual(globalThis.probe.combo.snapshot(), { chain: 0, remaining: 0, multiplier: 1 });
   app.children.find(e => e.className === "main-menu").children[1].emit("click");
   assert.deepEqual(snapshot(globalThis.probe), initial);

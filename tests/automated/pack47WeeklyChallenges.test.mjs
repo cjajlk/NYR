@@ -88,13 +88,13 @@ export function verifyWeeklyRuntime({app,frame,snapshot,hz,setBounds}) {
   const frozen=p.readWeekly();for(let i=0;i<hz;i++)frame();assert.deepEqual(p.readWeekly(),frozen);
   window.innerWidth=956;window.innerHeight=440;setBounds({width:940,height:392});window.emit("resize");frame();
   const totals=p.readTotals();
-  app.children.find(e=>e.className==="return-menu").emit("click");
+  globalThis.quitToMenu();
   const menu=app.children.find(e=>e.className==="main-menu");
   const saved=globalThis.probe.readWeekly();assert.equal(saved.challenges[0].progress,85);
   menu.children.find(e=>e.textContent==="DÉFIS").emit("click");
   const panel=menu.children.find(e=>e.className==="challenges-panel");assert.equal(panel.hidden,false);
   for(let i=0;i<hz;i++)frame();assert.deepEqual(globalThis.probe.readWeekly(),saved);
-  assert.deepEqual(globalThis.probe.readTotals(),totals,"abandon does not record a finished run");
+  assert.equal(globalThis.probe.readTotals().completedRuns,totals.completedRuns+1,"explicit quit now records a finished run");
   menu.children.find(e=>e.textContent==="RETOUR").emit("click");assert.equal(panel.hidden,true);
   menu.children[1].emit("click");assert.deepEqual(snapshot(globalThis.probe),initial);
   const next=globalThis.probe;

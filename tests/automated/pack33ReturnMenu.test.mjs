@@ -34,6 +34,7 @@ export function verifyReturnMenu({ app, frame, snapshot, setBounds }) {
     setBounds({ width: 940, height: 392 }); window.emit("resize"); frame();
     assert.equal(globalThis.probe, old, "rotation does not return to menu");
     button.emit("click");
+    if (!dead) app.children.find(e => e.className === "pause-overlay").children[2].emit("click");
     const menuSession = globalThis.probe;
     assert.notEqual(menuSession, old);
     assert.equal(getRuntimeState().phase, "MENU");

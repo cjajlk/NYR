@@ -78,7 +78,7 @@ export function verifyNocturne({ app, frame, snapshot, hz }) {
     for (let i = 0; i < hz; i++) frame();
     assert.deepEqual(snapshot(p), frozen);
     if (earlyPortals) {
-      app.children.find(e => e.className === "return-menu").emit("click");
+      globalThis.quitToMenu();
       app.children.find(e => e.className === "main-menu").children[1].emit("click");
     } else p.stabilityDisplay.gameOverElement.children[2].emit("click");
     assert.deepEqual(snapshot(globalThis.probe), initial);

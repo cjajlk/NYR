@@ -63,7 +63,7 @@ export function verifyMotion({ app, frame, snapshot, hz, setBounds }) {
   const dead = danger(p.fragmentSystem);
   for (let i = 0; i < hz; i++) frame();
   assert.deepEqual(danger(p.fragmentSystem), dead);
-  app.children.find(e => e.className === "return-menu").emit("click");
+  globalThis.quitToMenu();
   assert.equal(danger(globalThis.probe.fragmentSystem), undefined);
   app.children.find(e => e.className === "main-menu").children[1].emit("click");
   assert.deepEqual(snapshot(globalThis.probe), initial);

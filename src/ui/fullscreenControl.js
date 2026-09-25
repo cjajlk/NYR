@@ -4,12 +4,13 @@ export function createFullscreenControl(onDisplayChange, ownerDocument = documen
   element.className = "fullscreen-control";
   let pending = false;
   let refused = false;
+  let menuVisible = true;
 
   function refresh() {
     const available = ownerDocument.fullscreenEnabled === true &&
       typeof ownerDocument.documentElement?.requestFullscreen === "function";
-    element.hidden = !available;
-    element.disabled = !available || pending;
+    element.hidden = !available || !menuVisible;
+    element.disabled = !available || !menuVisible || pending;
     element.textContent = ownerDocument.fullscreenElement
       ? "QUITTER PLEIN ÉCRAN"
       : refused ? "RÉESSAYER PLEIN ÉCRAN" : "PLEIN ÉCRAN";
@@ -17,7 +18,7 @@ export function createFullscreenControl(onDisplayChange, ownerDocument = documen
   }
 
   element.addEventListener("click", async () => {
-    if (pending || ownerDocument.fullscreenEnabled !== true ||
+    if (!menuVisible || pending || ownerDocument.fullscreenEnabled !== true ||
         typeof ownerDocument.documentElement?.requestFullscreen !== "function") {
       refresh();
       return;
@@ -47,7 +48,10 @@ export function createFullscreenControl(onDisplayChange, ownerDocument = documen
   }
   ownerDocument.addEventListener("fullscreenchange", onFullscreenChange);
   refresh();
-  return Object.freeze({ element, destroy() {
+  return Object.freeze({ element, update(state) {
+    menuVisible = state.phase === "MENU" && !state.suspensionReasons.includes("portrait-orientation");
+    refresh();
+  }, destroy() {
     ownerDocument.removeEventListener("fullscreenchange", onFullscreenChange);
   } });
 }

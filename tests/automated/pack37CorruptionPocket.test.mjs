@@ -83,7 +83,7 @@ export function verifyPocket({ app, frame, snapshot, hz, setBounds }) {
   assert.deepEqual(p.pocket.snapshot(), dead);
   p.stabilityDisplay.gameOverElement.children[2].emit("click");
   assert.deepEqual(snapshot(globalThis.probe), initial);
-  app.children.find(e => e.className === "return-menu").emit("click");
+  globalThis.quitToMenu();
   assert.equal(globalThis.probe.pocket.snapshot().phase, "inactive");
   app.children.find(e => e.className === "main-menu").children[1].emit("click");
   assert.deepEqual(snapshot(globalThis.probe), initial);

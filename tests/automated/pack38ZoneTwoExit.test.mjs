@@ -60,7 +60,7 @@ export function verifyZoneTwoExit({ app, frame, snapshot, hz, setBounds }) {
     endGame(); frame();
     if (entry === 27) p.stabilityDisplay.gameOverElement.children[2].emit("click");
     else {
-      app.children.find(e => e.className === "return-menu").emit("click");
+      globalThis.quitToMenu();
       app.children.find(e => e.className === "main-menu").children[1].emit("click");
     }
     assert.deepEqual(snapshot(globalThis.probe), initial);

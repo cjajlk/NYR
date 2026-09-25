@@ -82,7 +82,7 @@ export function verifyVoid({ app, frame, snapshot, hz, setBounds }) {
     for (let i = 0; i < hz; i++) frame();
     assert.deepEqual(snapshot(p), dead);
     if (menu) {
-      app.children.find(e => e.className === "return-menu").emit("click");
+      globalThis.quitToMenu();
       const idle = snapshot(globalThis.probe); for (let i = 0; i < hz; i++) frame();
       assert.deepEqual(snapshot(globalThis.probe), idle);
       app.children.find(e => e.className === "main-menu").children[1].emit("click");

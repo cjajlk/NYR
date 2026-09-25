@@ -66,7 +66,7 @@ export function verifyPortal({ app, frame, snapshot, hz, setBounds }) {
   assert.equal(p.mobileAsteroid.snapshot().active, true);
   for (let i = 32; i < 35; i++) normal();
   assert.equal(p.fragmentSystem.snapshot().find(f => f.kind === "corruption").generation, 35);
-  app.children.find(e => e.className === "return-menu").emit("click");
+  globalThis.quitToMenu();
   assert.equal(globalThis.probe.portal.snapshot().active, false);
   app.children.find(e => e.className === "main-menu").children[1].emit("click");
   const fresh = globalThis.probe;
@@ -85,7 +85,7 @@ export function verifyPortal({ app, frame, snapshot, hz, setBounds }) {
   walking.movement.aimAt(target.x, target.y);
   for (let i = 0; i < hz * 20 && walking.zoneProgression.snapshot().currentZone === "zone-1"; i++) { walking.movement.aimAt(target.x, target.y); frame(); }
   assert.equal(walking.zoneProgression.snapshot().currentZone, "zone-2", "real movement enters portal through gameplay loop");
-  app.children.find(e => e.className === "return-menu").emit("click");
+  globalThis.quitToMenu();
   app.children.find(e => e.className === "main-menu").children[1].emit("click");
   assert.deepEqual(snapshot(globalThis.probe), initial);
 }
