@@ -27,12 +27,17 @@ export function createFragmentSystem({
   onAbsorbed = () => {},
   onPureAbsorbed = null,
   onCorruptionContact = null,
+  getVoidCorruptionInterval = () => CORRUPTION_CONFIG.interval,
   getCurrentZone = () => null
 } = {}) {
   const fragments = [];
   let pureFragment = null;
   let normalAbsorptions = 0;
   let corruption = null;
+  let nextVoidCorruption = null;
+  function enterVoid() {
+    if (nextVoidCorruption === null) nextVoidCorruption = normalAbsorptions + CORRUPTION_CONFIG.interval;
+  }
 
   function isInsideSurface(point, width, height) {
     const margin = Math.min(config.spawnMarginPixels, width * 0.2, height * 0.2);
@@ -105,6 +110,7 @@ export function createFragmentSystem({
     fragments.length = 0;
     pureFragment = null;
     normalAbsorptions = 0;
+    nextVoidCorruption = null;
     corruption = null;
     for (let index = 0; index < config.activeCount; index += 1) {
       const fragment = { id: index + 1, x: 0, y: 0 };
@@ -154,11 +160,16 @@ export function createFragmentSystem({
         placeFragment(pureFragment, headState, width, height);
       }
       if (onCorruptionContact && [NYR_ZONES.ZONE_2, NYR_ZONES.ZONE_3, NYR_ZONES.ZONE_4].includes(getCurrentZone()) &&
-          normalAbsorptions >= CORRUPTION_CONFIG.firstAbsorption &&
-          (normalAbsorptions - CORRUPTION_CONFIG.firstAbsorption) % CORRUPTION_CONFIG.interval === 0) {
+          (getCurrentZone() === NYR_ZONES.ZONE_4
+            ? nextVoidCorruption !== null && normalAbsorptions >= nextVoidCorruption
+            : normalAbsorptions >= CORRUPTION_CONFIG.firstAbsorption &&
+              (normalAbsorptions - CORRUPTION_CONFIG.firstAbsorption) % CORRUPTION_CONFIG.interval === 0)) {
         corruption = { id: "corruption", kind: "corruption", generation: normalAbsorptions,
           x: 0, y: 0, headContact: false };
         placeFragment(corruption, headState, width, height);
+        if (getCurrentZone() === NYR_ZONES.ZONE_4) {
+          nextVoidCorruption = normalAbsorptions + getVoidCorruptionInterval();
+        }
       }
     }
   }
@@ -194,5 +205,5 @@ export function createFragmentSystem({
     }
   }
 
-  return Object.freeze({ initialize, update, advanceCorruption, revalidate, translate, snapshot });
+  return Object.freeze({ enterVoid, initialize, update, advanceCorruption, revalidate, translate, snapshot });
 }

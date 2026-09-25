@@ -1,4 +1,5 @@
-import { ZONE_THREE_SPEED_MULTIPLIER } from "./gameplay/nyrPrototypeConfig.js";
+import { createVoidDifficulty } from "./gameplay/voidDifficulty.js";
+import { NYR_PROTOTYPE_CONFIG, ZONE_THREE_SPEED_MULTIPLIER } from "./gameplay/nyrPrototypeConfig.js";
 import { createZoneTwoObjective, createRelativeZoneObjective, ZONE_TWO_TARGET, ZONE_THREE_TARGET } from "./gameplay/zoneTwoObjective.js";
 import { createCorruptionPocket, renderCorruptionPocket } from "./gameplay/corruptionPocket.js";
 import { createZoneExitPortal, renderZoneExitPortal } from "./gameplay/zoneExitPortal.js";
@@ -87,6 +88,7 @@ function startGame() {
     }
   });
   const progression = createNyrProgression();
+  const voidDifficulty = createVoidDifficulty();
   const zoneTwoObjective = createZoneTwoObjective();
   const zoneThreeObjective = createRelativeZoneObjective();
   const zoneProgression = createNyrZoneProgression({
@@ -109,6 +111,8 @@ function startGame() {
   const zoneThreePortal = createZoneExitPortal(() => {
     if (!isRuntimeActive() || zoneProgression.snapshot().currentZone !== NYR_ZONES.ZONE_3) return;
     combo.reset();
+    voidDifficulty.enter(movement.snapshot().simulationTime);
+    fragmentSystem.enterVoid();
     zoneBackgroundTransition.sync(zoneProgression.enterZoneFour());
   }, ZONE_THREE_TARGET);
   const pocket = createCorruptionPocket(() => {
@@ -132,6 +136,7 @@ function startGame() {
   const absorptionFeedback = createNyrAbsorptionFeedback();
   const fragmentSystem = createFragmentSystem({
     getCurrentZone: () => zoneProgression.snapshot().currentZone,
+    getVoidCorruptionInterval: () => voidDifficulty.snapshot().corruptionInterval,
     onCorruptionContact() {
       if (!isRuntimeActive()) return false;
       stability.applyCorruptionContact();
@@ -303,7 +308,12 @@ function startGame() {
       decorativeAsteroidsParallax.update(deltaSeconds);
       absorptionFeedback.update(deltaSeconds);
       movement.update(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight,
-        [NYR_ZONES.ZONE_3, NYR_ZONES.ZONE_4].includes(zoneProgression.snapshot().currentZone) ? ZONE_THREE_SPEED_MULTIPLIER : 1);
+        zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_4
+          ? voidDifficulty.snapshot().speed / NYR_PROTOTYPE_CONFIG.speedPixelsPerSecond
+          : zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_3 ? ZONE_THREE_SPEED_MULTIPLIER : 1);
+      if (zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_4) {
+        voidDifficulty.sync(movement.snapshot().simulationTime);
+      }
       fragmentSystem.advanceCorruption(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight);
       fragmentSystem.update(movement.snapshot(), displaySize.cssWidth, displaySize.cssHeight);
       if (!isRuntimeActive()) return;
@@ -320,7 +330,7 @@ function startGame() {
       );
       if (!isRuntimeActive()) return;
       pocket.update(deltaSeconds, zoneProgression.snapshot().currentZone,
-        displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(), pocketObstacles());
+        displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(), pocketObstacles(), voidDifficulty.snapshot().pocketCooldown);
     },
     render() {
       /* Also resize while portrait or Game Over keeps update suspended. */
