@@ -3,6 +3,10 @@ export const PORTAL_CONFIG = Object.freeze({ radius: 28, contactRadius: 24, marg
 export function createZoneExitPortal(onEnter, threshold = NYR_ZONE_PROGRESSION_CONFIG.zoneTwoThresholdFragments) {
   let state = { active: false, used: false, x: 0, y: 0 };
   let readyForContact = true;
+  function reset() {
+    state = { active: false, used: false, x: 0, y: 0 };
+    readyForContact = true;
+  }
   function place(width, height, head, fragments, asteroid) {
     const margin = Math.min(PORTAL_CONFIG.margin, width / 4, height / 4);
     const occupied = [...(head.trail ?? []), ...fragments];
@@ -45,7 +49,7 @@ export function createZoneExitPortal(onEnter, threshold = NYR_ZONE_PROGRESSION_C
     // A resize is never an entry gesture: require separation if it overlaps Nyr.
     readyForContact = Math.hypot(head.x - state.x, head.y - state.y) > PORTAL_CONFIG.contactRadius;
   }
-  return Object.freeze({ unlock, update, translate, revalidate, snapshot: () => Object.freeze({ ...state }) });
+  return Object.freeze({ reset, unlock, update, translate, revalidate, snapshot: () => Object.freeze({ ...state }) });
 }
 export function renderZoneExitPortal(context, portal) {
   if (!portal.active) return;

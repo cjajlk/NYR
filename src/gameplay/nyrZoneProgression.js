@@ -14,12 +14,13 @@ export function createNyrZoneProgression({
   onZoneTwoReached = () => {}
 } = {}) {
   let currentZone = NYR_ZONES.ZONE_1;
+  let zoneOneEntryCount = 0;
 
   function sync(progressionSnapshot, portalContact = false) {
     const normalFragmentsAbsorbed = progressionSnapshot?.normalFragmentsAbsorbed;
     const reachedNow = portalContact && currentZone === NYR_ZONES.ZONE_1 &&
       Number.isFinite(normalFragmentsAbsorbed) &&
-      normalFragmentsAbsorbed >= config.zoneTwoThresholdFragments;
+      normalFragmentsAbsorbed - zoneOneEntryCount >= config.zoneTwoThresholdFragments;
 
     if (reachedNow) {
       currentZone = NYR_ZONES.ZONE_2;
@@ -43,9 +44,17 @@ export function createNyrZoneProgression({
     return snapshot();
   }
 
+  function enterZoneOne(globalCount) {
+    if (currentZone === NYR_ZONES.ZONE_4) {
+      currentZone = NYR_ZONES.ZONE_1;
+      zoneOneEntryCount = globalCount;
+    }
+    return snapshot();
+  }
+
   function snapshot() {
     return Object.freeze({ currentZone });
   }
 
-  return Object.freeze({ sync, enterZoneThree, enterZoneFour, snapshot });
+  return Object.freeze({ sync, enterZoneOne, enterZoneThree, enterZoneFour, snapshot });
 }

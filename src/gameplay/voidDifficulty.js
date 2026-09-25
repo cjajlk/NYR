@@ -6,7 +6,8 @@ export function createVoidDifficulty() {
   let entryTime = null;
   let elapsed = 0;
   function enter(simulationTime) {
-    if (entryTime === null) entryTime = simulationTime;
+    entryTime = simulationTime;
+    elapsed = 0;
     return snapshot();
   }
   function sync(simulationTime) {

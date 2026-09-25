@@ -41,7 +41,7 @@ if (!hz) {
   const url = new URL("../../src/main.js", import.meta.url);
   let source = readFileSync(url, "utf8").replace(/from "(\.\/[^"]+)"/g, (_, path) => `from "${new URL(path, url).href}"`);
   source = source.replace("  gameLoop.start();", `
-    globalThis.probe = { voidDifficulty, zoneThreeObjective, zoneThreePortal, zoneTwoObjective, exitPortal, pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
+    globalThis.probe = { timeDisplay, zoneFourObjective, zoneOneObjective, zoneFourPortal, voidDifficulty, zoneThreeObjective, zoneThreePortal, zoneTwoObjective, exitPortal, pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
       absorptionFeedback, zoneBackgroundTransition, farStarsParallax, midNebulaParallax,
       nearParticlesParallax, decorativeAsteroidsParallax, stabilityDisplay, gameLoop, canvas };
     gameLoop.start();`);
@@ -105,6 +105,10 @@ if (!hz) {
   if (process.env.NYR_VOID_TEST) {
     const { verifyVoid } = await import("./pack44VoidSurvival.test.mjs");
     verifyVoid({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
+  }
+  if (process.env.NYR_INFINITE_TEST) {
+    const { verifyInfinite } = await import("./pack45InfiniteJourney.test.mjs");
+    verifyInfinite({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
   }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {

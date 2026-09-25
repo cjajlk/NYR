@@ -1,12 +1,13 @@
 export const ZONE_TWO_TARGET = 15;
 export const ZONE_THREE_TARGET = 20;
+export const ZONE_FOUR_TARGET = 25;
 export const createZoneTwoObjective = createRelativeZoneObjective;
 export function createRelativeZoneObjective() {
   let entryCount = null;
   let absorbed = 0;
   function enter(globalCount) {
-    if (entryCount !== null) return;
     entryCount = globalCount;
+    absorbed = 0;
   }
   function sync(globalCount) {
     if (entryCount !== null) absorbed = Math.max(0, globalCount - entryCount);

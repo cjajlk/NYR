@@ -306,3 +306,19 @@ body {
   text-shadow: 0 1px 4px #070713;
 }
 .combo-display[hidden] { display: none; }
+
+.time-display {
+  position: fixed;
+  top: 2.45rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9;
+  color: #b2bbce;
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  text-shadow: 0 1px 4px #070713;
+}
+.time-display[hidden] { display: none; }
+.combo-display { top: 3.35rem; }

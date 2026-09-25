@@ -1,6 +1,7 @@
+import { createTimeDisplay } from "./ui/timeDisplay.js";
 import { createVoidDifficulty } from "./gameplay/voidDifficulty.js";
 import { NYR_PROTOTYPE_CONFIG, ZONE_THREE_SPEED_MULTIPLIER } from "./gameplay/nyrPrototypeConfig.js";
-import { createZoneTwoObjective, createRelativeZoneObjective, ZONE_TWO_TARGET, ZONE_THREE_TARGET } from "./gameplay/zoneTwoObjective.js";
+import { createZoneTwoObjective, createRelativeZoneObjective, ZONE_TWO_TARGET, ZONE_THREE_TARGET, ZONE_FOUR_TARGET } from "./gameplay/zoneTwoObjective.js";
 import { createCorruptionPocket, renderCorruptionPocket } from "./gameplay/corruptionPocket.js";
 import { createZoneExitPortal, renderZoneExitPortal } from "./gameplay/zoneExitPortal.js";
 import { createNyrCombo } from "./gameplay/nyrCombo.js";
@@ -91,8 +92,12 @@ function startGame() {
   const voidDifficulty = createVoidDifficulty();
   const zoneTwoObjective = createZoneTwoObjective();
   const zoneThreeObjective = createRelativeZoneObjective();
+  const zoneFourObjective = createRelativeZoneObjective();
+  const zoneOneObjective = createRelativeZoneObjective();
+  zoneOneObjective.enter(0);
   const zoneProgression = createNyrZoneProgression({
     onZoneTwoReached(zoneState) {
+      exitPortal.reset();
       zoneTwoObjective.enter(progression.snapshot().normalFragmentsAbsorbed);
       combo.reset();
       zoneBackgroundTransition.sync(zoneState);
@@ -104,6 +109,7 @@ function startGame() {
       movement.snapshot(), fragmentSystem.snapshot());
   });
   const exitPortal = createZoneExitPortal(() => {
+    zoneThreePortal.reset();
     zoneThreeObjective.enter(progression.snapshot().normalFragmentsAbsorbed);
     combo.reset();
     zoneBackgroundTransition.sync(zoneProgression.enterZoneThree());
@@ -111,17 +117,27 @@ function startGame() {
   const zoneThreePortal = createZoneExitPortal(() => {
     if (!isRuntimeActive() || zoneProgression.snapshot().currentZone !== NYR_ZONES.ZONE_3) return;
     combo.reset();
+    zoneFourPortal.reset();
+    zoneFourObjective.enter(progression.snapshot().normalFragmentsAbsorbed);
     voidDifficulty.enter(movement.snapshot().simulationTime);
     fragmentSystem.enterVoid();
     zoneBackgroundTransition.sync(zoneProgression.enterZoneFour());
   }, ZONE_THREE_TARGET);
+  const zoneFourPortal = createZoneExitPortal(() => {
+    if (!isRuntimeActive() || zoneProgression.snapshot().currentZone !== NYR_ZONES.ZONE_4) return;
+    combo.reset();
+    const count = progression.snapshot().normalFragmentsAbsorbed;
+    zoneOneObjective.enter(count);
+    portal.reset();
+    zoneBackgroundTransition.sync(zoneProgression.enterZoneOne(count));
+  }, ZONE_FOUR_TARGET);
   const pocket = createCorruptionPocket(() => {
     if (!isRuntimeActive()) return;
     stability.applyCorruptionContact();
     if (stability.snapshot().stability === 0) endGame();
   });
   function pocketObstacles() {
-    return [...fragmentSystem.snapshot(), ...[mobileAsteroid.snapshot(), portal.snapshot(), exitPortal.snapshot(), zoneThreePortal.snapshot()].filter(o => o.active)];
+    return [...fragmentSystem.snapshot(), ...[mobileAsteroid.snapshot(), portal.snapshot(), exitPortal.snapshot(), zoneThreePortal.snapshot(), zoneFourPortal.snapshot()].filter(o => o.active)];
   }
   const combo = createNyrCombo();
   const comboDisplay = createComboDisplay();
@@ -131,6 +147,7 @@ function startGame() {
   }
   const score = createNyrScore();
   const scoreDisplay = createScoreDisplay();
+  const timeDisplay = createTimeDisplay();
   const stabilityDisplay = createStabilityDisplay(undefined, replayGame, () => replaceSession(true));
   scoreDisplay.update(score.snapshot());
   const absorptionFeedback = createNyrAbsorptionFeedback();
@@ -157,10 +174,10 @@ function startGame() {
         movement.snapshot(),
         fragmentSystem.snapshot()
       );
-      portal.unlock(progressionState.normalFragmentsAbsorbed, displaySize.cssWidth, displaySize.cssHeight,
+      if (zoneState.currentZone === NYR_ZONES.ZONE_1) portal.unlock(zoneOneObjective.sync(progressionState.normalFragmentsAbsorbed).absorbed, displaySize.cssWidth, displaySize.cssHeight,
         movement.snapshot(), fragmentSystem.snapshot(), mobileAsteroid.snapshot());
       const objective = zoneTwoObjective.sync(progressionState.normalFragmentsAbsorbed);
-      if (objective.entryCount !== null) {
+      if (zoneState.currentZone === NYR_ZONES.ZONE_2 && objective.entryCount !== null) {
         const hazard = pocket.snapshot();
         exitPortal.unlock(objective.absorbed, displaySize.cssWidth, displaySize.cssHeight,
           movement.snapshot(), [...fragmentSystem.snapshot(),
@@ -170,6 +187,13 @@ function startGame() {
         const objectiveThree = zoneThreeObjective.sync(progressionState.normalFragmentsAbsorbed);
         const hazard = pocket.snapshot();
         zoneThreePortal.unlock(objectiveThree.absorbed, displaySize.cssWidth, displaySize.cssHeight,
+          movement.snapshot(), [...fragmentSystem.snapshot(),
+            ...(["warning", "active"].includes(hazard.phase) ? [hazard] : [])], mobileAsteroid.snapshot());
+      }
+      if (zoneState.currentZone === NYR_ZONES.ZONE_4) {
+        const objectiveFour = zoneFourObjective.sync(progressionState.normalFragmentsAbsorbed);
+        const hazard = pocket.snapshot();
+        zoneFourPortal.unlock(objectiveFour.absorbed, displaySize.cssWidth, displaySize.cssHeight,
           movement.snapshot(), [...fragmentSystem.snapshot(),
             ...(["warning", "active"].includes(hazard.phase) ? [hazard] : [])], mobileAsteroid.snapshot());
       }
@@ -183,7 +207,7 @@ function startGame() {
 
   app.replaceChildren(screen, orientationOverlay.element, scoreDisplay.element);
   app.append(stabilityDisplay.element, stabilityDisplay.gameOverElement);
-  app.append(mainMenu.element, returnMenu.element, comboDisplay.element);
+  app.append(mainMenu.element, returnMenu.element, comboDisplay.element, timeDisplay.element);
 
   function syncOrientationState(shouldSuspend) {
     orientationOverlay.setVisible(shouldSuspend);
@@ -207,6 +231,7 @@ function startGame() {
     if (state.gameOver || state.journeyComplete) combo.reset();
     comboDisplay.update(combo.snapshot(), state);
     scoreDisplay.element.hidden = menu;
+    timeDisplay.update(movement.snapshot().simulationTime, state);
     if (menu) stabilityDisplay.element.hidden = true;
     screen.children[1].hidden = menu;
   }
@@ -232,11 +257,15 @@ function startGame() {
       pocket.translate(offset);
       exitPortal.translate(offset);
       zoneThreePortal.translate(offset);
+      zoneFourPortal.translate(offset);
       const hazard = pocket.snapshot();
       exitPortal.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(),
         [...fragmentSystem.snapshot(), ...(["warning", "active"].includes(hazard.phase) ? [hazard] : [])],
         mobileAsteroid.snapshot());
       zoneThreePortal.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(),
+        [...fragmentSystem.snapshot(), ...(["warning", "active"].includes(hazard.phase) ? [hazard] : [])],
+        mobileAsteroid.snapshot());
+      zoneFourPortal.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(),
         [...fragmentSystem.snapshot(), ...(["warning", "active"].includes(hazard.phase) ? [hazard] : [])],
         mobileAsteroid.snapshot());
       pocket.revalidate(displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(), pocketObstacles());
@@ -320,6 +349,7 @@ function startGame() {
       portal.update(movement.snapshot());
       exitPortal.update(movement.snapshot());
       zoneThreePortal.update(movement.snapshot());
+      zoneFourPortal.update(movement.snapshot());
       if (!isRuntimeActive()) return;
       mobileAsteroid.update(
         deltaSeconds,
@@ -363,10 +393,13 @@ function startGame() {
       );
       syncMenuDisplay();
       if (getRuntimeState().phase === "MENU") return;
-      renderCorruptionPocket(displayManager.context, pocket.snapshot());
+      if (zoneProgression.snapshot().currentZone !== NYR_ZONES.ZONE_1) {
+        renderCorruptionPocket(displayManager.context, pocket.snapshot());
+      }
       renderZoneExitPortal(displayManager.context, portal.snapshot());
       renderZoneExitPortal(displayManager.context, exitPortal.snapshot());
       renderZoneExitPortal(displayManager.context, zoneThreePortal.snapshot());
+      renderZoneExitPortal(displayManager.context, zoneFourPortal.snapshot());
       renderMobileAsteroid(displayManager.context, mobileAsteroid.snapshot());
       renderNormalFragments(displayManager.context, fragmentSystem.snapshot());
       renderNyr(

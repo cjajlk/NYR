@@ -1,4 +1,4 @@
-import { calculateCoverRect } from "./zoneOneBackground.js";
+import { calculateCoverRect, ZONE_ONE_BACKGROUND_SOURCE } from "./zoneOneBackground.js";
 import { NYR_ZONES } from "../gameplay/nyrZoneProgression.js";
 export const ZONE_TWO_BACKGROUND_SOURCE = "./assets/images/zones/NYR_ZONE_02_NEBULEUSE_V1.png";
 export const ZONE_THREE_BACKGROUND_SOURCE = "./assets/images/zones/NYR_ZONE_03_FAILLE_ASTRALE_V1.png";
@@ -22,24 +22,38 @@ export function createZoneBackgroundTransition({
     return layer;
   }
   const two = preload(zoneTwoSource), three = preload(zoneThreeSource), four = preload(zoneFourSource);
+  const one = preload(ZONE_ONE_BACKGROUND_SOURCE);
+  const layers = { "zone-1": one, "zone-2": two, "zone-3": three, "zone-4": four };
+  const names = { "zone-1": "zone-one", "zone-2": "zone-two", "zone-3": "zone-three", "zone-4": "zone-four" };
   let targetZone = NYR_ZONES.ZONE_1;
   let activeTransitionSeconds = 0;
-  let previousTwoProgress = 0;
-  let previousThreeProgress = 0;
-  function targetLayer() { return targetZone === NYR_ZONES.ZONE_4 ? four : targetZone === NYR_ZONES.ZONE_3 ? three : two; }
+  let transitioning = false;
+  let previous = [];
+  function progress() {
+    return transitioning && layers[targetZone].status === "ready"
+      ? Math.min(1, activeTransitionSeconds / Math.max(Number.EPSILON, config.durationSeconds)) : 0;
+  }
+  function visibleLayers() {
+    const alpha = progress();
+    if (alpha === 1) return [{ zone: targetZone, alpha: 1 }];
+    return [...previous.map(item => ({ ...item, alpha: item.alpha * (1 - alpha) })),
+      ...(alpha > 0 ? [{ zone: targetZone, alpha }] : [])];
+  }
   function sync(zoneSnapshot) {
     const next = zoneSnapshot?.currentZone;
-    if (next === targetZone || ![NYR_ZONES.ZONE_2, NYR_ZONES.ZONE_3, NYR_ZONES.ZONE_4].includes(next) ||
-        next < targetZone) return snapshot();
-    if (next === NYR_ZONES.ZONE_3) previousTwoProgress = snapshot().progress;
-    if (next === NYR_ZONES.ZONE_4) previousThreeProgress = snapshot().progress;
+    if (!layers[next] || next === targetZone) return snapshot();
+    /* Collapse repeated layers to keep memory bounded across unlimited cycles. */
+    const weights = new Map();
+    for (const item of visibleLayers()) weights.set(item.zone, (weights.get(item.zone) ?? 0) + item.alpha);
+    previous = [...weights].map(([zone, alpha]) => ({ zone, alpha }));
     targetZone = next;
+    transitioning = true;
     activeTransitionSeconds = 0;
     onTransitionStarted(snapshot());
     return snapshot();
   }
   function update(deltaSeconds) {
-    if (targetZone === NYR_ZONES.ZONE_1 || targetLayer().status !== "ready") return snapshot();
+    if (!transitioning || layers[targetZone].status !== "ready") return snapshot();
     const duration = Math.max(Number.EPSILON, config.durationSeconds);
     const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
     const next = Math.min(duration, activeTransitionSeconds + delta);
@@ -56,29 +70,26 @@ export function createZoneBackgroundTransition({
   function render(context, width, height) {
     const zoneOneResult = zoneOneBackground.render(context, width, height);
     const state = snapshot();
-    if (targetZone === NYR_ZONES.ZONE_1) return Object.freeze({ mode: "zone-one", zoneOneResult, ...state });
-    const isFour = targetZone === NYR_ZONES.ZONE_4;
-    const isThree = targetZone === NYR_ZONES.ZONE_3 || isFour;
-    if (isThree && two.status === "ready") {
-      draw(context, two, width, height, three.status === "ready" ? previousTwoProgress : 1);
+    if (!transitioning) return Object.freeze({ mode: "zone-one", zoneOneResult, ...state });
+    /* Draw the captured previous composition, then the new target over it. */
+    let remaining = previous.reduce((sum, item) => sum + item.alpha, 0);
+    for (const item of previous) {
+      if (layers[item.zone].status === "ready") {
+        const beneath = remaining - item.alpha;
+        draw(context, layers[item.zone], width, height, item.alpha / Math.max(1e-12, 1 - beneath));
+      }
+      remaining -= item.alpha;
     }
-    if (isFour && three.status === "ready") {
-      draw(context, three, width, height, four.status === "ready" ? previousThreeProgress : 1);
+    if (layers[targetZone].status !== "ready") {
+      const last = previous.filter(item => layers[item.zone].status === "ready").at(-1);
+      return Object.freeze({ mode: `${names[last?.zone ?? "zone-1"]}-fallback`, zoneOneResult, ...state });
     }
-    if (targetLayer().status !== "ready") {
-      return Object.freeze({ mode: isFour && three.status === "ready" ? "zone-three-fallback" : isThree && two.status === "ready" ? "zone-two-fallback" : "zone-one-fallback",
-        zoneOneResult, ...state });
-    }
-    const rect = draw(context, targetLayer(), width, height, state.progress);
-    return Object.freeze({ mode: state.progress < 1 ? "crossfade" : isFour ? "zone-four" : isThree ? "zone-three" : "zone-two",
-      zoneOneResult, rect, ...state });
+    const rect = draw(context, layers[targetZone], width, height, state.progress);
+    return Object.freeze({ mode: state.progress < 1 ? "crossfade" : names[targetZone], zoneOneResult, rect, ...state });
   }
   function snapshot() {
-    const duration = Math.max(Number.EPSILON, config.durationSeconds);
     return Object.freeze({ targetZone, zoneTwoStatus: two.status, zoneThreeStatus: three.status, zoneFourStatus: four.status,
-      activeTransitionSeconds,
-      progress: targetZone !== NYR_ZONES.ZONE_1 && targetLayer().status === "ready"
-        ? Math.min(1, activeTransitionSeconds / duration) : 0 });
+      activeTransitionSeconds, progress: progress() });
   }
   return Object.freeze({ sync, update, render, snapshot });
 }

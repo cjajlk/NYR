@@ -36,7 +36,7 @@ export function createFragmentSystem({
   let corruption = null;
   let nextVoidCorruption = null;
   function enterVoid() {
-    if (nextVoidCorruption === null) nextVoidCorruption = normalAbsorptions + CORRUPTION_CONFIG.interval;
+    nextVoidCorruption = normalAbsorptions + CORRUPTION_CONFIG.interval;
   }
 
   function isInsideSurface(point, width, height) {
