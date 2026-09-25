@@ -349,3 +349,26 @@ body {
   .game-over-indication strong { font-size: 1.5rem; }
   .game-over-indication .replay-button { margin-top: 0.15rem; padding: 0.4rem 1.5rem; }
 }
+
+.challenges-panel {
+  order: 1;
+  width: min(52rem, 92vw);
+  max-height: calc(100vh - 7rem);
+  max-height: calc(100dvh - 7rem);
+  overflow-y: auto;
+  padding: 0.25rem 0.5rem;
+  color: #e7f9ff;
+}
+.challenges-panel[hidden] { display: none; }
+.shards-balance { text-align: center; color: #c9b5ff; font-size: 0.95rem; }
+.challenge-period { text-align: center; font-size: 0.65rem; color: #b2bbce; margin: 0.2rem 0 0.6rem; }
+.challenges-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+.challenge-card { display: flex; flex-direction: column; gap: 0.15rem; border: 1px solid #a2dcff33; border-radius: 0.6rem; background: #090a1dcc; padding: 0.55rem; font-size: 0.7rem; }
+.challenge-card strong { color: #d5cbff; font-size: 0.72rem; letter-spacing: 0.05em; }
+.challenge-card .replay-button { font-size: 0.7rem; padding: 0.4rem; min-width: 0; width: 100%; margin-top: 0.2rem; }
+.main-menu .challenge-message { font-size: 0.65rem; letter-spacing: normal; text-align: center; }
+@media (max-height: 360px) {
+  .main-menu { gap: 0.15rem; }
+  .main-menu h1 { font-size: 1.5rem; }
+  .main-menu > .replay-button { padding: 0.3rem 1.5rem; }
+}

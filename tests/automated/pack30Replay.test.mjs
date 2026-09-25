@@ -41,7 +41,7 @@ if (!hz) {
   const url = new URL("../../src/main.js", import.meta.url);
   let source = readFileSync(url, "utf8").replace(/from "(\.\/[^"]+)"/g, (_, path) => `from "${new URL(path, url).href}"`);
   source = source.replace("  gameLoop.start();", `
-    globalThis.probe = { runStatistics, readTotals: statisticsStore.snapshot, timeDisplay, zoneFourObjective, zoneOneObjective, zoneFourPortal, voidDifficulty, zoneThreeObjective, zoneThreePortal, zoneTwoObjective, exitPortal, pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
+    globalThis.probe = { readWeekly: weeklyChallenges.snapshot, runStatistics, readTotals: statisticsStore.snapshot, timeDisplay, zoneFourObjective, zoneOneObjective, zoneFourPortal, voidDifficulty, zoneThreeObjective, zoneThreePortal, zoneTwoObjective, exitPortal, pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
       absorptionFeedback, zoneBackgroundTransition, farStarsParallax, midNebulaParallax,
       nearParticlesParallax, decorativeAsteroidsParallax, stabilityDisplay, gameLoop, canvas };
     gameLoop.start();`);
@@ -113,6 +113,10 @@ if (!hz) {
   if (process.env.NYR_STATS_TEST) {
     const { verifyStatistics } = await import("./pack46Statistics.test.mjs");
     verifyStatistics({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
+  }
+  if (process.env.NYR_WEEKLY_TEST) {
+    const { verifyWeeklyRuntime } = await import("./pack47WeeklyChallenges.test.mjs");
+    verifyWeeklyRuntime({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
   }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {

@@ -1,5 +1,6 @@
+import { createChallengesPanel } from "./challengesDisplay.js";
 import { createStatisticsPanel } from "./statisticsDisplay.js";
-export function createMainMenu(onPlay, readTotals = () => ({})) {
+export function createMainMenu(onPlay, readTotals = () => ({}), weekly = null) {
   const element = document.createElement("div");
   element.className = "main-menu";
   const title = document.createElement("h1");
@@ -27,20 +28,27 @@ export function createMainMenu(onPlay, readTotals = () => ({})) {
   const information = command("À PROPOS", () => navigate("about"));
   const statistics = command("STATISTIQUES", () => { panel.refresh(); navigate("statistics"); });
   const panel = createStatisticsPanel(readTotals);
+  const challenges = command("DÉFIS", () => navigate("challenges"));
+  const challengePanel = weekly ? createChallengesPanel(weekly, () => available && page === "challenges") : null;
   const back = command("RETOUR", () => navigate("home"));
   back.className += " menu-back";
   element.append(title, play, options, information, about, back, statistics, panel.element);
+  if (challengePanel) element.append(challenges, challengePanel.element);
   function navigate(next) {
     page = next;
     refresh();
   }
   function refresh() {
-    title.textContent = page === "home" ? "NYR" : page === "options" ? "OPTIONS" : page === "statistics" ? "STATISTIQUES" : "À PROPOS";
-    for (const button of [play, options, information, statistics]) button.hidden = page !== "home";
+    title.textContent = page === "home" ? "NYR" : page === "options" ? "OPTIONS" : page === "statistics" ? "STATISTIQUES" : page === "challenges" ? "DÉFIS" : "À PROPOS";
+    for (const button of [play, options, information, statistics, challenges]) button.hidden = page !== "home";
+    if (challengePanel) {
+      challengePanel.element.hidden = page !== "challenges";
+      if (page === "challenges") challengePanel.refresh();
+    }
     panel.element.hidden = page !== "statistics";
     about.hidden = page !== "about";
     back.hidden = page === "home";
-    for (const button of [play, options, information, back, statistics]) button.disabled = !available;
+    for (const button of [play, options, information, back, statistics, challenges]) button.disabled = !available;
   }
   function update(menu, portrait) {
     available = menu && !portrait;

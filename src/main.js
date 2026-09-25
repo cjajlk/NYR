@@ -1,3 +1,4 @@
+import { createWeeklyChallenges } from "./gameplay/weeklyChallenges.js";
 import { createRunStatistics, createStatisticsStore } from "./gameplay/runStatistics.js";
 import { createTimeDisplay } from "./ui/timeDisplay.js";
 import { createVoidDifficulty } from "./gameplay/voidDifficulty.js";
@@ -68,10 +69,13 @@ function createPreproductionScreen() {
 
 const app = document.querySelector("#app");
 const statisticsStore = createStatisticsStore();
+const weeklyChallenges = createWeeklyChallenges();
+window.addEventListener("pagehide", weeklyChallenges.flush);
+document.addEventListener("visibilitychange", () => { if (document.hidden) weeklyChallenges.flush(); });
 
 function startGame() {
   const { screen, canvas } = createPreproductionScreen();
-  const mainMenu = createMainMenu(replayGame, statisticsStore.snapshot);
+  const mainMenu = createMainMenu(replayGame, statisticsStore.snapshot, weeklyChallenges);
   const returnMenu = createReturnMenu(() => replaceSession(true));
   let disposed = false;
   const orientationOverlay = createOrientationOverlay();
@@ -90,6 +94,7 @@ function startGame() {
     combo: combo.snapshot().multiplier,
     form: progression.snapshot().currentForm
   }), statisticsStore);
+  const observeWeekly = weeklyChallenges.trackRun(runStatistics.snapshot);
   const stability = createNyrStability(undefined, runStatistics.damage);
   const mobileAsteroid = createMobileAsteroidSystem({
     onHeadContactStarted() {
@@ -323,6 +328,8 @@ function startGame() {
     const menu = state.phase === "MENU";
     if (state.suspensionReasons.some(reason => reason !== "main-menu")) return;
     if (toMenu ? menu : (!state.gameOver && !state.journeyComplete && !menu)) return;
+    observeWeekly();
+    weeklyChallenges.flush();
     disposed = true;
     gameLoop.stop();
     pointerInput.destroy();
@@ -376,6 +383,8 @@ function startGame() {
     },
     render() {
       if (getRuntimeState().gameOver) runStatistics.finish();
+      observeWeekly();
+      if (!isRuntimeActive()) weeklyChallenges.flush();
       /* Also resize while portrait or Game Over keeps update suspended. */
       flushDisplaySync();
       stabilityDisplay.update(stability.snapshot(), getRuntimeState(), runStatistics.snapshot());
