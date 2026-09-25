@@ -64,7 +64,7 @@ export function verifyZoneFour({ app, frame, snapshot, hz, setBounds }) {
     assert.equal(getRuntimeState().phase, "PLAYING");
     assert.equal(getRuntimeState().journeyComplete, false);
     assert.deepEqual(conserved(), before);
-    assert.equal(p.progression.snapshot().currentForm, "nocturne");
+    assert.equal(p.progression.snapshot().currentForm, "spectre");
     assert.equal(p.combo.snapshot().chain, 0);
     p.zoneThreePortal.update(portal); assert.deepEqual(conserved(), before);
     p.fragmentSystem.update({ ...touchingCorruption, trail: [] }, 940, 392);

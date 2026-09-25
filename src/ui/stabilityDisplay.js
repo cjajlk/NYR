@@ -1,3 +1,4 @@
+import { formatRunSummary } from "./statisticsDisplay.js";
 export function createStabilityDisplay(createElement = tag => document.createElement(tag), onReplay = () => {}, onMenu = () => {}) {
   const element = createElement("div");
   element.className = "stability-display";
@@ -39,17 +40,22 @@ export function createStabilityDisplay(createElement = tag => document.createEle
     menu.disabled = true;
     onMenu();
   });
-  gameOverElement.append(title, detail, replay, menu);
+  const summary = createElement("p");
+  summary.className = "run-summary";
+  summary.hidden = true;
+  gameOverElement.append(title, detail, replay, menu, summary);
   gameOverElement.hidden = true;
   let previousValue;
 
-  function update(stabilityState, runtimeState) {
+  function update(stabilityState, runtimeState, run = null) {
     const value = stabilityState.stability;
     if (value !== previousValue) {
       label.textContent = `STABILITÉ ${value}/100`;
       gauge.value = value;
       previousValue = value;
     }
+    summary.hidden = !runtimeState.gameOver || !run;
+    if (!summary.hidden) summary.textContent = formatRunSummary(run);
     const portrait = runtimeState.suspensionReasons.includes("portrait-orientation");
     element.hidden = portrait;
     const finished = runtimeState.gameOver || runtimeState.journeyComplete;

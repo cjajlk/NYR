@@ -6,12 +6,14 @@ export const NYR_STABILITY_CONFIG = Object.freeze({
   corruptionDamage: 20
 });
 
-export function createNyrStability(config = NYR_STABILITY_CONFIG) {
+export function createNyrStability(config = NYR_STABILITY_CONFIG, onDamage = () => {}) {
   let stability = Math.min(config.maximum, Math.max(0, config.initial));
 
   function applyAsteroidContact() {
+    const before = stability;
     stability = Math.max(0, stability -
       (config.asteroidContactDamage ?? NYR_STABILITY_CONFIG.asteroidContactDamage));
+    if (stability < before) onDamage(before, stability);
     return snapshot();
   }
 
@@ -28,7 +30,9 @@ export function createNyrStability(config = NYR_STABILITY_CONFIG) {
   }
 
   function applyCorruptionContact() {
+    const before = stability;
     stability = Math.max(0, stability - NYR_STABILITY_CONFIG.corruptionDamage);
+    if (stability < before) onDamage(before, stability);
     return snapshot();
   }
 

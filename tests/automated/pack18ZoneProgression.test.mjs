@@ -37,8 +37,8 @@ for (const refreshRate of [30, 60, 120]) {
     assert.equal(zoneTwoSignals, 0);
     assert.equal(score.snapshot().points, 2400);
     assert.equal(formatScore(score.snapshot()), "SCORE 002400");
-    assert.equal(progression.snapshot().currentForm, "spectre");
-    assert.equal(spectreSignals, 1);
+    assert.equal(progression.snapshot().currentForm, "eclat");
+    assert.equal(spectreSignals, 0);
 
     const atTwentyFive = progression.recordNormalFragmentAbsorption();
     zoneProgression.sync(atTwentyFive, true);

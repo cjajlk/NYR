@@ -322,3 +322,30 @@ body {
 }
 .time-display[hidden] { display: none; }
 .combo-display { top: 3.35rem; }
+
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem 1.5rem;
+  width: min(32rem, 90vw);
+  max-height: calc(100vh - 7rem);
+  max-height: calc(100dvh - 7rem);
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.5rem;
+  color: #e7f9ff;
+}
+.statistics-grid[hidden], .run-summary[hidden] { display: none; }
+.statistics-grid dt { color: #b2bbce; font-size: 0.65rem; letter-spacing: 0.05em; }
+.statistics-grid dd { margin: 0.2rem 0 0; font-size: 1rem; font-variant-numeric: tabular-nums; }
+.main-menu .statistics-grid { order: 1; }
+.main-menu .menu-back { order: 2; }
+.run-summary { white-space: pre-line; font-size: 0.72rem; line-height: 1.6; margin: 0.4rem; order: 1; }
+.game-over-indication .replay-button { order: 2; }
+@media (max-height: 500px) {
+  .main-menu h1 { font-size: 1.8rem; }
+  .main-menu { gap: 0.3rem; }
+  .game-over-indication { gap: 0.2rem; }
+  .game-over-indication strong { font-size: 1.5rem; }
+  .game-over-indication .replay-button { margin-top: 0.15rem; padding: 0.4rem 1.5rem; }
+}

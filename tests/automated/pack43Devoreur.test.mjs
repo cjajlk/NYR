@@ -8,25 +8,25 @@ import { endGame } from "../../src/core/runtimeState.js";
 
 export function verifyDevoreur({ app, frame, snapshot, hz }) {
   const progression = createNyrProgression();
-  for (let i = 0; i <= 125; i++) {
-    assert.equal(progression.snapshot().currentForm, i < 20 ? "eclat" : i < 50 ? "spectre" : i < 100 ? "nocturne" : "devoreur");
+  for (let i = 0; i <= 325; i++) {
+    assert.equal(progression.snapshot().currentForm, i < 50 ? "eclat" : i < 150 ? "spectre" : i < 300 ? "nocturne" : "devoreur");
     progression.recordNormalFragmentAbsorption();
   }
   const initial = snapshot(globalThis.probe);
   for (const earlyPortals of [false, true]) {
     const p = globalThis.probe;
     const normal = () => p.fragmentSystem.update({ ...p.fragmentSystem.snapshot()[0], trail: [] }, 940, 392);
-    for (let i = 1; i <= 125; i++) {
+    for (let i = 1; i <= 325; i++) {
       const before = snapshot(p);
       normal();
       assert.equal(p.progression.snapshot().normalFragmentsAbsorbed, i);
-      assert.equal(p.progression.snapshot().currentForm, i < 20 ? "eclat" : i < 50 ? "spectre" : i < 100 ? "nocturne" : "devoreur");
+      assert.equal(p.progression.snapshot().currentForm, i < 50 ? "eclat" : i < 150 ? "spectre" : i < 300 ? "nocturne" : "devoreur");
       assert.equal(p.movement.snapshot().segmentCount, Math.min(120, 4 + i));
       assert.equal(p.stability.snapshot().stability, before.stability.stability);
       assert.equal(p.movement.snapshot().heading, before.movement.heading);
       assert.equal(p.movement.snapshot().x, before.movement.x);
       assert.equal(p.score.snapshot().points - before.score.points, 100 * (before.combo.chain < 2 ? 1 : before.combo.chain < 4 ? 2 : before.combo.chain < 6 ? 3 : 4));
-      if (i === 100) {
+      if (i === 300) {
         assert.equal(p.combo.snapshot().chain, before.combo.chain + 1);
         assert.equal(p.absorptionFeedback.snapshot().form, "devoreur");
       }

@@ -64,7 +64,7 @@ for (const viewport of viewports) {
       const spawnState = asteroid.snapshot();
       assert.equal(spawnState.active, true);
       assert.equal(score.snapshot().points, 2500);
-      assert.equal(progression.snapshot().currentForm, "spectre");
+      assert.equal(progression.snapshot().currentForm, "eclat");
       assert.ok(distance(spawnState, head) >= MOBILE_ASTEROID_CONFIG.minimumHeadSpawnDistancePixels);
       assert.ok(fragments.every((fragment) =>
         distance(spawnState, fragment) >= MOBILE_ASTEROID_CONFIG.minimumFragmentSpawnDistancePixels

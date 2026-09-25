@@ -70,7 +70,7 @@ export function verifyInfinite({ app, frame, snapshot, hz, setBounds }) {
       }
       assert.equal(p.progression.snapshot().normalFragmentsAbsorbed, entry + 85);
     }
-    assert.equal(p.progression.snapshot().currentForm, "devoreur");
+    assert.equal(p.progression.snapshot().currentForm, "nocturne");
     assert.equal(p.movement.snapshot().segmentCount, 120);
     window.innerWidth = 440; window.innerHeight = 956;
     setBounds({ width: 424, height: 908 }); window.emit("resize"); frame();

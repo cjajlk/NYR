@@ -47,7 +47,7 @@ for (const hz of [30, 60, 120]) {
 const source = readFileSync(new URL("../../src/ui/stabilityDisplay.js", import.meta.url), "utf8");
 assert.doesNotMatch(source, /applyAsteroidContact|applyCorruptionContact|applyPureFragment|endGame\(|resumeRuntime|suspendRuntime|reset\(/);
 const main = readFileSync(new URL("../../src/main.js", import.meta.url), "utf8");
-assert.match(main, /render\(\)\s*\{[^}]*stabilityDisplay.update\(stability.snapshot\(\), getRuntimeState\(\)\)/);
+assert.match(main, /render\(\)\s*\{[^}]*stabilityDisplay.update\(stability.snapshot\(\), getRuntimeState\(\), runStatistics.snapshot\(\)\)/);
 assert.match(main, /app.append\(stabilityDisplay.element, stabilityDisplay.gameOverElement\)/);
 const css = readFileSync(new URL("../../assets/css/main.css", import.meta.url), "utf8");
 assert.match(css, /\.orientation-overlay\s*\{[^}]*z-index: 10/);

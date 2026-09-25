@@ -41,7 +41,7 @@ if (!hz) {
   const url = new URL("../../src/main.js", import.meta.url);
   let source = readFileSync(url, "utf8").replace(/from "(\.\/[^"]+)"/g, (_, path) => `from "${new URL(path, url).href}"`);
   source = source.replace("  gameLoop.start();", `
-    globalThis.probe = { timeDisplay, zoneFourObjective, zoneOneObjective, zoneFourPortal, voidDifficulty, zoneThreeObjective, zoneThreePortal, zoneTwoObjective, exitPortal, pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
+    globalThis.probe = { runStatistics, readTotals: statisticsStore.snapshot, timeDisplay, zoneFourObjective, zoneOneObjective, zoneFourPortal, voidDifficulty, zoneThreeObjective, zoneThreePortal, zoneTwoObjective, exitPortal, pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
       absorptionFeedback, zoneBackgroundTransition, farStarsParallax, midNebulaParallax,
       nearParticlesParallax, decorativeAsteroidsParallax, stabilityDisplay, gameLoop, canvas };
     gameLoop.start();`);
@@ -110,6 +110,10 @@ if (!hz) {
     const { verifyInfinite } = await import("./pack45InfiniteJourney.test.mjs");
     verifyInfinite({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
   }
+  if (process.env.NYR_STATS_TEST) {
+    const { verifyStatistics } = await import("./pack46Statistics.test.mjs");
+    verifyStatistics({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
+  }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {
     const p = globalThis.probe;
@@ -123,7 +127,7 @@ if (!hz) {
     }
     assert.equal(p.score.snapshot().points, 23600);
     assert.equal(p.progression.snapshot().normalFragmentsAbsorbed, 65);
-    assert.equal(p.progression.snapshot().currentForm, "nocturne");
+    assert.equal(p.progression.snapshot().currentForm, "spectre");
     assert.equal(p.zoneProgression.snapshot().currentZone, "zone-2");
     assert.equal(p.movement.snapshot().segmentCount, 69);
     assert.equal(p.mobileAsteroid.snapshot().active, true);

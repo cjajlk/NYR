@@ -1,8 +1,8 @@
 export const NYR_PROGRESSION_CONFIG = Object.freeze({
   // Seuils des formes visuelles sur le compteur normal global.
-  spectreThresholdFragments: 20,
-  nocturneThresholdFragments: 50,
-  devoreurThresholdFragments: 100
+  spectreThresholdFragments: 50,
+  nocturneThresholdFragments: 150,
+  devoreurThresholdFragments: 300
 });
 
 export const NYR_FORMS = Object.freeze({

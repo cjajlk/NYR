@@ -1,3 +1,4 @@
+import { createRunStatistics, createStatisticsStore } from "./gameplay/runStatistics.js";
 import { createTimeDisplay } from "./ui/timeDisplay.js";
 import { createVoidDifficulty } from "./gameplay/voidDifficulty.js";
 import { NYR_PROTOTYPE_CONFIG, ZONE_THREE_SPEED_MULTIPLIER } from "./gameplay/nyrPrototypeConfig.js";
@@ -66,10 +67,11 @@ function createPreproductionScreen() {
 }
 
 const app = document.querySelector("#app");
+const statisticsStore = createStatisticsStore();
 
 function startGame() {
   const { screen, canvas } = createPreproductionScreen();
-  const mainMenu = createMainMenu(replayGame);
+  const mainMenu = createMainMenu(replayGame, statisticsStore.snapshot);
   const returnMenu = createReturnMenu(() => replaceSession(true));
   let disposed = false;
   const orientationOverlay = createOrientationOverlay();
@@ -81,7 +83,14 @@ function startGame() {
   const nearParticlesParallax = createNearParticlesParallax();
   const decorativeAsteroidsParallax = createDecorativeAsteroidsParallax();
   const movement = createNyrMovement();
-  const stability = createNyrStability();
+  const runStatistics = createRunStatistics(() => ({
+    score: score.snapshot().points,
+    activeTime: movement.snapshot().simulationTime,
+    normalFragments: progression.snapshot().normalFragmentsAbsorbed,
+    combo: combo.snapshot().multiplier,
+    form: progression.snapshot().currentForm
+  }), statisticsStore);
+  const stability = createNyrStability(undefined, runStatistics.damage);
   const mobileAsteroid = createMobileAsteroidSystem({
     onHeadContactStarted() {
       stability.applyAsteroidContact();
@@ -130,6 +139,7 @@ function startGame() {
     zoneOneObjective.enter(count);
     portal.reset();
     zoneBackgroundTransition.sync(zoneProgression.enterZoneOne(count));
+    runStatistics.cycle();
   }, ZONE_FOUR_TARGET);
   const pocket = createCorruptionPocket(() => {
     if (!isRuntimeActive()) return;
@@ -142,6 +152,7 @@ function startGame() {
   const combo = createNyrCombo();
   const comboDisplay = createComboDisplay();
   function endGame() {
+    runStatistics.finish();
     combo.reset();
     endRuntimeGame();
   }
@@ -161,7 +172,7 @@ function startGame() {
       return isRuntimeActive();
     },
     onPureAbsorbed() {
-      if (isRuntimeActive()) stability.applyPureFragment();
+      if (isRuntimeActive()) { stability.applyPureFragment(); runStatistics.pure(); }
     },
     onAbsorbed() {
       movement.addSegments(1);
@@ -199,6 +210,7 @@ function startGame() {
       }
       const updatedScore = score.awardNormalFragment(combo.absorb());
       scoreDisplay.update(updatedScore);
+      runStatistics.progress();
       absorptionFeedback.trigger(progression.snapshot().currentForm);
     }
   });
@@ -219,7 +231,7 @@ function startGame() {
     }
 
     document.body.dataset.runtimeState = isRuntimeActive() ? "active" : "suspended";
-    stabilityDisplay.update(stability.snapshot(), getRuntimeState());
+    stabilityDisplay.update(stability.snapshot(), getRuntimeState(), runStatistics.snapshot());
     syncMenuDisplay();
   }
 
@@ -363,9 +375,10 @@ function startGame() {
         displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(), pocketObstacles(), voidDifficulty.snapshot().pocketCooldown);
     },
     render() {
+      if (getRuntimeState().gameOver) runStatistics.finish();
       /* Also resize while portrait or Game Over keeps update suspended. */
       flushDisplaySync();
-      stabilityDisplay.update(stability.snapshot(), getRuntimeState());
+      stabilityDisplay.update(stability.snapshot(), getRuntimeState(), runStatistics.snapshot());
       zoneBackgroundTransition.render(
         displayManager.context,
         displaySize.cssWidth,

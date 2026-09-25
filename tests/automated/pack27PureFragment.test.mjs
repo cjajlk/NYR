@@ -19,7 +19,7 @@ if (!hz) {
     assert.equal(stability.applyPureFragment().stability, expected);
   }
   const main = readFileSync(new URL("../../src/main.js", import.meta.url), "utf8");
-  assert.match(main, /onPureAbsorbed\(\)\s*\{\s*if \(isRuntimeActive\(\)\) stability\.applyPureFragment\(\);\s*\}/);
+  assert.match(main, /onPureAbsorbed\(\)\s*\{\s*if \(isRuntimeActive\(\)\) \{ stability\.applyPureFragment\(\); runStatistics.pure\(\); \}\s*\}/);
   for (const rate of [30, 60, 120]) {
     const result = spawnSync(process.execPath, [fileURLToPath(import.meta.url), String(rate)], { encoding: "utf8" });
     assert.equal(result.status, 0, result.stdout + result.stderr);

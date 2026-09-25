@@ -92,7 +92,7 @@ for (const refreshRate of [30, 60, 120]) {
       assert.equal(transitionSignals, 1);
       assert.equal(zoneTwoSignals, 1);
       assert.equal(score.snapshot().points, 2500);
-      assert.equal(progression.snapshot().currentForm, "spectre");
+      assert.equal(progression.snapshot().currentForm, "eclat");
 
       const activeFramesBeforePortrait = Math.round(refreshRate * 0.4);
       for (let frame = 0; frame < activeFramesBeforePortrait; frame += 1) {

@@ -78,7 +78,7 @@ for (const refreshRate of [30, 60, 120]) {
     }
 
     assert.equal(score.snapshot().points, 2600);
-    assert.equal(progression.snapshot().currentForm, "spectre");
+    assert.equal(progression.snapshot().currentForm, "eclat");
     assert.equal(zoneProgression.snapshot().currentZone, "zone-2");
     assert.equal(stability.snapshot().stability, 100);
   }
@@ -96,7 +96,7 @@ const scoreDisplaySource = await readFile(
   "utf8"
 );
 
-assert.match(mainSource, /const stability = createNyrStability\(\)/);
+assert.match(mainSource, /const stability = createNyrStability\(undefined, runStatistics.damage\)/);
 // PACK 22 adds asteroid damage; the no-contact foundation stays unchanged.
 assert.doesNotMatch(stabilitySource, /heal|recover|gameOver/);
 // PACK 29 adds a read-only HUD; the score component remains independent.

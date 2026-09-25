@@ -69,8 +69,8 @@ for (const refreshRate of [30, 60, 120]) {
   }
 
   assert.equal(score.snapshot().points, 2100, `${refreshRate} Hz`);
-  assert.equal(progression.snapshot().currentForm, "spectre", `${refreshRate} Hz`);
-  assert.equal(spectreThresholdSignals, 1, `${refreshRate} Hz`);
+  assert.equal(progression.snapshot().currentForm, "eclat", `${refreshRate} Hz`);
+  assert.equal(spectreThresholdSignals, 0, `${refreshRate} Hz`);
 
   const frozenLabel = output.textContent;
   for (let suspendedFrame = 0; suspendedFrame < refreshRate * 3; suspendedFrame += 1) {

@@ -1,4 +1,5 @@
-export function createMainMenu(onPlay) {
+import { createStatisticsPanel } from "./statisticsDisplay.js";
+export function createMainMenu(onPlay, readTotals = () => ({})) {
   const element = document.createElement("div");
   element.className = "main-menu";
   const title = document.createElement("h1");
@@ -24,18 +25,22 @@ export function createMainMenu(onPlay) {
   });
   const options = command("OPTIONS", () => navigate("options"));
   const information = command("À PROPOS", () => navigate("about"));
+  const statistics = command("STATISTIQUES", () => { panel.refresh(); navigate("statistics"); });
+  const panel = createStatisticsPanel(readTotals);
   const back = command("RETOUR", () => navigate("home"));
-  element.append(title, play, options, information, about, back);
+  back.className += " menu-back";
+  element.append(title, play, options, information, about, back, statistics, panel.element);
   function navigate(next) {
     page = next;
     refresh();
   }
   function refresh() {
-    title.textContent = page === "home" ? "NYR" : page === "options" ? "OPTIONS" : "À PROPOS";
-    for (const button of [play, options, information]) button.hidden = page !== "home";
+    title.textContent = page === "home" ? "NYR" : page === "options" ? "OPTIONS" : page === "statistics" ? "STATISTIQUES" : "À PROPOS";
+    for (const button of [play, options, information, statistics]) button.hidden = page !== "home";
+    panel.element.hidden = page !== "statistics";
     about.hidden = page !== "about";
     back.hidden = page === "home";
-    for (const button of [play, options, information, back]) button.disabled = !available;
+    for (const button of [play, options, information, back, statistics]) button.disabled = !available;
   }
   function update(menu, portrait) {
     available = menu && !portrait;
