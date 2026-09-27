@@ -53,6 +53,14 @@ function verifyStoreAndRenderer() {
         assert.ok(draws[0][1].src.endsWith("queue.png"));
         assert.ok(draws.at(-1)[1].src.endsWith("tete.png"));
         const body=draws.slice(1,-1).reverse();
+        assert.equal(draws[0][4],31,"tail size unchanged");
+        assert.equal(draws.at(-1)[4],48,"head size unchanged");
+        for(const call of body) {
+          const width=expected==="spectre"?36:26;
+          assert.equal(call[4],width,"only Spectre body scales are enlarged");
+          assert.equal(call[2],-width/2,"same centered anchor");
+          assert.equal(call[5],width/2,"original aspect ratio preserved");
+        }
         body.forEach((call,i)=>assert.ok(call[1].src.endsWith(`ecaille_0${i%3+1}.png`)));
         const translations=skinned.calls.filter(c=>c[0]==="translate");
         assert.deepEqual(translations.at(-1),["translate",state.x,state.y]);

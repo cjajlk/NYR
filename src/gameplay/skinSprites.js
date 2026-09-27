@@ -8,6 +8,8 @@ const visuals = Object.freeze({
   ecaille: { width: 26, anchorX: 0.5, anchorY: 0.5, angle: -0.48 },
   queue: { width: 31, anchorX: 0.8, anchorY: 0.6, angle: -0.2 }
 });
+// Spectre's artwork occupies less of its transparent canvas: enlarge only body scales.
+const spectreScaleVisual = Object.freeze({ ...visuals.ecaille, width: 36 });
 export function createSkinSprites(readEquipped, createImage = () => new Image()) {
   const forms = new Map();
   function load(form) {
@@ -36,10 +38,11 @@ export function createSkinSprites(readEquipped, createImage = () => new Image())
     const images = load(form);
     // Keep the entire classic form while loading or if an asset cannot be decoded.
     if (!images.every(image => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0)) return false;
+    const bodyVisual = form === "spectre" ? spectreScaleVisual : visuals.ecaille;
     for (let index = poses.length - 1; index >= 0; index--) {
       const tail = index === poses.length - 1;
       draw(context, images[tail ? 4 : 1 + index % 3],
-        { ...poses[index], angle: poses[index].angle + Math.PI }, tail ? visuals.queue : visuals.ecaille);
+        { ...poses[index], angle: poses[index].angle + Math.PI }, tail ? visuals.queue : bodyVisual);
     }
     draw(context, images[0], { x: state.x, y: state.y, angle: state.heading }, visuals.tete);
     return true;
