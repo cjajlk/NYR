@@ -333,7 +333,8 @@ export function renderNyr(
   absorptionFeedback = null,
   config = NYR_PROTOTYPE_CONFIG,
   visualConfig = NYR_BODY_VISUAL_CONFIG,
-  feedbackConfig = NYR_ABSORPTION_FEEDBACK_CONFIG
+  feedbackConfig = NYR_ABSORPTION_FEEDBACK_CONFIG,
+  skinSprites = null
 ) {
   const isDevoreur = progression.currentForm === NYR_FORMS.DEVOREUR;
   const isNocturne = progression.currentForm === NYR_FORMS.NOCTURNE || isDevoreur;
@@ -344,6 +345,8 @@ export function renderNyr(
 
   drawEnergyLinks(context, state, poses, isSpectre, visualConfig);
   drawAbsorptionFeedback(context, poses.at(-1), absorptionFeedback, feedbackConfig);
+
+  if (skinSprites?.(context, state, poses, progression.currentForm)) return;
 
   for (let index = poses.length - 1; index >= 0; index -= 1) {
     const tailProgress = index / Math.max(1, poses.length - 1);

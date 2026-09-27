@@ -1,4 +1,6 @@
 import { createWeeklyChallenges } from "./gameplay/weeklyChallenges.js";
+import { createCosmeticsStore } from "./gameplay/cosmetics.js";
+import { createSkinSprites } from "./gameplay/skinSprites.js";
 import { createPauseDisplay } from "./ui/pauseDisplay.js";
 import { createRunStatistics, createStatisticsStore } from "./gameplay/runStatistics.js";
 import { createTimeDisplay } from "./ui/timeDisplay.js";
@@ -71,12 +73,14 @@ function createPreproductionScreen() {
 const app = document.querySelector("#app");
 const statisticsStore = createStatisticsStore();
 const weeklyChallenges = createWeeklyChallenges();
+const cosmetics = createCosmeticsStore();
+const skinSprites = createSkinSprites(() => cosmetics.snapshot().equipped.skin);
 window.addEventListener("pagehide", weeklyChallenges.flush);
 document.addEventListener("visibilitychange", () => { if (document.hidden) weeklyChallenges.flush(); });
 
 function startGame() {
   const { screen, canvas } = createPreproductionScreen();
-  const mainMenu = createMainMenu(replayGame, statisticsStore.snapshot, weeklyChallenges);
+  const mainMenu = createMainMenu(replayGame, statisticsStore.snapshot, weeklyChallenges, cosmetics);
   const returnMenu = createReturnMenu(() => {
     if (disposed) return;
     if (getRuntimeState().gameOver) { replaceSession(true); return; }
@@ -463,7 +467,7 @@ function startGame() {
         displayManager.context,
         movement.snapshot(),
         progression.snapshot(),
-        absorptionFeedback.snapshot()
+        absorptionFeedback.snapshot(), undefined, undefined, undefined, skinSprites
       );
     }
   });

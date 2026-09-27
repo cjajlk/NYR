@@ -38,10 +38,14 @@ if (!hz) {
   let queue = [], timestamp = 0;
   globalThis.requestAnimationFrame = fn => queue.push(fn);
   Math.random = () => 0.4;
+  if (process.env.NYR_SHOP_TEST) {
+    const saved = new Map();
+    globalThis.localStorage = { getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value) };
+  }
   const url = new URL("../../src/main.js", import.meta.url);
   let source = readFileSync(url, "utf8").replace(/from "(\.\/[^"]+)"/g, (_, path) => `from "${new URL(path, url).href}"`);
   source = source.replace("  gameLoop.start();", `
-    globalThis.probe = { readWeekly: weeklyChallenges.snapshot, runStatistics, readTotals: statisticsStore.snapshot, timeDisplay, zoneFourObjective, zoneOneObjective, zoneFourPortal, voidDifficulty, zoneThreeObjective, zoneThreePortal, zoneTwoObjective, exitPortal, pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
+    globalThis.probe = { readCosmetics: cosmetics.snapshot, readWeekly: weeklyChallenges.snapshot, runStatistics, readTotals: statisticsStore.snapshot, timeDisplay, zoneFourObjective, zoneOneObjective, zoneFourPortal, voidDifficulty, zoneThreeObjective, zoneThreePortal, zoneTwoObjective, exitPortal, pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
       absorptionFeedback, zoneBackgroundTransition, farStarsParallax, midNebulaParallax,
       nearParticlesParallax, decorativeAsteroidsParallax, stabilityDisplay, gameLoop, canvas };
     gameLoop.start();`);
@@ -127,6 +131,10 @@ if (!hz) {
   if (process.env.NYR_PAUSE_TEST) {
     const { verifyPause } = await import("./pack48Pause.test.mjs");
     verifyPause({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
+  }
+  if (process.env.NYR_SHOP_TEST) {
+    const { verifyShop } = await import("./pack49Shop.test.mjs");
+    verifyShop({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
   }
   const initial = snapshot(globalThis.probe);
   for (let run = 0; run < 3; run++) {

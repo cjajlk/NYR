@@ -390,6 +390,51 @@ body {
   pointer-events: none;
   text-shadow: 0 1px 4px #070713;
 }
+
+/* Keep the primary action prominent and group secondary menu access in two columns. */
+.main-menu[data-page="home"] {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 12rem));
+  align-content: center;
+  justify-content: center;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+.main-menu[data-page="home"][hidden] { display: none; }
+.main-menu[data-page="home"] h1 { grid-column: 1 / -1; text-align: center; }
+.main-menu[data-page="home"] .menu-play { grid-column: 1 / -1; order: 1; }
+.main-menu[data-page="home"] .menu-shop,
+.main-menu[data-page="home"] .menu-challenges { order: 2; }
+.main-menu[data-page="home"] .menu-statistics { order: 3; grid-column: 1 / -1; }
+.main-menu[data-page="home"] .menu-options,
+.main-menu[data-page="home"] .menu-about { order: 4; }
+.main-menu[data-page="home"] > button { min-width: 0; }
+.shop-panel {
+  order: 1;
+  width: min(46rem, 92vw);
+  max-height: calc(100vh - 7rem);
+  max-height: calc(100dvh - 7rem);
+  min-height: 0;
+  padding: 0.4rem 0.5rem 1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+.shop-panel[hidden] { display: none; }
+.shop-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; }
+.shop-card { display: flex; flex-direction: column; gap: 0.3rem; padding: 0.7rem; border: 1px solid #a2dcff33; border-radius: 0.7rem; background: #090a1dcc; }
+.shop-card strong { color: #d5cbff; font-size: 0.8rem; }
+.main-menu .shop-card p, .main-menu .shop-message { font-size: 0.72rem; letter-spacing: normal; line-height: 1.4; }
+.shop-card .replay-button { margin-top: auto; min-width: 0; font-size: 0.75rem; }
+.shop-card .replay-button:disabled { border-color: #a2dcff44; color: #b2bbce; cursor: default; }
+.skin-preview { height: 5rem; display: flex; align-items: center; justify-content: center; color: #b2bbce; letter-spacing: 0.2em; }
+.skin-preview img { width: 50%; max-height: 100%; object-fit: contain; }
+@media (max-height: 500px) {
+  .main-menu[data-page="home"] { gap: 0.25rem; }
+  .main-menu[data-page="home"] > button { padding: 0.3rem 1rem; font-size: 0.8rem; }
+  .skin-preview { height: 3rem; }
+}
 .challenges-panel[hidden] { display: none; }
 .shards-balance { text-align: center; color: #c9b5ff; font-size: 0.95rem; }
 .challenge-period { text-align: center; font-size: 0.65rem; color: #b2bbce; margin: 0.2rem 0 0.6rem; }
