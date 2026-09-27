@@ -1,3 +1,4 @@
+import { SKINS } from "./skinCatalog.js";
 /* Calendar arithmetic uses local dates; UTC is used only to number the ISO week. */
 export function getLocalWeek(date) {
   const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -21,7 +22,7 @@ export const WEEKLY_CHALLENGES = Object.freeze([
 const limits = { normalFragments: 250, cycles: 5, devoreurRuns: 3, activeTime: 3600 };
 const safe = value => Number.isFinite(value) && value >= 0 ? Math.min(value, Number.MAX_SAFE_INTEGER) : 0;
 export function createWeeklyChallenges({ now = () => new Date(), getStorage = () => globalThis.localStorage } = {}) {
-  const fresh = (week, balance = 0) => ({ version: 1, weekId: week.id, balance,
+  const fresh = (week, balance = 0, ownedSkins = []) => ({ version: 1, weekId: week.id, balance, ownedSkins,
     progress: { normalFragments: 0, cycles: 0, devoreurRuns: 0, activeTime: 0 }, completed: {}, claimed: {} });
   let week = getLocalWeek(now());
   let state = fresh(week), dirty = false, unsavedTime = 0;
@@ -33,7 +34,10 @@ export function createWeeklyChallenges({ now = () => new Date(), getStorage = ()
   }
   function merge(saved) {
     if (!saved) return;
-    state.balance = Math.max(state.balance, Math.floor(safe(saved.balance)));
+    // A persisted debit must not be replaced by an older, higher in-memory balance.
+    state.balance = Math.floor(safe(saved.balance));
+    if (Array.isArray(saved.ownedSkins)) state.ownedSkins = [...new Set([...state.ownedSkins,
+      ...saved.ownedSkins.filter(id => typeof id === "string")])];
     if (saved.weekId !== state.weekId) return;
     for (const key of Object.keys(limits)) state.progress[key] = Math.min(limits[key], Math.max(state.progress[key], safe(saved.progress?.[key])));
     for (const challenge of WEEKLY_CHALLENGES) {
@@ -49,7 +53,7 @@ export function createWeeklyChallenges({ now = () => new Date(), getStorage = ()
   function refreshWeek() {
     const current = getLocalWeek(now());
     if (current.id !== week.id) {
-      merge(read()); week = current; state = fresh(week, state.balance); dirty = true; unsavedTime = 0;
+      merge(read()); week = current; state = fresh(week, state.balance, state.ownedSkins); dirty = true; unsavedTime = 0;
     }
   }
   function flush() {
@@ -79,8 +83,9 @@ export function createWeeklyChallenges({ now = () => new Date(), getStorage = ()
     if (events || unsavedTime >= 5 || WEEKLY_CHALLENGES.some(c => state.completed[c.id] && !wasComplete[c.id])) flush();
   }
   function snapshot() {
-    refreshWeek(); markCompleted();
+    refreshWeek(); merge(read()); markCompleted();
     return Object.freeze({ week: Object.freeze({ ...week }), balance: state.balance,
+      ownedSkins: Object.freeze([...state.ownedSkins]),
       challenges: Object.freeze(WEEKLY_CHALLENGES.map(c => Object.freeze({ ...c, progress: Math.min(c.target, state.progress[c.metric]),
         completed: state.completed[c.id], claimed: Boolean(state.claimed[c.id]) }))) });
   }
@@ -90,6 +95,16 @@ export function createWeeklyChallenges({ now = () => new Date(), getStorage = ()
     if (expectedWeek !== week.id || !c || !state.completed[id] || state.claimed[id]) return false;
     /* One storage write commits both the balance and the claim marker. */
     const next = { ...state, balance: state.balance + c.reward, claimed: { ...state.claimed, [id]: true } };
+    return commit(next);
+  }
+  function purchaseSkin(id) {
+    refreshWeek(); merge(read()); markCompleted();
+    const skin = SKINS.find(item => item.id === id);
+    if (!skin || id === "classic" || state.ownedSkins.includes(id) || state.balance < skin.price) return false;
+    // Debit and ownership share one atomic write in the existing wallet.
+    return commit({ ...state, balance: state.balance - skin.price, ownedSkins: [...state.ownedSkins, id] });
+  }
+  function commit(next) {
     try {
       const storage = getStorage();
       if (!storage) return false;
@@ -108,5 +123,5 @@ export function createWeeklyChallenges({ now = () => new Date(), getStorage = ()
     };
   }
   if (dirty) flush();
-  return Object.freeze({ snapshot, claim, flush, trackRun });
+  return Object.freeze({ snapshot, claim, flush, trackRun, purchaseSkin });
 }

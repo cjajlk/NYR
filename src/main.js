@@ -73,7 +73,7 @@ function createPreproductionScreen() {
 const app = document.querySelector("#app");
 const statisticsStore = createStatisticsStore();
 const weeklyChallenges = createWeeklyChallenges();
-const cosmetics = createCosmeticsStore();
+const cosmetics = createCosmeticsStore(weeklyChallenges);
 const skinSprites = createSkinSprites(() => cosmetics.snapshot().equipped.skin);
 window.addEventListener("pagehide", weeklyChallenges.flush);
 document.addEventListener("visibilitychange", () => { if (document.hidden) weeklyChallenges.flush(); });

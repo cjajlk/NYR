@@ -39,7 +39,7 @@ if (!hz) {
   globalThis.requestAnimationFrame = fn => queue.push(fn);
   Math.random = () => 0.4;
   if (process.env.NYR_SHOP_TEST) {
-    const saved = new Map();
+    const saved = new Map([["nyrWeeklyChallengesV1", JSON.stringify({version:1, balance:750})]]);
     globalThis.localStorage = { getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value) };
   }
   const url = new URL("../../src/main.js", import.meta.url);

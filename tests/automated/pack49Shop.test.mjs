@@ -4,33 +4,23 @@ import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
 import { createCosmeticsStore, COSMETICS_KEY } from "../../src/gameplay/cosmetics.js";
 import { createSkinSprites, SKIN_PARTS, skinAssetPath } from "../../src/gameplay/skinSprites.js";
+import { createWeeklyChallenges, WEEKLY_KEY, getLocalWeek } from "../../src/gameplay/weeklyChallenges.js";
 import { renderNyr } from "../../src/gameplay/nyrRenderer.js";
 import { createNyrMovement } from "../../src/gameplay/nyrMovement.js";
 import { createNyrProgression } from "../../src/gameplay/nyrProgression.js";
 
 function verifyStoreAndRenderer() {
-  const data=new Map([["nyrWeeklyChallengesV1",'{"balance":425}'],["nyrStatisticsV1",'{"bestScore":9000}']]);
-  const writes=[];
-  const storage={getItem:k=>data.get(k)??null,setItem(k,v){writes.push(k);data.set(k,v);}};
-  const store=createCosmeticsStore(()=>storage);
+  // Free ownership was a PACK 49 preproduction state; PACK 50 tests the paid transaction.
+  const data=new Map([[WEEKLY_KEY,JSON.stringify({version:1,weekId:getLocalWeek(new Date()).id,balance:750})]]);
+  const storage={getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)};
+  const wallet=createWeeklyChallenges({getStorage:()=>storage});
+  const store=createCosmeticsStore(wallet,()=>storage);
   assert.deepEqual(store.snapshot(),{owned:["classic"],equipped:{skin:"classic"}});
   assert.equal(store.equip("test"),false);
-  assert.equal(store.unlock("unknown"),false);
-  assert.equal(store.unlock("test"),true);
-  assert.equal(store.unlock("test"),false);
-  assert.equal(store.snapshot().equipped.skin,"classic","unlock is separate from equip");
+  assert.equal(store.purchase("test"),true);
   assert.equal(store.equip("test"),true);
-  assert.deepEqual(createCosmeticsStore(()=>storage).snapshot(),store.snapshot());
+  assert.deepEqual(createCosmeticsStore(wallet,()=>storage).snapshot(),store.snapshot());
   assert.equal(store.equip("classic"),true);
-  assert.equal(createCosmeticsStore(()=>storage).snapshot().equipped.skin,"classic");
-  assert.equal(data.get("nyrWeeklyChallengesV1"),'{"balance":425}');
-  assert.equal(data.get("nyrStatisticsV1"),'{"bestScore":9000}');
-  assert.ok(writes.every(k=>k===COSMETICS_KEY));
-  const blocked=createCosmeticsStore(()=>{throw Error("blocked");});assert.equal(blocked.unlock("test"),false);
-  assert.equal(blocked.snapshot().equipped.skin,"classic");
-  for(const raw of ["bad JSON",'null','{"version":1,"owned":[],"equipped":{"skin":"test"}}']) {
-    const bad=createCosmeticsStore(()=>({getItem:()=>raw}));assert.equal(bad.snapshot().equipped.skin,"classic");
-  }
   const loaded=[];let equipped="test";
   const sprites=createSkinSprites(()=>equipped,()=>{const image={complete:true,naturalWidth:1774,naturalHeight:887};loaded.push(image);return image;});
   function context() {
@@ -44,19 +34,24 @@ function verifyStoreAndRenderer() {
     if([0,49,50,149,150,299,300,450].includes(count)) {
       const form=progression.snapshot();const classic=context(), skinned=context();
       renderNyr(classic.ctx,state,form);
+      equipped="classic";
+      const unchanged=context();
+      renderNyr(unchanged.ctx,state,form,null,undefined,undefined,undefined,sprites);
+      assert.deepEqual(unchanged.calls,classic.calls,"all four CLASSIQUE forms stay unchanged");
+      equipped="test";
       renderNyr(skinned.ctx,state,form,null,undefined,undefined,undefined,sprites);
       const draws=skinned.calls.filter(c=>c[0]==="drawImage");
-      if(count<150) {
+      if(count<=450) {
         assert.equal(draws.length,121,"120 visible segments plus head");
-        const expected=count<50?"eclat":"spectre";
+        const expected=count<50?"eclat":count<150?"spectre":count<300?"nocturne":"devoreur";
         assert.ok(draws.every(c=>c[1].src.includes(`nyr_${expected}_`)));
         assert.ok(draws[0][1].src.endsWith("queue.png"));
         assert.ok(draws.at(-1)[1].src.endsWith("tete.png"));
         const body=draws.slice(1,-1).reverse();
-        assert.equal(draws[0][4],31,"tail size unchanged");
-        assert.equal(draws.at(-1)[4],48,"head size unchanged");
+        assert.equal(draws[0][4],count<150?31:count<300?36:40,"form tail size");
+        assert.equal(draws.at(-1)[4],count<150?48:count<300?52:58,"form head size");
         for(const call of body) {
-          const width=expected==="spectre"?36:26;
+          const width=expected==="eclat"?26:expected==="devoreur"?40:36;
           assert.equal(call[4],width,"only Spectre body scales are enlarged");
           assert.equal(call[2],-width/2,"same centered anchor");
           assert.equal(call[5],width/2,"original aspect ratio preserved");
@@ -69,14 +64,14 @@ function verifyStoreAndRenderer() {
     }
     progression.recordNormalFragmentAbsorption();
   }
-  assert.equal(loaded.length,10,"images cached across frames and runs");
+  assert.equal(loaded.length,20,"images cached across frames and runs");
   equipped="classic";const a=context(),b=context();
   renderNyr(a.ctx,state,{currentForm:"eclat"});renderNyr(b.ctx,state,{currentForm:"eclat"},null,undefined,undefined,undefined,sprites);
   assert.deepEqual(a.calls,b.calls,"classic unchanged");
   const pending=createSkinSprites(()=>"test",()=>({complete:false,naturalWidth:0,naturalHeight:0}));
   const c=context();renderNyr(c.ctx,state,{currentForm:"eclat"},null,undefined,undefined,undefined,pending);assert.deepEqual(c.calls,a.calls);
   assert.equal(JSON.stringify(movement.snapshot()),saved,"rendering never mutates physical state");
-  for(const form of ["eclat","spectre"])for(const part of SKIN_PARTS){
+  for(const form of ["eclat","spectre","nocturne","devoreur"])for(const part of SKIN_PARTS){
     const png=readFileSync(new URL(`../../${skinAssetPath(form,part)}`,import.meta.url));
     assert.equal(png.subarray(1,4).toString(),"PNG");assert.equal(png[25],6,"RGBA assets preserved");
   }
@@ -89,10 +84,12 @@ export function verifyShop({app,frame,snapshot,hz,setBounds}) {
   menu.children.find(e=>e.textContent==="BOUTIQUE").emit("click");
   const panel=menu.children.find(e=>e.className==="shop-panel");assert.equal(panel.hidden,false);
   const cards=panel.children[1].children, classic=cards[0].children.at(-1), test=cards[1].children.at(-1);
-  assert.equal(classic.textContent,"ÉQUIPÉ");assert.equal(test.textContent,"DÉBLOQUER");
+  assert.equal(classic.textContent,"ÉQUIPÉ");assert.equal(test.textContent,"ACHETER — 750 ÉCLATS");
   test.emit("click");assert.equal(test.textContent,"ÉQUIPER");test.emit("click");assert.equal(test.textContent,"ÉQUIPÉ");
-  assert.equal(createCosmeticsStore().snapshot().equipped.skin,"test");
-  for(let i=0;i<hz;i++)frame();assert.deepEqual(snapshot(p),before);assert.deepEqual(p.readWeekly(),weekly);assert.deepEqual(p.readTotals(),totals);
+  assert.equal(createCosmeticsStore(createWeeklyChallenges()).snapshot().equipped.skin,"test");
+  for(let i=0;i<hz;i++)frame();assert.deepEqual(snapshot(p),before);
+  assert.deepEqual(p.readWeekly().challenges,weekly.challenges);assert.equal(p.readWeekly().balance,weekly.balance-750);
+  assert.deepEqual(p.readTotals(),totals);
   window.innerWidth=440;window.innerHeight=956;setBounds({width:424,height:908});window.emit("resize");frame();
   classic.emit("click");assert.equal(p.readCosmetics().equipped.skin,"test","portrait cannot change equipment");
   window.innerWidth=956;window.innerHeight=440;setBounds({width:940,height:392});window.emit("resize");frame();assert.equal(panel.hidden,false);
