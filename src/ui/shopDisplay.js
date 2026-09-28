@@ -1,5 +1,7 @@
 import { SKINS } from "../gameplay/cosmetics.js";
-import { skinAssetPath } from "../gameplay/skinSprites.js";
+import { SKIN_FORMS } from "../gameplay/skinCatalog.js";
+
+const FORM_LABELS = Object.freeze({ eclat: "ÉCLAT", spectre: "SPECTRE", nocturne: "NOCTURNE", devoreur: "DÉVOREUR" });
 
 export function createShopPanel(cosmetics, readBalance, canInteract) {
   const element = document.createElement("section");
@@ -18,11 +20,17 @@ export function createShopPanel(cosmetics, readBalance, canInteract) {
     const detail = document.createElement("p");
     detail.textContent = skin.id === "classic" ? "Apparence originale · Possédé" : `${skin.price} Éclats`;
     const preview = document.createElement("div"); preview.className = "skin-preview";
-    if (skin.id === "test") {
-      for (const form of ["eclat", "spectre"]) {
+    if (SKIN_FORMS.some(form => skin.forms[form]?.tete)) {
+      preview.className = "skin-preview skin-preview-forms";
+      for (const form of SKIN_FORMS) {
+        const source = skin.forms[form]?.tete;
+        if (!source) continue;
+        const figure = document.createElement("figure");
         const image = document.createElement("img");
-        image.src = skinAssetPath(form, "tete"); image.alt = form === "eclat" ? "Éclat" : "Spectre";
-        preview.append(image);
+        image.src = source; image.alt = `${skin.name} — ${FORM_LABELS[form]}`;
+        const caption = document.createElement("figcaption"); caption.textContent = FORM_LABELS[form];
+        figure.append(image, caption);
+        preview.append(figure);
       }
     } else {
       preview.textContent = "NYR";

@@ -429,7 +429,14 @@ body {
 .shop-card .replay-button { margin-top: auto; min-width: 0; font-size: 0.75rem; }
 .shop-card .replay-button:disabled { border-color: #a2dcff44; color: #b2bbce; cursor: default; }
 .skin-preview { height: 5rem; display: flex; align-items: center; justify-content: center; color: #b2bbce; letter-spacing: 0.2em; }
-.skin-preview img { width: 50%; max-height: 100%; object-fit: contain; }
+.skin-preview.skin-preview-forms { height: auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.25rem; letter-spacing: normal; }
+.skin-preview-forms figure { min-width: 0; margin: 0; text-align: center; }
+.skin-preview-forms img { display: block; width: 100%; height: 4rem; object-fit: contain; }
+.skin-preview-forms figcaption { font-size: 0.55rem; line-height: 1.5; color: #b2bbce; }
+@media (max-width: 700px) {
+  .skin-preview.skin-preview-forms { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .skin-preview-forms img { height: 3rem; }
+}
 @media (max-height: 500px) {
   .main-menu[data-page="home"] { gap: 0.25rem; }
   .main-menu[data-page="home"] > button { padding: 0.3rem 1rem; font-size: 0.8rem; }
