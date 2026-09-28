@@ -1,4 +1,5 @@
 import { SKINS } from "./skinCatalog.js";
+import { readStory, awardStoryChapter } from "./storyProgression.js";
 /* Calendar arithmetic uses local dates; UTC is used only to number the ISO week. */
 export function getLocalWeek(date) {
   const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -22,7 +23,7 @@ export const WEEKLY_CHALLENGES = Object.freeze([
 const limits = { normalFragments: 250, cycles: 5, devoreurRuns: 3, activeTime: 3600 };
 const safe = value => Number.isFinite(value) && value >= 0 ? Math.min(value, Number.MAX_SAFE_INTEGER) : 0;
 export function createWeeklyChallenges({ now = () => new Date(), getStorage = () => globalThis.localStorage } = {}) {
-  const fresh = (week, balance = 0, ownedSkins = []) => ({ version: 1, weekId: week.id, balance, ownedSkins,
+  const fresh = (week, balance = 0, ownedSkins = [], story = readStory()) => ({ version: 1, weekId: week.id, balance, ownedSkins, story,
     progress: { normalFragments: 0, cycles: 0, devoreurRuns: 0, activeTime: 0 }, completed: {}, claimed: {} });
   let week = getLocalWeek(now());
   let state = fresh(week), dirty = false, unsavedTime = 0;
@@ -36,6 +37,7 @@ export function createWeeklyChallenges({ now = () => new Date(), getStorage = ()
     if (!saved) return;
     // A persisted debit must not be replaced by an older, higher in-memory balance.
     state.balance = Math.floor(safe(saved.balance));
+    state.story = readStory(saved.story);
     if (Array.isArray(saved.ownedSkins)) state.ownedSkins = [...new Set([...state.ownedSkins,
       ...saved.ownedSkins.filter(id => typeof id === "string")])];
     if (saved.weekId !== state.weekId) return;
@@ -53,7 +55,7 @@ export function createWeeklyChallenges({ now = () => new Date(), getStorage = ()
   function refreshWeek() {
     const current = getLocalWeek(now());
     if (current.id !== week.id) {
-      merge(read()); week = current; state = fresh(week, state.balance, state.ownedSkins); dirty = true; unsavedTime = 0;
+      merge(read()); week = current; state = fresh(week, state.balance, state.ownedSkins, state.story); dirty = true; unsavedTime = 0;
     }
   }
   function flush() {
@@ -104,6 +106,13 @@ export function createWeeklyChallenges({ now = () => new Date(), getStorage = ()
     // Debit and ownership share one atomic write in the existing wallet.
     return commit({ ...state, balance: state.balance - skin.price, ownedSkins: [...state.ownedSkins, id] });
   }
+  function storySnapshot() { refreshWeek(); merge(read()); return readStory(state.story); }
+  function recordStoryChapter(chapter, run) {
+    refreshWeek(); merge(read()); markCompleted();
+    const result = awardStoryChapter(state.story, chapter, run);
+    // Completion, records, reward receipts and the existing balance commit together.
+    return result ? commit({ ...state, story: result.story, balance: state.balance + result.reward }) : false;
+  }
   function commit(next) {
     try {
       const storage = getStorage();
@@ -123,5 +132,5 @@ export function createWeeklyChallenges({ now = () => new Date(), getStorage = ()
     };
   }
   if (dirty) flush();
-  return Object.freeze({ snapshot, claim, flush, trackRun, purchaseSkin });
+  return Object.freeze({ snapshot, claim, flush, trackRun, purchaseSkin, storySnapshot, recordStoryChapter });
 }

@@ -3,10 +3,10 @@ const defaults = () => ({ bestScore: 0, bestTime: 0, bestCombo: 1, completedRuns
   normalFragments: 0, pureFragments: 0, cycles: 0, damageEvents: 0, stabilityLost: 0,
   spectreReached: 0, nocturneReached: 0, devoreurReached: 0 });
 const forms = ["eclat", "spectre", "nocturne", "devoreur"];
-export function createStatisticsStore(getStorage = () => globalThis.localStorage) {
+export function createStatisticsStore(getStorage = () => globalThis.localStorage, storageKey = STATISTICS_KEY) {
   let totals = defaults();
   try {
-    const saved = JSON.parse(getStorage()?.getItem(STATISTICS_KEY) ?? "null");
+    const saved = JSON.parse(getStorage()?.getItem(storageKey) ?? "null");
     if (saved?.version === 1) for (const key of Object.keys(totals)) {
       const value = saved.totals?.[key];
       if (Number.isFinite(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER) {
@@ -25,7 +25,7 @@ export function createStatisticsStore(getStorage = () => globalThis.localStorage
     for (const [index, key] of ["spectreReached", "nocturneReached", "devoreurReached"].entries()) {
       if (rank >= index + 1) totals[key]++;
     }
-    try { getStorage()?.setItem(STATISTICS_KEY, JSON.stringify({ version: 1, totals })); } catch { /* Keep memory totals. */ }
+    try { getStorage()?.setItem(storageKey, JSON.stringify({ version: 1, totals })); } catch { /* Keep memory totals. */ }
     return snapshot();
   }
   function snapshot() { return Object.freeze({ ...totals }); }

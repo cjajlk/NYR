@@ -16,7 +16,14 @@ if (!hz) {
     listeners = new Map();
     addEventListener(name, fn) { if (!this.listeners.has(name)) this.listeners.set(name, new Set()); this.listeners.get(name).add(fn); }
     removeEventListener(name, fn) { this.listeners.get(name)?.delete(fn); }
-    emit(name) { for (const fn of [...(this.listeners.get(name) ?? [])]) fn(); }
+    emit(name) {
+      const selectInfinite = !process.env.NYR_STORY_TEST && name === "click" && this.textContent === "JOUER" && !this.hidden && !this.disabled;
+      for (const fn of [...(this.listeners.get(name) ?? [])]) fn();
+      // Legacy gameplay scenarios explicitly select the already-unlocked Infinite mode.
+      if (selectInfinite) {
+        app.children.find(e => e.className === "main-menu").children.find(e => e.className === "mode-selection").children[2].emit("click");
+      }
+    }
   }
   let bounds = { width: 940, height: 392 };
   const context = new Proxy({}, { get: (target, key) => target[key] ?? (() => ({ addColorStop() {} })) });
@@ -38,14 +45,16 @@ if (!hz) {
   let queue = [], timestamp = 0;
   globalThis.requestAnimationFrame = fn => queue.push(fn);
   Math.random = () => 0.4;
-  if (process.env.NYR_SHOP_TEST) {
-    const saved = new Map([["nyrWeeklyChallengesV1", JSON.stringify({version:1, balance:750})]]);
+  {
+    const saved = new Map([["nyrWeeklyChallengesV1", JSON.stringify({version:1, balance:process.env.NYR_SHOP_TEST ? 750 : 0,
+      ownedSkins: process.env.NYR_STORY_TEST ? ["test"] : [], story: { completed: !process.env.NYR_STORY_TEST }})]]);
+    if (process.env.NYR_STORY_TEST) saved.set("nyrCosmeticsV1", JSON.stringify({version:2,equipped:{skin:"test"}}));
     globalThis.localStorage = { getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value) };
   }
   const url = new URL("../../src/main.js", import.meta.url);
   let source = readFileSync(url, "utf8").replace(/from "(\.\/[^"]+)"/g, (_, path) => `from "${new URL(path, url).href}"`);
   source = source.replace("  gameLoop.start();", `
-    globalThis.probe = { readCosmetics: cosmetics.snapshot, readWeekly: weeklyChallenges.snapshot, runStatistics, readTotals: statisticsStore.snapshot, timeDisplay, zoneFourObjective, zoneOneObjective, zoneFourPortal, voidDifficulty, zoneThreeObjective, zoneThreePortal, zoneTwoObjective, exitPortal, pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
+    globalThis.probe = { readStory: weeklyChallenges.storySnapshot, storyDisplay, mode, readCosmetics: cosmetics.snapshot, readWeekly: weeklyChallenges.snapshot, runStatistics, readTotals: statisticsStore.snapshot, timeDisplay, zoneFourObjective, zoneOneObjective, zoneFourPortal, voidDifficulty, zoneThreeObjective, zoneThreePortal, zoneTwoObjective, exitPortal, pocket, portal, combo, comboDisplay, movement, stability, progression, zoneProgression, score, fragmentSystem, mobileAsteroid,
       absorptionFeedback, zoneBackgroundTransition, farStarsParallax, midNebulaParallax,
       nearParticlesParallax, decorativeAsteroidsParallax, stabilityDisplay, gameLoop, canvas };
     gameLoop.start();`);
@@ -53,6 +62,11 @@ if (!hz) {
   const snapshot = p => Object.fromEntries(Object.entries(p).filter(([, value]) => value.snapshot).map(([key, value]) => [key, value.snapshot()]));
   const frame = () => { timestamp += 1000 / hz; const callbacks = queue; queue = []; callbacks.forEach(fn => fn(timestamp)); };
   const button = p => p.stabilityDisplay.gameOverElement.children[2];
+  if (process.env.NYR_STORY_TEST) {
+    const { verifyStoryRuntime } = await import("./pack51Story.test.mjs");
+    verifyStoryRuntime({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });
+    process.exit(0);
+  }
   // Earlier packs exercise cleanup through the current explicit quit flow.
   globalThis.quitToMenu = () => {
     app.children.find(e => e.className === "return-menu").emit("click");

@@ -1,4 +1,5 @@
 import { createWeeklyChallenges } from "./gameplay/weeklyChallenges.js";
+import { createStoryDisplay } from "./ui/storyDisplay.js";
 import { createCosmeticsStore } from "./gameplay/cosmetics.js";
 import { createSkinSprites } from "./gameplay/skinSprites.js";
 import { createPauseDisplay } from "./ui/pauseDisplay.js";
@@ -16,7 +17,7 @@ import { createMainMenu } from "./ui/mainMenu.js";
 import { APP_CONFIG } from "./core/appConfig.js";
 import { createDisplayManager } from "./core/displayManager.js";
 import { createGameLoop } from "./core/gameLoop.js";
-import { beginNewGame, endGame as endRuntimeGame, getRuntimeState, isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
+import { beginNewGame, completeJourney, endGame as endRuntimeGame, getRuntimeState, isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
 import { createZoneOneBackground } from "./core/zoneOneBackground.js";
 import { createZoneBackgroundTransition } from "./core/zoneBackgroundTransition.js";
 import { createFarStarsParallax } from "./core/farStarsParallax.js";
@@ -72,15 +73,55 @@ function createPreproductionScreen() {
 
 const app = document.querySelector("#app");
 const statisticsStore = createStatisticsStore();
+const storyStatisticsStore = createStatisticsStore(undefined, "nyrStoryStatisticsV1");
 const weeklyChallenges = createWeeklyChallenges();
 const cosmetics = createCosmeticsStore(weeklyChallenges);
 const skinSprites = createSkinSprites(() => cosmetics.snapshot().equipped.skin);
 window.addEventListener("pagehide", weeklyChallenges.flush);
 document.addEventListener("visibilitychange", () => { if (document.hidden) weeklyChallenges.flush(); });
 
-function startGame() {
+function startGame(mode = "infinite", menuPage = "home") {
   const { screen, canvas } = createPreproductionScreen();
-  const mainMenu = createMainMenu(replayGame, statisticsStore.snapshot, weeklyChallenges, cosmetics);
+  const mainMenu = createMainMenu(selected => {
+    if (selected !== "story" && (selected !== "infinite" || !weeklyChallenges.storySnapshot().completed)) return;
+    replaceSession(false, selected);
+  }, statisticsStore.snapshot, weeklyChallenges, cosmetics, menuPage);
+  let narrativeStage = mode === "story" && getRuntimeState().phase !== "MENU" ? 0 : null;
+  let pendingStoryRecord = null;
+  let storySaveFailed = false;
+  let chapterStart = { time: 0, score: 0 };
+  let chapterCombo = 1;
+  let completedChapter = 0;
+  if (narrativeStage !== null) suspendRuntime("story-narrative");
+  const storyDisplay = createStoryDisplay(() => {
+    const state = getRuntimeState();
+    if (disposed || narrativeStage === null || state.suspensionReasons.some(r => r !== "story-narrative")) return;
+    if (pendingStoryRecord && !saveStoryRecord()) { syncMenuDisplay(); return; }
+    if (narrativeStage === 4) { replaceSession(true); return; }
+    narrativeStage = null;
+    resumeRuntime("story-narrative");
+    gameLoop.resetClock();
+    syncDisplayState();
+  });
+  function saveStoryRecord() {
+    storySaveFailed = !weeklyChallenges.recordStoryChapter(pendingStoryRecord.chapter, pendingStoryRecord.run);
+    if (!storySaveFailed) pendingStoryRecord = null;
+    return !storySaveFailed;
+  }
+  function finishChapter(chapter) {
+    if (mode !== "story" || chapter !== completedChapter + 1 || !isRuntimeActive()) return;
+    completedChapter = chapter;
+    const time = movement.snapshot().simulationTime, points = score.snapshot().points;
+    pendingStoryRecord = { chapter, run: { time: time - chapterStart.time, score: points - chapterStart.score,
+      stability: stability.snapshot().stability, combo: chapterCombo } };
+    saveStoryRecord();
+    chapterStart = { time, score: points }; chapterCombo = 1;
+    narrativeStage = chapter;
+    if (chapter === 4) { runStatistics.finish(); completeJourney(); }
+    suspendRuntime("story-narrative");
+    gameLoop.resetClock();
+    syncMenuDisplay();
+  }
   const returnMenu = createReturnMenu(() => {
     if (disposed) return;
     if (getRuntimeState().gameOver) { replaceSession(true); return; }
@@ -123,7 +164,7 @@ function startGame() {
     normalFragments: progression.snapshot().normalFragmentsAbsorbed,
     combo: combo.snapshot().multiplier,
     form: progression.snapshot().currentForm
-  }), statisticsStore);
+  }), mode === "story" ? storyStatisticsStore : statisticsStore);
   const observeWeekly = weeklyChallenges.trackRun(runStatistics.snapshot);
   const stability = createNyrStability(undefined, runStatistics.damage);
   const mobileAsteroid = createMobileAsteroidSystem({
@@ -151,12 +192,14 @@ function startGame() {
     const zoneState = zoneProgression.sync(progression.snapshot(), true);
     mobileAsteroid.syncZone(zoneState, displaySize.cssWidth, displaySize.cssHeight,
       movement.snapshot(), fragmentSystem.snapshot());
+    finishChapter(1);
   });
   const exitPortal = createZoneExitPortal(() => {
     zoneThreePortal.reset();
     zoneThreeObjective.enter(progression.snapshot().normalFragmentsAbsorbed);
     combo.reset();
     zoneBackgroundTransition.sync(zoneProgression.enterZoneThree());
+    finishChapter(2);
   }, ZONE_TWO_TARGET);
   const zoneThreePortal = createZoneExitPortal(() => {
     if (!isRuntimeActive() || zoneProgression.snapshot().currentZone !== NYR_ZONES.ZONE_3) return;
@@ -166,9 +209,11 @@ function startGame() {
     voidDifficulty.enter(movement.snapshot().simulationTime);
     fragmentSystem.enterVoid();
     zoneBackgroundTransition.sync(zoneProgression.enterZoneFour());
+    finishChapter(3);
   }, ZONE_THREE_TARGET);
   const zoneFourPortal = createZoneExitPortal(() => {
     if (!isRuntimeActive() || zoneProgression.snapshot().currentZone !== NYR_ZONES.ZONE_4) return;
+    if (mode === "story") { finishChapter(4); return; }
     combo.reset();
     const count = progression.snapshot().normalFragmentsAbsorbed;
     zoneOneObjective.enter(count);
@@ -247,6 +292,7 @@ function startGame() {
             ...(["warning", "active"].includes(hazard.phase) ? [hazard] : [])], mobileAsteroid.snapshot());
       }
       const updatedScore = score.awardNormalFragment(combo.absorb());
+      chapterCombo = Math.max(chapterCombo, combo.snapshot().multiplier);
       scoreDisplay.update(updatedScore);
       runStatistics.progress();
       absorptionFeedback.trigger(progression.snapshot().currentForm);
@@ -259,6 +305,7 @@ function startGame() {
   app.append(stabilityDisplay.element, stabilityDisplay.gameOverElement);
   app.append(mainMenu.element, returnMenu.element, comboDisplay.element, timeDisplay.element);
   app.append(pauseDisplay.element, fragmentsDisplay);
+  app.append(storyDisplay.element);
 
   function syncOrientationState(shouldSuspend) {
     orientationOverlay.setVisible(shouldSuspend);
@@ -277,6 +324,8 @@ function startGame() {
   function syncMenuDisplay() {
     const state = getRuntimeState();
     const menu = state.phase === "MENU";
+    const narrative = narrativeStage !== null;
+    storyDisplay.update(narrativeStage, state.suspensionReasons.includes("portrait-orientation"), weeklyChallenges.storySnapshot(), storySaveFailed);
     mainMenu.update(menu, state.suspensionReasons.includes("portrait-orientation"));
     returnMenu.update(state);
     pauseDisplay.update(state);
@@ -288,7 +337,12 @@ function startGame() {
     scoreDisplay.element.hidden = menu;
     timeDisplay.update(movement.snapshot().simulationTime, state);
     if (menu) stabilityDisplay.element.hidden = true;
-    screen.children[1].hidden = menu;
+    screen.children[1].hidden = menu || narrative;
+    if (narrative) {
+      stabilityDisplay.element.hidden = true;
+      stabilityDisplay.gameOverElement.hidden = true;
+      scoreDisplay.element.hidden = timeDisplay.element.hidden = fragmentsDisplay.hidden = comboDisplay.element.hidden = true;
+    }
   }
 
   function syncDisplayState() {
@@ -360,11 +414,11 @@ function startGame() {
     replaceSession(false);
   }
 
-  function replaceSession(toMenu) {
+  function replaceSession(toMenu, selectedMode = mode) {
     if (disposed) return;
     const state = getRuntimeState();
     const menu = state.phase === "MENU";
-    if (state.suspensionReasons.some(reason => reason !== "main-menu" && !(toMenu && reason === "user-pause"))) return;
+    if (state.suspensionReasons.some(reason => reason !== "main-menu" && !(toMenu && ["user-pause", "story-narrative"].includes(reason)))) return;
     if (toMenu ? menu : (!state.gameOver && !state.journeyComplete && !menu)) return;
     observeWeekly();
     weeklyChallenges.flush();
@@ -378,8 +432,9 @@ function startGame() {
     if (toMenu) suspendRuntime("main-menu");
     else if (menu) resumeRuntime("main-menu");
     resumeRuntime("user-pause");
+    resumeRuntime("story-narrative");
     if (state.gameOver || state.journeyComplete) beginNewGame();
-    startGame();
+    startGame(selectedMode, toMenu && mode === "story" ? "modes" : "home");
   }
 
   const gameLoop = createGameLoop({
