@@ -1,9 +1,30 @@
 import { FRAGMENT_PROTOTYPE_CONFIG } from "./fragmentPrototypeConfig.js";
 
+// PACK assets 61: cosmetic sprites only. Keep the canvas fallback for loading failures.
+const fragmentSpriteSources = {
+  normal: new URL("../../assets/images/collectibles/pack61/asset_07.png", import.meta.url).href,
+  pure: new URL("../../assets/images/collectibles/pack61/asset_03.png", import.meta.url).href,
+  corruption: new URL("../../assets/images/collectibles/pack61/asset_04.png", import.meta.url).href
+};
+const fragmentSprites = Object.fromEntries(Object.entries(fragmentSpriteSources).map(([kind, src]) => {
+  const image = typeof Image !== "undefined" ? new Image() : null;
+  if (image) image.src = src;
+  return [kind, image];
+}));
+
 export function renderNormalFragments(context, fragments, config = FRAGMENT_PROTOTYPE_CONFIG) {
   for (const fragment of fragments) {
     const pure = fragment.kind === "pure";
     const corrupted = fragment.kind === "corruption";
+    const sprite = fragmentSprites[corrupted ? "corruption" : pure ? "pure" : "normal"];
+    if (sprite?.complete && sprite.naturalWidth > 0 && typeof context.drawImage === "function") {
+      const diameter = config.visualRadiusPixels * (corrupted ? 4.2 : pure ? 4.4 : 3.8);
+      const aspect = sprite.naturalWidth / sprite.naturalHeight;
+      const width = diameter * Math.min(1, aspect);
+      const height = diameter / Math.max(1, aspect);
+      context.drawImage(sprite, fragment.x - width / 2, fragment.y - height / 2, width, height);
+      continue;
+    }
     const gradient = context.createRadialGradient(
       fragment.x,
       fragment.y,
