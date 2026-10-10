@@ -36,7 +36,7 @@ export function createShopPanel(cosmetics, readBalance, canInteract) {
       preview.textContent = "NYR";
     }
     const note = document.createElement("p");
-    note.textContent = skin.id === "test" ? "Un skin complet : Éclat, Spectre, Nocturne, Dévoreur." : "Les quatre formes actuelles de Nyr.";
+    note.textContent = skin.id === "classic" ? "Les quatre formes actuelles de Nyr." : "Un skin complet : Éclat, Spectre, Nocturne, Dévoreur.";
     const button = document.createElement("button"); button.type = "button"; button.className = "replay-button";
     button.addEventListener("click", () => {
       if (!canInteract() || button.disabled) return;

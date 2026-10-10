@@ -16,7 +16,7 @@ function fixture(balance, legacy = false) {
   const shop=createCosmeticsStore(wallet,()=>storage);
   return {saved,writes,storage,options,wallet,shop,setFail:value=>fail=value,nextWeek:()=>date=new Date(2026,8,28)};
 }
-assert.equal(SKINS.length,2);assert.equal(SKINS.find(s=>s.id==="test").price,750);
+assert.equal(SKINS.length,3);assert.equal(SKINS.find(s=>s.id==="test").price,750);
 assert.deepEqual(Object.keys(SKINS.find(s=>s.id==="test").forms),["eclat","spectre","nocturne","devoreur"]);
 for(const balance of [0,749,750,800]) {
   const f=fixture(balance), before=f.wallet.snapshot();

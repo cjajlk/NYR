@@ -4,7 +4,11 @@ export const skinAssetPath = (form, part) => `./assets/images/nyr/nyr_${form}_${
 const forms = Object.freeze(Object.fromEntries(SKIN_FORMS.map(form => [form,
   Object.freeze(Object.fromEntries(SKIN_PARTS.map(part => [part, skinAssetPath(form, part)])))])));
 // Keep the PACK 49 technical ID; displayed names never identify ownership.
+const leviathanForms = Object.freeze(Object.fromEntries(SKIN_FORMS.map(form => [form,
+  Object.freeze(Object.fromEntries(SKIN_PARTS.map(part =>
+    [part, `./assets/images/leviathan/${form}_${part}.png`])))])));
 export const SKINS = Object.freeze([
   Object.freeze({ id: "classic", name: "CLASSIQUE", price: 0, forms: Object.freeze({}) }),
-  Object.freeze({ id: "test", name: "PREMIER SKIN", price: 750, forms })
+  Object.freeze({ id: "test", name: "PREMIER SKIN", price: 750, forms }),
+  Object.freeze({ id: "leviathan_astral", name: "LÉVIATHAN ASTRAL", price: 750, forms: leviathanForms })
 ]);
