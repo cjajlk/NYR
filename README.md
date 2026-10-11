@@ -6,9 +6,11 @@ NYR est un jeu autonome de l’écosystème CJAJLK Games. Le joueur y contrôler
 
 ## Statut
 
-Prototype PACK 22 — l’Astéroïde mobile de Zone 2 retire 25 points de Stabilité à chaque nouvelle entrée en contact avec la tête de Nyr.
+PACK 53 — Mode Survie implémenté, en attente des essais réels de CJ sur téléphone.
 
-Un contact continu ne provoque qu’une seule perte ; une séparation réarme la détection. La Stabilité reste bornée à zéro. Son état reste interne : aucun HUD, flash de collision, recul ou écran de fin de partie n’est ajouté. À zéro, le prototype continue de tourner ; le game over reste à réaliser dans un prochain pack. Le rendu canvas de l’Astéroïde reste provisoire.
+Survie se débloque après la première conclusion réussie de l’Histoire. Il reprend les quatre zones et les portails du Voyage Infini, avec une défaite immédiate par autocollision et une vitesse de 100 %, 105 %, 110 %, 115 %, puis 120 % selon le cycle. Trois défis permanents accordent au total 250 Éclats, une seule fois. Les records Survie sont séparés.
+
+Les contrôles existants restent souris sur PC et toucher/glisser sur téléphone. Aucun contrôle clavier ou manette de déplacement n’existe dans ce socle ; le PACK 53 n’en ajoute pas. Voir `docs/checkpoints/CHECKPOINT_PACK_53.md` pour les vérifications et limites de livraison.
 
 ## Vérification
 

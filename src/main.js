@@ -1,3 +1,4 @@
+import { createSurvivalRun, hasSelfCollision, survivalSpeed } from "./gameplay/survival.js";
 import { createWeeklyChallenges } from "./gameplay/weeklyChallenges.js";
 import { createStoryDisplay } from "./ui/storyDisplay.js";
 import { createCosmeticsStore } from "./gameplay/cosmetics.js";
@@ -74,6 +75,7 @@ function createPreproductionScreen() {
 const app = document.querySelector("#app");
 const statisticsStore = createStatisticsStore();
 const storyStatisticsStore = createStatisticsStore(undefined, "nyrStoryStatisticsV1");
+const survivalStatisticsStore = createStatisticsStore(undefined, "nyrSurvivalStatisticsV1");
 const weeklyChallenges = createWeeklyChallenges();
 const cosmetics = createCosmeticsStore(weeklyChallenges);
 const skinSprites = createSkinSprites(() => cosmetics.snapshot().equipped.skin);
@@ -83,9 +85,9 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) weekl
 function startGame(mode = "infinite", menuPage = "home") {
   const { screen, canvas } = createPreproductionScreen();
   const mainMenu = createMainMenu(selected => {
-    if (selected !== "story" && (selected !== "infinite" || !weeklyChallenges.storySnapshot().completed)) return;
+    if (!["story", "infinite", "survival"].includes(selected) || (selected !== "story" && !weeklyChallenges.storySnapshot().completed)) return;
     replaceSession(false, selected);
-  }, statisticsStore.snapshot, weeklyChallenges, cosmetics, menuPage);
+  }, statisticsStore.snapshot, weeklyChallenges, cosmetics, menuPage, survivalStatisticsStore.snapshot);
   let narrativeStage = mode === "story" && getRuntimeState().phase !== "MENU" ? 0 : null;
   let pendingStoryRecord = null;
   let storySaveFailed = false;
@@ -163,9 +165,12 @@ function startGame(mode = "infinite", menuPage = "home") {
     activeTime: movement.snapshot().simulationTime,
     normalFragments: progression.snapshot().normalFragmentsAbsorbed,
     combo: combo.snapshot().multiplier,
-    form: progression.snapshot().currentForm
-  }), mode === "story" ? storyStatisticsStore : statisticsStore);
-  const observeWeekly = weeklyChallenges.trackRun(runStatistics.snapshot);
+    form: progression.snapshot().currentForm,
+    length: movement.snapshot().segmentCount
+  }), mode === "story" ? storyStatisticsStore : mode === "survival" ? survivalStatisticsStore : statisticsStore);
+  const survivalRun = mode === "survival" ? createSurvivalRun(() => ({ ...runStatistics.snapshot(), segmentCount: movement.snapshot().segmentCount }), weeklyChallenges) : null;
+  const readRun = () => ({ ...runStatistics.snapshot(), ...survivalRun?.snapshot() });
+  const observeWeekly = mode === "survival" ? () => survivalRun.observe() : weeklyChallenges.trackRun(runStatistics.snapshot);
   const stability = createNyrStability(undefined, runStatistics.damage);
   const mobileAsteroid = createMobileAsteroidSystem({
     onHeadContactStarted() {
@@ -231,7 +236,10 @@ function startGame(mode = "infinite", menuPage = "home") {
   }
   const combo = createNyrCombo();
   const comboDisplay = createComboDisplay();
-  function endGame() {
+  function endGame(cause = "Stabilité épuisée") {
+    if (!isRuntimeActive()) return;
+    survivalRun?.observe();
+    survivalRun?.defeat(cause);
     runStatistics.finish();
     combo.reset();
     endRuntimeGame();
@@ -317,7 +325,7 @@ function startGame(mode = "infinite", menuPage = "home") {
     }
 
     document.body.dataset.runtimeState = isRuntimeActive() ? "active" : "suspended";
-    stabilityDisplay.update(stability.snapshot(), getRuntimeState(), runStatistics.snapshot());
+    stabilityDisplay.update(stability.snapshot(), getRuntimeState(), readRun());
     syncMenuDisplay();
   }
 
@@ -434,7 +442,7 @@ function startGame(mode = "infinite", menuPage = "home") {
     resumeRuntime("user-pause");
     resumeRuntime("story-narrative");
     if (state.gameOver || state.journeyComplete) beginNewGame();
-    startGame(selectedMode, toMenu && mode === "story" ? "modes" : "home");
+    startGame(selectedMode, toMenu && (mode === "story" || mode === "survival") ? "modes" : "home");
   }
 
   const gameLoop = createGameLoop({
@@ -450,12 +458,15 @@ function startGame(mode = "infinite", menuPage = "home") {
       decorativeAsteroidsParallax.update(deltaSeconds);
       absorptionFeedback.update(deltaSeconds);
       movement.update(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight,
+        mode === "survival" ? survivalSpeed(runStatistics.snapshot().cycles) :
         zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_4
           ? voidDifficulty.snapshot().speed / NYR_PROTOTYPE_CONFIG.speedPixelsPerSecond
           : zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_3 ? ZONE_THREE_SPEED_MULTIPLIER : 1);
-      if (zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_4) {
+      if (mode !== "survival" && zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_4) {
         voidDifficulty.sync(movement.snapshot().simulationTime);
       }
+      if (mode === "survival" && hasSelfCollision(movement.snapshot())) { endGame("Autocollision"); return; }
+      survivalRun?.observe();
       fragmentSystem.advanceCorruption(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight);
       fragmentSystem.update(movement.snapshot(), displaySize.cssWidth, displaySize.cssHeight);
       if (!isRuntimeActive()) return;
@@ -481,7 +492,7 @@ function startGame(mode = "infinite", menuPage = "home") {
       if (!isRuntimeActive()) weeklyChallenges.flush();
       /* Also resize while portrait or Game Over keeps update suspended. */
       flushDisplaySync();
-      stabilityDisplay.update(stability.snapshot(), getRuntimeState(), runStatistics.snapshot());
+      stabilityDisplay.update(stability.snapshot(), getRuntimeState(), readRun());
       zoneBackgroundTransition.render(
         displayManager.context,
         displaySize.cssWidth,

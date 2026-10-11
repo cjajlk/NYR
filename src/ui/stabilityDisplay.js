@@ -61,8 +61,11 @@ export function createStabilityDisplay(createElement = tag => document.createEle
     const finished = runtimeState.gameOver || runtimeState.journeyComplete;
     title.textContent = runtimeState.journeyComplete ? "ZONE 2 TERMINÉE" : "GAME OVER";
     detail.hidden = Boolean(runtimeState.journeyComplete);
+    detail.textContent = run?.cause ?? "STABILITÉ ÉPUISÉE";
+    gameOverElement.className = "game-over-indication" + (run?.survival ? " survival-game-over" : "");
+    menu.textContent = run?.survival ? "RETOUR AUX MODES" : "MENU";
     gameOverElement.hidden = portrait || !finished;
-    canMenu = Boolean(runtimeState.journeyComplete) && !portrait;
+    canMenu = (Boolean(runtimeState.journeyComplete) || (runtimeState.gameOver && run?.survival)) && !portrait;
     menu.hidden = !canMenu;
     menu.disabled = !canMenu;
     canReplay = finished && !portrait;

@@ -1,5 +1,5 @@
 export const STATISTICS_KEY = "nyrStatisticsV1";
-const defaults = () => ({ bestScore: 0, bestTime: 0, bestCombo: 1, completedRuns: 0,
+const defaults = () => ({ bestScore: 0, bestTime: 0, bestLength: 0, bestCycles: 0, bestCombo: 1, completedRuns: 0,
   normalFragments: 0, pureFragments: 0, cycles: 0, damageEvents: 0, stabilityLost: 0,
   spectreReached: 0, nocturneReached: 0, devoreurReached: 0 });
 const forms = ["eclat", "spectre", "nocturne", "devoreur"];
@@ -19,6 +19,8 @@ export function createStatisticsStore(getStorage = () => globalThis.localStorage
     totals.bestScore = Math.max(totals.bestScore, run.score);
     totals.bestTime = Math.max(totals.bestTime, run.activeTime);
     totals.bestCombo = Math.max(totals.bestCombo, run.bestCombo);
+    totals.bestLength = Math.max(totals.bestLength, run.maxLength ?? 0);
+    totals.bestCycles = Math.max(totals.bestCycles, run.cycles);
     totals.completedRuns++;
     for (const key of ["normalFragments", "pureFragments", "cycles", "damageEvents", "stabilityLost"]) totals[key] += run[key];
     const rank = forms.indexOf(run.maxForm);
@@ -32,11 +34,12 @@ export function createStatisticsStore(getStorage = () => globalThis.localStorage
   return Object.freeze({ record, snapshot });
 }
 export function createRunStatistics(readMetrics, store) {
-  const counters = { pureFragments: 0, cycles: 0, damageEvents: 0, stabilityLost: 0, bestCombo: 1, maxForm: "eclat" };
+  const counters = { pureFragments: 0, cycles: 0, damageEvents: 0, stabilityLost: 0, bestCombo: 1, maxLength: 0, maxForm: "eclat" };
   let final = null;
   function progress() {
     if (final) return;
     const metrics = readMetrics();
+    counters.maxLength = Math.max(counters.maxLength, metrics.length ?? 0);
     counters.bestCombo = Math.max(counters.bestCombo, metrics.combo);
     if (forms.indexOf(metrics.form) > forms.indexOf(counters.maxForm)) counters.maxForm = metrics.form;
   }

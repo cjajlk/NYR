@@ -17,7 +17,7 @@ if (!hz) {
     addEventListener(name, fn) { if (!this.listeners.has(name)) this.listeners.set(name, new Set()); this.listeners.get(name).add(fn); }
     removeEventListener(name, fn) { this.listeners.get(name)?.delete(fn); }
     emit(name) {
-      const selectInfinite = !process.env.NYR_STORY_TEST && name === "click" && this.textContent === "JOUER" && !this.hidden && !this.disabled;
+      const selectInfinite = !process.env.NYR_STORY_TEST && !process.env.NYR_SURVIVAL_TEST && name === "click" && this.textContent === "JOUER" && !this.hidden && !this.disabled;
       for (const fn of [...(this.listeners.get(name) ?? [])]) fn();
       // Legacy gameplay scenarios explicitly select the already-unlocked Infinite mode.
       if (selectInfinite) {
@@ -62,6 +62,11 @@ if (!hz) {
   const snapshot = p => Object.fromEntries(Object.entries(p).filter(([, value]) => value.snapshot).map(([key, value]) => [key, value.snapshot()]));
   const frame = () => { timestamp += 1000 / hz; const callbacks = queue; queue = []; callbacks.forEach(fn => fn(timestamp)); };
   const button = p => p.stabilityDisplay.gameOverElement.children[2];
+  if (process.env.NYR_SURVIVAL_TEST) {
+    const { verifySurvivalRuntime } = await import("./pack53Survival.test.mjs");
+    verifySurvivalRuntime({ app, frame, snapshot, hz });
+    process.exit(0);
+  }
   if (process.env.NYR_STORY_TEST) {
     const { verifyStoryRuntime } = await import("./pack51Story.test.mjs");
     verifyStoryRuntime({ app, frame, snapshot, hz, setBounds: value => { bounds = value; } });

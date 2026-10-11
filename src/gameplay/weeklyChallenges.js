@@ -1,3 +1,4 @@
+import { SURVIVAL_CHALLENGES } from "./survival.js";
 import { SKINS } from "./skinCatalog.js";
 import { readStory, awardStoryChapter } from "./storyProgression.js";
 /* Calendar arithmetic uses local dates; UTC is used only to number the ISO week. */
@@ -24,6 +25,7 @@ const limits = { normalFragments: 250, cycles: 5, devoreurRuns: 3, activeTime: 3
 const safe = value => Number.isFinite(value) && value >= 0 ? Math.min(value, Number.MAX_SAFE_INTEGER) : 0;
 export function createWeeklyChallenges({ now = () => new Date(), getStorage = () => globalThis.localStorage } = {}) {
   const fresh = (week, balance = 0, ownedSkins = [], story = readStory()) => ({ version: 1, weekId: week.id, balance, ownedSkins, story,
+    survival: {},
     progress: { normalFragments: 0, cycles: 0, devoreurRuns: 0, activeTime: 0 }, completed: {}, claimed: {} });
   let week = getLocalWeek(now());
   let state = fresh(week), dirty = false, unsavedTime = 0;
@@ -38,6 +40,7 @@ export function createWeeklyChallenges({ now = () => new Date(), getStorage = ()
     // A persisted debit must not be replaced by an older, higher in-memory balance.
     state.balance = Math.floor(safe(saved.balance));
     state.story = readStory(saved.story);
+    for (const c of SURVIVAL_CHALLENGES) if (saved.survival?.[c.id] === true) state.survival[c.id] = true;
     if (Array.isArray(saved.ownedSkins)) state.ownedSkins = [...new Set([...state.ownedSkins,
       ...saved.ownedSkins.filter(id => typeof id === "string")])];
     if (saved.weekId !== state.weekId) return;
@@ -55,7 +58,12 @@ export function createWeeklyChallenges({ now = () => new Date(), getStorage = ()
   function refreshWeek() {
     const current = getLocalWeek(now());
     if (current.id !== week.id) {
-      merge(read()); week = current; state = fresh(week, state.balance, state.ownedSkins, state.story); dirty = true; unsavedTime = 0;
+      merge(read());
+      week = current;
+      const survival = state.survival;
+      state = fresh(week, state.balance, state.ownedSkins, state.story);
+      state.survival = survival;
+      dirty = true; unsavedTime = 0;
     }
   }
   function flush() {
@@ -113,6 +121,19 @@ export function createWeeklyChallenges({ now = () => new Date(), getStorage = ()
     // Completion, records, reward receipts and the existing balance commit together.
     return result ? commit({ ...state, story: result.story, balance: state.balance + result.reward }) : false;
   }
+  function survivalSnapshot() {
+    refreshWeek(); merge(read());
+    return SURVIVAL_CHALLENGES.map(c => ({ ...c, completed: state.survival[c.id] === true }));
+  }
+  function recordSurvival(run) {
+    refreshWeek(); merge(read()); markCompleted();
+    const earned = SURVIVAL_CHALLENGES.filter(c => !state.survival[c.id] &&
+      Number.isFinite(run[c.metric]) && run[c.metric] >= c.target);
+    if (!earned.length) return [];
+    const survival = { ...state.survival };
+    for (const c of earned) survival[c.id] = true;
+    return commit({ ...state, survival, balance: state.balance + earned.reduce((sum, c) => sum + c.reward, 0) }) ? earned : [];
+  }
   function commit(next) {
     try {
       const storage = getStorage();
@@ -132,5 +153,5 @@ export function createWeeklyChallenges({ now = () => new Date(), getStorage = ()
     };
   }
   if (dirty) flush();
-  return Object.freeze({ snapshot, claim, flush, trackRun, purchaseSkin, storySnapshot, recordStoryChapter });
+  return Object.freeze({ snapshot, claim, flush, trackRun, purchaseSkin, storySnapshot, recordStoryChapter, survivalSnapshot, recordSurvival });
 }
