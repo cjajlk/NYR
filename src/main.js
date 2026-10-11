@@ -18,7 +18,7 @@ import { createMainMenu } from "./ui/mainMenu.js";
 import { APP_CONFIG } from "./core/appConfig.js";
 import { createDisplayManager } from "./core/displayManager.js";
 import { createGameLoop } from "./core/gameLoop.js";
-import { beginNewGame, completeJourney, endGame as endRuntimeGame, getRuntimeState, isRuntimeActive, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
+import { beginNewGame, completeJourney, endGame as endRuntimeGame, getRuntimeState, isRuntimeActive, onRuntimeStateChange, resumeRuntime, suspendRuntime } from "./core/runtimeState.js";
 import { createZoneOneBackground } from "./core/zoneOneBackground.js";
 import { createZoneBackgroundTransition } from "./core/zoneBackgroundTransition.js";
 import { createFarStarsParallax } from "./core/farStarsParallax.js";
@@ -82,6 +82,8 @@ const skinSprites = createSkinSprites(() => cosmetics.snapshot().equipped.skin);
 window.addEventListener("pagehide", weeklyChallenges.flush);
 document.addEventListener("visibilitychange", () => { if (document.hidden) weeklyChallenges.flush(); });
 
+onRuntimeStateChange(() => window.CJGameIntegration?.suspend());
+window.getGameState = () => ({ running: window.CJajlkAccount?.isIdentityReady?.() !== false && isRuntimeActive(), paused: !isRuntimeActive() });
 function startGame(mode = "infinite", menuPage = "home") {
   const { screen, canvas } = createPreproductionScreen();
   const mainMenu = createMainMenu(selected => {
@@ -487,6 +489,7 @@ function startGame(mode = "infinite", menuPage = "home") {
         displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(), pocketObstacles(), voidDifficulty.snapshot().pocketCooldown);
     },
     render() {
+      window.CJGameIntegration?.tick(performance.now(), 'nyr');
       if (getRuntimeState().gameOver) runStatistics.finish();
       observeWeekly();
       if (!isRuntimeActive()) weeklyChallenges.flush();

@@ -4,6 +4,11 @@ import { createStatisticsPanel } from "./statisticsDisplay.js";
 export function createMainMenu(onPlay, readTotals = () => ({}), weekly = null, cosmetics = null, initialPage = "home", readSurvivalTotals = () => ({})) {
   const element = document.createElement("div");
   element.className = "main-menu";
+  const identity = document.createElement('p');
+  if (identity.dataset) identity.dataset.cjPseudo = '';
+  identity.textContent = window.CJajlkAccount?.getDisplayPseudo?.() || 'Joueur';
+  const identityLink = document.createElement('a');
+  identityLink.href = 'https://cjajlk.github.io/cjajlkGames-V2-test/v2/#profil'; identityLink.textContent = 'Modifier mon pseudo dans le Hub';
   const title = document.createElement("h1");
   const about = document.createElement("p");
   about.textContent = "NYR";
@@ -62,6 +67,7 @@ export function createMainMenu(onPlay, readTotals = () => ({}), weekly = null, c
   if (challengePanel) element.append(challenges, challengePanel.element);
   if (shopPanel) element.append(shop, shopPanel.element);
   element.append(modes, survivalPanel.element, survivalChallenges);
+  element.append(identity, identityLink);
   function navigate(next) {
     page = next;
     refresh();
