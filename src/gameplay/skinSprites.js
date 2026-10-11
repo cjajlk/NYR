@@ -1,4 +1,5 @@
 import { SKINS, SKIN_PARTS } from "./skinCatalog.js";
+import { LEVIATHAN_VISUALS } from "./leviathanVisuals.js";
 export { SKIN_PARTS, SKIN_FORMS, skinAssetPath } from "./skinCatalog.js";
 
 // These offsets affect drawing only. Trail poses and collision dimensions stay untouched.
@@ -48,12 +49,15 @@ export function createSkinSprites(readEquipped, createImage = () => new Image())
     // Keep the entire classic form while loading or if an asset cannot be decoded.
     if (!images.every(image => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0)) return false;
     const bodyVisual = lateForms[form]?.ecaille ?? (form === "spectre" ? spectreScaleVisual : visuals.ecaille);
+    const leviathan = skin.id === "leviathan_astral" ? LEVIATHAN_VISUALS[form] : null;
     for (let index = poses.length - 1; index >= 0; index--) {
       const tail = index === poses.length - 1;
-      draw(context, images[tail ? 4 : 1 + index % 3],
-        { ...poses[index], angle: poses[index].angle + Math.PI }, tail ? (lateForms[form]?.queue ?? visuals.queue) : bodyVisual);
+      const partIndex = tail ? 4 : 1 + index % 3;
+      draw(context, images[partIndex],
+        { ...poses[index], angle: poses[index].angle + Math.PI },
+        leviathan?.[SKIN_PARTS[partIndex]] ?? (tail ? (lateForms[form]?.queue ?? visuals.queue) : bodyVisual));
     }
-    draw(context, images[0], { x: state.x, y: state.y, angle: state.heading }, lateForms[form]?.tete ?? visuals.tete);
+    draw(context, images[0], { x: state.x, y: state.y, angle: state.heading }, leviathan?.tete ?? lateForms[form]?.tete ?? visuals.tete);
     return true;
   };
 }

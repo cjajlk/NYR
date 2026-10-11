@@ -1,0 +1,250 @@
+{
+  "eclat": [
+    {
+      "path": "./assets/images/nyr/nyr_eclat_queue.png",
+      "x": 44,
+      "y": 108,
+      "angle": 0.4415926535897931,
+      "args": [
+        -24.8,
+        -9.299999999999999,
+        31,
+        15.5
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_eclat_ecaille_03.png",
+      "x": 54,
+      "y": 113,
+      "angle": 0.061592653589793045,
+      "args": [
+        -13,
+        -8.666666666666666,
+        26,
+        17.333333333333332
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_eclat_ecaille_02.png",
+      "x": 66,
+      "y": 118,
+      "angle": -0.038407346410207044,
+      "args": [
+        -13,
+        -8.666666666666666,
+        26,
+        17.333333333333332
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_eclat_ecaille_01.png",
+      "x": 78,
+      "y": 122,
+      "angle": -0.1384073464102067,
+      "args": [
+        -13,
+        -8.666666666666666,
+        26,
+        17.333333333333332
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_eclat_tete.png",
+      "x": 91,
+      "y": 127,
+      "angle": 0.12,
+      "args": [
+        -34.56,
+        -14.399999999999999,
+        48,
+        24
+      ]
+    }
+  ],
+  "spectre": [
+    {
+      "path": "./assets/images/nyr/nyr_spectre_queue.png",
+      "x": 44,
+      "y": 108,
+      "angle": 0.4415926535897931,
+      "args": [
+        -24.8,
+        -12.4,
+        31,
+        20.666666666666668
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_spectre_ecaille_03.png",
+      "x": 54,
+      "y": 113,
+      "angle": 0.061592653589793045,
+      "args": [
+        -18,
+        -12,
+        36,
+        24
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_spectre_ecaille_02.png",
+      "x": 66,
+      "y": 118,
+      "angle": -0.038407346410207044,
+      "args": [
+        -18,
+        -12,
+        36,
+        24
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_spectre_ecaille_01.png",
+      "x": 78,
+      "y": 122,
+      "angle": -0.1384073464102067,
+      "args": [
+        -18,
+        -12,
+        36,
+        24
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_spectre_tete.png",
+      "x": 91,
+      "y": 127,
+      "angle": 0.12,
+      "args": [
+        -34.56,
+        -14.399999999999999,
+        48,
+        24
+      ]
+    }
+  ],
+  "nocturne": [
+    {
+      "path": "./assets/images/nyr/nyr_nocturne_queue.png",
+      "x": 44,
+      "y": 108,
+      "angle": 4.333185307179586,
+      "args": [
+        -5.3999999999999995,
+        -18,
+        36,
+        24
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_nocturne_ecaille_03.png",
+      "x": 54,
+      "y": 113,
+      "angle": -2.108407346410207,
+      "args": [
+        -18,
+        -12,
+        36,
+        24
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_nocturne_ecaille_02.png",
+      "x": 66,
+      "y": 118,
+      "angle": -2.208407346410207,
+      "args": [
+        -18,
+        -12,
+        36,
+        24
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_nocturne_ecaille_01.png",
+      "x": 78,
+      "y": 122,
+      "angle": -2.3084073464102066,
+      "args": [
+        -18,
+        -12,
+        36,
+        24
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_nocturne_tete.png",
+      "x": 91,
+      "y": 127,
+      "angle": -2.33,
+      "args": [
+        -15.6,
+        -22.53333333333333,
+        52,
+        34.666666666666664
+      ]
+    }
+  ],
+  "devoreur": [
+    {
+      "path": "./assets/images/nyr/nyr_devoreur_queue.png",
+      "x": 44,
+      "y": 108,
+      "angle": 4.483185307179586,
+      "args": [
+        -6,
+        -20,
+        40,
+        26.666666666666668
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_devoreur_ecaille_03.png",
+      "x": 54,
+      "y": 113,
+      "angle": -2.108407346410207,
+      "args": [
+        -20,
+        -13.333333333333334,
+        40,
+        26.666666666666668
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_devoreur_ecaille_02.png",
+      "x": 66,
+      "y": 118,
+      "angle": -2.208407346410207,
+      "args": [
+        -20,
+        -13.333333333333334,
+        40,
+        26.666666666666668
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_devoreur_ecaille_01.png",
+      "x": 78,
+      "y": 122,
+      "angle": -2.3084073464102066,
+      "args": [
+        -20,
+        -13.333333333333334,
+        40,
+        26.666666666666668
+      ]
+    },
+    {
+      "path": "./assets/images/nyr/nyr_devoreur_tete.png",
+      "x": 91,
+      "y": 127,
+      "angle": -2.33,
+      "args": [
+        -16.240000000000002,
+        -25.133333333333333,
+        58,
+        38.666666666666664
+      ]
+    }
+  ]
+}
