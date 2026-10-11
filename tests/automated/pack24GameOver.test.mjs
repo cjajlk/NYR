@@ -18,7 +18,7 @@ if (!hz) {
     assert.equal(result.status, 0, result.stdout + result.stderr);
   }
   const main = readFileSync(new URL("../../src/main.js", import.meta.url), "utf8");
-  assert.match(main, /stability\.applyAsteroidContact\(\);\s*if \(stability\.snapshot\(\).stability === 0\) endGame\(\);/);
+  assert.match(main, /stability\.applyAsteroidContact\(\);\s*gameplayAudio\.play\("collision"\);\s*if \(stability\.snapshot\(\).stability === 0\) endGame\(\);/);
   assert.match(main, /isActive: isRuntimeActive/);
   assert.match(main, /if \(isRuntimeActive\(\) && movement\.snapshot\(\).trail.length\)/);
   console.log("PACK 24 irreversible game over: tests OK");

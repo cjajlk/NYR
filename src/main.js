@@ -1,3 +1,4 @@
+import { createGameplayAudio } from "./systems/gameplayAudio.js";
 import { createSurvivalRun, hasSelfCollision, survivalSpeed } from "./gameplay/survival.js";
 import { createWeeklyChallenges } from "./gameplay/weeklyChallenges.js";
 import { createStoryDisplay } from "./ui/storyDisplay.js";
@@ -79,6 +80,14 @@ const survivalStatisticsStore = createStatisticsStore(undefined, "nyrSurvivalSta
 const weeklyChallenges = createWeeklyChallenges();
 const cosmetics = createCosmeticsStore(weeklyChallenges);
 const skinSprites = createSkinSprites(() => cosmetics.snapshot().equipped.skin);
+const gameplayAudio = createGameplayAudio();
+document.addEventListener("pointerdown", () => { void gameplayAudio.unlock(); }, { passive: true });
+document.addEventListener("keydown", () => { void gameplayAudio.unlock(); });
+window.addEventListener("pagehide", () => gameplayAudio.setHidden(true));
+window.addEventListener("pageshow", () => gameplayAudio.setHidden(Boolean(document.hidden)));
+document.addEventListener("visibilitychange", () => gameplayAudio.setHidden(Boolean(document.hidden)));
+onRuntimeStateChange(state => gameplayAudio.setActive(state.active,
+  state.suspensionReasons.some(reason => reason !== "story-narrative")));
 window.addEventListener("pagehide", weeklyChallenges.flush);
 document.addEventListener("visibilitychange", () => { if (document.hidden) weeklyChallenges.flush(); });
 
@@ -86,6 +95,21 @@ onRuntimeStateChange(() => window.CJGameIntegration?.suspend());
 window.getGameState = () => ({ running: window.CJajlkAccount?.isIdentityReady?.() !== false && isRuntimeActive(), paused: !isRuntimeActive() });
 function startGame(mode = "infinite", menuPage = "home") {
   const { screen, canvas } = createPreproductionScreen();
+  const soundButton = document.createElement("button");
+  soundButton.type = "button";
+  soundButton.className = "gameplay-sound-toggle";
+  function syncSoundButton() {
+    soundButton.textContent = gameplayAudio.isEnabled() ? "SON : ON" : "SON : OFF";
+    soundButton.setAttribute("aria-label", gameplayAudio.isEnabled() ? "Couper le son" : "Activer le son");
+    soundButton.setAttribute("aria-pressed", String(gameplayAudio.isEnabled()));
+  }
+  soundButton.addEventListener("click", () => {
+    gameplayAudio.setEnabled(!gameplayAudio.isEnabled());
+    void gameplayAudio.unlock();
+    syncSoundButton();
+  });
+  syncSoundButton();
+  gameplayAudio.setActive(isRuntimeActive());
   const mainMenu = createMainMenu(selected => {
     if (!["story", "infinite", "survival"].includes(selected) || (selected !== "story" && !weeklyChallenges.storySnapshot().completed)) return;
     replaceSession(false, selected);
@@ -177,6 +201,7 @@ function startGame(mode = "infinite", menuPage = "home") {
   const mobileAsteroid = createMobileAsteroidSystem({
     onHeadContactStarted() {
       stability.applyAsteroidContact();
+      gameplayAudio.play("collision");
       if (stability.snapshot().stability === 0) endGame();
     }
   });
@@ -196,12 +221,14 @@ function startGame(mode = "infinite", menuPage = "home") {
     }
   });
   const portal = createZoneExitPortal(() => {
+    gameplayAudio.play("portal");
     const zoneState = zoneProgression.sync(progression.snapshot(), true);
     mobileAsteroid.syncZone(zoneState, displaySize.cssWidth, displaySize.cssHeight,
       movement.snapshot(), fragmentSystem.snapshot());
     finishChapter(1);
   });
   const exitPortal = createZoneExitPortal(() => {
+    gameplayAudio.play("portal");
     zoneThreePortal.reset();
     zoneThreeObjective.enter(progression.snapshot().normalFragmentsAbsorbed);
     combo.reset();
@@ -210,6 +237,7 @@ function startGame(mode = "infinite", menuPage = "home") {
   }, ZONE_TWO_TARGET);
   const zoneThreePortal = createZoneExitPortal(() => {
     if (!isRuntimeActive() || zoneProgression.snapshot().currentZone !== NYR_ZONES.ZONE_3) return;
+    gameplayAudio.play("portal");
     combo.reset();
     zoneFourPortal.reset();
     zoneFourObjective.enter(progression.snapshot().normalFragmentsAbsorbed);
@@ -220,6 +248,7 @@ function startGame(mode = "infinite", menuPage = "home") {
   }, ZONE_THREE_TARGET);
   const zoneFourPortal = createZoneExitPortal(() => {
     if (!isRuntimeActive() || zoneProgression.snapshot().currentZone !== NYR_ZONES.ZONE_4) return;
+    gameplayAudio.play("portal");
     if (mode === "story") { finishChapter(4); return; }
     combo.reset();
     const count = progression.snapshot().normalFragmentsAbsorbed;
@@ -230,6 +259,7 @@ function startGame(mode = "infinite", menuPage = "home") {
   }, ZONE_FOUR_TARGET);
   const pocket = createCorruptionPocket(() => {
     if (!isRuntimeActive()) return;
+    gameplayAudio.play("corruption");
     stability.applyCorruptionContact();
     if (stability.snapshot().stability === 0) endGame();
   });
@@ -240,6 +270,7 @@ function startGame(mode = "infinite", menuPage = "home") {
   const comboDisplay = createComboDisplay();
   function endGame(cause = "Stabilité épuisée") {
     if (!isRuntimeActive()) return;
+    gameplayAudio.play("death");
     survivalRun?.observe();
     survivalRun?.defeat(cause);
     runStatistics.finish();
@@ -260,14 +291,16 @@ function startGame(mode = "infinite", menuPage = "home") {
     getVoidCorruptionInterval: () => voidDifficulty.snapshot().corruptionInterval,
     onCorruptionContact() {
       if (!isRuntimeActive()) return false;
+      gameplayAudio.play("corruption");
       stability.applyCorruptionContact();
       if (stability.snapshot().stability === 0) endGame();
       return isRuntimeActive();
     },
     onPureAbsorbed() {
-      if (isRuntimeActive()) { stability.applyPureFragment(); runStatistics.pure(); }
+      if (isRuntimeActive()) { gameplayAudio.play("pure"); stability.applyPureFragment(); runStatistics.pure(); }
     },
     onAbsorbed() {
+      gameplayAudio.play("fragment");
       movement.addSegments(1);
       const progressionState = progression.recordNormalFragmentAbsorption();
       const zoneState = zoneProgression.sync(progressionState);
@@ -316,6 +349,7 @@ function startGame(mode = "infinite", menuPage = "home") {
   app.append(mainMenu.element, returnMenu.element, comboDisplay.element, timeDisplay.element);
   app.append(pauseDisplay.element, fragmentsDisplay);
   app.append(storyDisplay.element);
+  app.append(soundButton);
 
   function syncOrientationState(shouldSuspend) {
     orientationOverlay.setVisible(shouldSuspend);
@@ -433,6 +467,7 @@ function startGame(mode = "infinite", menuPage = "home") {
     observeWeekly();
     weeklyChallenges.flush();
     disposed = true;
+    gameplayAudio.setActive(false, true);
     gameLoop.stop();
     pointerInput.destroy();
     fullscreenControl.destroy();

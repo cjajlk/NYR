@@ -504,3 +504,21 @@ body {
   .main-menu h1 { font-size: 1.5rem; }
   .main-menu > .replay-button { padding: 0.3rem 1.5rem; }
 }
+.gameplay-sound-toggle {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: max(0.25rem, env(safe-area-inset-bottom));
+  z-index: 9;
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid rgba(154, 209, 239, 0.35);
+  border-radius: 8px;
+  background: rgba(8, 15, 29, 0.8);
+  color: #c6e5ef;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.gameplay-sound-toggle:focus-visible { outline: 2px solid #c6e5ef; outline-offset: 3px; }
