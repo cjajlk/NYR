@@ -4,13 +4,19 @@ export const GAMEPLAY_SOUNDS = Object.freeze({
   collision: "nyr_collision", corruption: "nyr_corruption_hit",
   portal: "nyr_portal_enter", death: "nyr_death", movement: "nyr_movement_loop"
 });
+export const AUDIO_PREFERENCES_KEY = "nyrAudioPreferencesV1";
 
 export function createGameplayAudio({
   Context = globalThis.AudioContext ?? globalThis.webkitAudioContext,
-  fetchAudio = globalThis.fetch?.bind(globalThis)
+  fetchAudio = globalThis.fetch?.bind(globalThis),
+  getStorage = () => globalThis.localStorage
 } = {}) {
   let context = null, master = null, movement = null;
   let active = false, enabled = true, hidden = false, variant = 0;
+  try {
+    const preferences = JSON.parse(getStorage()?.getItem(AUDIO_PREFERENCES_KEY) ?? "null");
+    if (preferences?.version === 1 && typeof preferences.enabled === "boolean") enabled = preferences.enabled;
+  } catch { /* Unavailable storage keeps the existing default and gameplay working. */ }
   let loading = null;
   const buffers = new Map(), voices = new Set();
 
@@ -80,7 +86,11 @@ export function createGameplayAudio({
     syncMovement();
   }
   function setHidden(value) { hidden = Boolean(value); if (hidden) silence(); syncMovement(); }
-  function setEnabled(value) { enabled = Boolean(value); if (!enabled) silence(); syncMovement(); }
+  function setEnabled(value) {
+    enabled = Boolean(value);
+    try { getStorage()?.setItem(AUDIO_PREFERENCES_KEY, JSON.stringify({ version: 1, enabled })); } catch {}
+    if (!enabled) silence(); syncMovement();
+  }
   return Object.freeze({ unlock, play, setActive, setHidden, setEnabled, silence,
     isEnabled: () => enabled });
 }

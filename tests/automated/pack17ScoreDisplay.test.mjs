@@ -88,7 +88,7 @@ assert.equal((mainSource.match(/score\.awardNormalFragment\(combo\.absorb\(\)\)/
 assert.match(mainSource, /scoreDisplay\.update\(updatedScore\)/);
 assert.match(mainSource, /scoreDisplay\.update\(score\.snapshot\(\)\)/);
 assert.match(cssSource, /\.score-display\s*\{[\s\S]*?z-index:\s*11;/);
-assert.match(cssSource, /\.orientation-overlay\s*\{[\s\S]*?z-index:\s*10;/);
+assert.match(cssSource, /\.orientation-overlay\s*\{[\s\S]*?z-index:\s*1000;/);
 assert.doesNotMatch(projectFiles.join("\n"), /(?:https?:)?\/\//);
 
 console.log("PACK 17 score display: tests OK");

@@ -90,6 +90,7 @@ if (!hz) {
   };
   document.exitFullscreen = () => Promise.resolve();
   globalThis.window = Object.assign(new Surface(), { innerWidth: portraitStart ? 440 : 844, innerHeight: portraitStart ? 956 : 330, devicePixelRatio: 2 });
+  window.navigator = { userAgent: "Android", maxTouchPoints: 5 };
   if (process.argv[3] === "available") window.visualViewport = Object.assign(new Surface(), { width: 1, height: 1 });
   globalThis.Image = class extends Surface {};
   const frames = [];

@@ -1,7 +1,7 @@
 import { createChallengesPanel } from "./challengesDisplay.js";
 import { createShopPanel } from "./shopDisplay.js";
 import { createStatisticsPanel } from "./statisticsDisplay.js";
-export function createMainMenu(onPlay, readTotals = () => ({}), weekly = null, cosmetics = null, initialPage = "home", readSurvivalTotals = () => ({})) {
+export function createMainMenu(onPlay, readTotals = () => ({}), weekly = null, cosmetics = null, initialPage = "home", readSurvivalTotals = () => ({}), audio = null) {
   const element = document.createElement("div");
   element.className = "main-menu";
   const identity = document.createElement('p');
@@ -68,11 +68,28 @@ export function createMainMenu(onPlay, readTotals = () => ({}), weekly = null, c
   if (shopPanel) element.append(shop, shopPanel.element);
   element.append(modes, survivalPanel.element, survivalChallenges);
   element.append(identity, identityLink);
+  const audioOptions = document.createElement("section");
+  audioOptions.className = "audio-options";
+  const sound = command("", () => {
+    if (page !== "options" || !audio) return;
+    audio.setEnabled(!audio.isEnabled());
+    void audio.unlock();
+    refresh();
+  });
+  sound.className += " audio-options-toggle";
+  audioOptions.append(sound);
+  element.append(audioOptions);
   function navigate(next) {
     page = next;
     refresh();
   }
   function refresh() {
+    audioOptions.hidden = !audio || page !== "options";
+    sound.hidden = !audio || page !== "options";
+    sound.disabled = !available;
+    sound.textContent = audio?.isEnabled() ? "SON : ON" : "SON : OFF";
+    sound.setAttribute("aria-pressed", String(Boolean(audio?.isEnabled())));
+    sound.setAttribute("aria-label", audio?.isEnabled() ? "Couper les effets sonores" : "Activer les effets sonores");
     element.setAttribute("data-page", page);
     title.textContent = page === "home" ? "NYR" : page === "options" ? "OPTIONS" : page === "statistics" ? "STATISTIQUES" : page === "challenges" ? "DÉFIS" : page === "shop" ? "BOUTIQUE" : "À PROPOS";
     if (page === "modes") title.textContent = "MODES";

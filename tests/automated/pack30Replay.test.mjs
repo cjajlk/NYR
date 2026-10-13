@@ -41,6 +41,7 @@ if (!hz) {
   root.requestFullscreen = () => { throw Error("replay must not request fullscreen"); };
   document.exitFullscreen = () => { throw Error("replay must not exit fullscreen"); };
   globalThis.window = Object.assign(new Surface(), { innerWidth: 956, innerHeight: 440, devicePixelRatio: 2, visualViewport: new Surface() });
+  window.navigator = { userAgent: "Android", maxTouchPoints: 5 };
   globalThis.Image = class extends Surface {};
   let queue = [], timestamp = 0;
   globalThis.requestAnimationFrame = fn => queue.push(fn);
@@ -63,6 +64,11 @@ if (!hz) {
   const snapshot = p => Object.fromEntries(Object.entries(p).filter(([, value]) => value.snapshot).map(([key, value]) => [key, value.snapshot()]));
   const frame = () => { timestamp += 1000 / hz; const callbacks = queue; queue = []; callbacks.forEach(fn => fn(timestamp)); };
   const button = p => p.stabilityDisplay.gameOverElement.children[2];
+  if (process.env.NYR_MOBILE_UI_TEST) {
+    const { verifyMobileUiRuntime } = await import("./mobileUi.test.mjs");
+    verifyMobileUiRuntime({ app, frame, hz, setBounds: value => { bounds = value; } });
+    process.exit(0);
+  }
   if (process.env.NYR_ACTION_TEST) {
     const { verifyActionRuntime } = await import("./actionEventsRuntime.test.mjs");
     verifyActionRuntime({ app, frame, hz });

@@ -1,4 +1,5 @@
 import { createGameplayAudio } from "./systems/gameplayAudio.js";
+import { needsLandscape } from "./ui/mobileOrientation.js";
 import { createActionEvents, renderActionEvents } from "./gameplay/actionEvents.js";
 import { createSurvivalRun, hasSelfCollision, survivalSpeed } from "./gameplay/survival.js";
 import { createWeeklyChallenges } from "./gameplay/weeklyChallenges.js";
@@ -96,25 +97,11 @@ onRuntimeStateChange(() => window.CJGameIntegration?.suspend());
 window.getGameState = () => ({ running: window.CJajlkAccount?.isIdentityReady?.() !== false && isRuntimeActive(), paused: !isRuntimeActive() });
 function startGame(mode = "infinite", menuPage = "home") {
   const { screen, canvas } = createPreproductionScreen();
-  const soundButton = document.createElement("button");
-  soundButton.type = "button";
-  soundButton.className = "gameplay-sound-toggle";
-  function syncSoundButton() {
-    soundButton.textContent = gameplayAudio.isEnabled() ? "SON : ON" : "SON : OFF";
-    soundButton.setAttribute("aria-label", gameplayAudio.isEnabled() ? "Couper le son" : "Activer le son");
-    soundButton.setAttribute("aria-pressed", String(gameplayAudio.isEnabled()));
-  }
-  soundButton.addEventListener("click", () => {
-    gameplayAudio.setEnabled(!gameplayAudio.isEnabled());
-    void gameplayAudio.unlock();
-    syncSoundButton();
-  });
-  syncSoundButton();
   gameplayAudio.setActive(isRuntimeActive());
   const mainMenu = createMainMenu(selected => {
     if (!["story", "infinite", "survival"].includes(selected) || (selected !== "story" && !weeklyChallenges.storySnapshot().completed)) return;
     replaceSession(false, selected);
-  }, statisticsStore.snapshot, weeklyChallenges, cosmetics, menuPage, survivalStatisticsStore.snapshot);
+  }, statisticsStore.snapshot, weeklyChallenges, cosmetics, menuPage, survivalStatisticsStore.snapshot, gameplayAudio);
   let narrativeStage = mode === "story" && getRuntimeState().phase !== "MENU" ? 0 : null;
   let pendingStoryRecord = null;
   let storySaveFailed = false;
@@ -370,10 +357,14 @@ function startGame(mode = "infinite", menuPage = "home") {
   app.append(mainMenu.element, returnMenu.element, comboDisplay.element, timeDisplay.element);
   app.append(pauseDisplay.element, fragmentsDisplay);
   app.append(storyDisplay.element);
-  app.append(soundButton);
+
 
   function syncOrientationState(shouldSuspend) {
     orientationOverlay.setVisible(shouldSuspend);
+    for (const child of app.children) {
+      if (child !== orientationOverlay.element) child.inert = shouldSuspend;
+    }
+    if (shouldSuspend) document.activeElement?.blur?.();
 
     if (shouldSuspend) {
       suspendRuntime("portrait-orientation");
@@ -413,8 +404,9 @@ function startGame(mode = "infinite", menuPage = "home") {
 
   function syncDisplayState() {
     displaySize = displayManager.resize();
-    syncOrientationState(window.innerHeight > window.innerWidth ||
-      displaySize.cssHeight > displaySize.cssWidth);
+    syncOrientationState(needsLandscape({ width: window.innerWidth, height: window.innerHeight,
+      surfaceWidth: displaySize.cssWidth, surfaceHeight: displaySize.cssHeight,
+      navigator: window.navigator ?? globalThis.navigator, matchMedia: window.matchMedia?.bind(window) }));
     if (!isRuntimeActive()) return;
     if (!playableSize) {
       movement.reset(displaySize.cssWidth, displaySize.cssHeight);
@@ -460,7 +452,8 @@ function startGame(mode = "infinite", menuPage = "home") {
   let displaySyncPending = false;
   function requestDisplaySync() {
     /* Suspend portrait immediately, even before the next animation frame. */
-    if (window.innerHeight > window.innerWidth) syncOrientationState(true);
+    if (needsLandscape({ width: window.innerWidth, height: window.innerHeight,
+      navigator: window.navigator ?? globalThis.navigator, matchMedia: window.matchMedia?.bind(window) })) syncOrientationState(true);
     displaySyncPending = true;
   }
   function flushDisplaySync() {

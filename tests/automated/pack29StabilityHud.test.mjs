@@ -50,7 +50,7 @@ const main = readFileSync(new URL("../../src/main.js", import.meta.url), "utf8")
 assert.match(main, /render\(\)\s*\{[^}]*stabilityDisplay.update\(stability.snapshot\(\), getRuntimeState\(\), readRun\(\)\)/);
 assert.match(main, /app.append\(stabilityDisplay.element, stabilityDisplay.gameOverElement\)/);
 const css = readFileSync(new URL("../../assets/css/main.css", import.meta.url), "utf8");
-assert.match(css, /\.orientation-overlay\s*\{[^}]*z-index: 10/);
+assert.match(css, /\.orientation-overlay\s*\{[^}]*z-index: 1000/);
 assert.match(css, /\.game-over-indication\s*\{[^}]*z-index: 9/);
 assert.match(css, /\.stability-display\s*\{[^}]*pointer-events: none/);
 assert.match(css, /\.stability-display\[hidden\], \.game-over-indication\[hidden\] \{ display: none/);
