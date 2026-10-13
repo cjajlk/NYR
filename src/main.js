@@ -1,4 +1,5 @@
 import { createGameplayAudio } from "./systems/gameplayAudio.js";
+import { createActionEvents, renderActionEvents } from "./gameplay/actionEvents.js";
 import { createSurvivalRun, hasSelfCollision, survivalSpeed } from "./gameplay/survival.js";
 import { createWeeklyChallenges } from "./gameplay/weeklyChallenges.js";
 import { createStoryDisplay } from "./ui/storyDisplay.js";
@@ -197,7 +198,22 @@ function startGame(mode = "infinite", menuPage = "home") {
   const survivalRun = mode === "survival" ? createSurvivalRun(() => ({ ...runStatistics.snapshot(), segmentCount: movement.snapshot().segmentCount }), weeklyChallenges) : null;
   const readRun = () => ({ ...runStatistics.snapshot(), ...survivalRun?.snapshot() });
   const observeWeekly = mode === "survival" ? () => survivalRun.observe() : weeklyChallenges.trackRun(runStatistics.snapshot);
-  const stability = createNyrStability(undefined, runStatistics.damage);
+  const stability = createNyrStability(undefined, (before, after) => {
+    runStatistics.damage(before, after);
+    actionEvents.noteDamage();
+  });
+  const actionEvents = createActionEvents({
+    onDamage(amount) {
+      if (!isRuntimeActive()) return;
+      if (amount === 25) stability.applyAsteroidContact();
+      else stability.applyCorruptionContact();
+      gameplayAudio.play(amount === 25 ? "collision" : "corruption");
+      if (stability.snapshot().stability === 0) endGame();
+    },
+    onDodge() {
+      if (isRuntimeActive()) scoreDisplay.update(score.awardDodge());
+    }
+  });
   const mobileAsteroid = createMobileAsteroidSystem({
     onHeadContactStarted() {
       stability.applyAsteroidContact();
@@ -221,6 +237,7 @@ function startGame(mode = "infinite", menuPage = "home") {
     }
   });
   const portal = createZoneExitPortal(() => {
+    actionEvents.reset();
     gameplayAudio.play("portal");
     const zoneState = zoneProgression.sync(progression.snapshot(), true);
     mobileAsteroid.syncZone(zoneState, displaySize.cssWidth, displaySize.cssHeight,
@@ -228,6 +245,7 @@ function startGame(mode = "infinite", menuPage = "home") {
     finishChapter(1);
   });
   const exitPortal = createZoneExitPortal(() => {
+    actionEvents.reset();
     gameplayAudio.play("portal");
     zoneThreePortal.reset();
     zoneThreeObjective.enter(progression.snapshot().normalFragmentsAbsorbed);
@@ -237,6 +255,7 @@ function startGame(mode = "infinite", menuPage = "home") {
   }, ZONE_TWO_TARGET);
   const zoneThreePortal = createZoneExitPortal(() => {
     if (!isRuntimeActive() || zoneProgression.snapshot().currentZone !== NYR_ZONES.ZONE_3) return;
+    actionEvents.reset();
     gameplayAudio.play("portal");
     combo.reset();
     zoneFourPortal.reset();
@@ -248,6 +267,7 @@ function startGame(mode = "infinite", menuPage = "home") {
   }, ZONE_THREE_TARGET);
   const zoneFourPortal = createZoneExitPortal(() => {
     if (!isRuntimeActive() || zoneProgression.snapshot().currentZone !== NYR_ZONES.ZONE_4) return;
+    actionEvents.reset();
     gameplayAudio.play("portal");
     if (mode === "story") { finishChapter(4); return; }
     combo.reset();
@@ -270,6 +290,7 @@ function startGame(mode = "infinite", menuPage = "home") {
   const comboDisplay = createComboDisplay();
   function endGame(cause = "Stabilité épuisée") {
     if (!isRuntimeActive()) return;
+    actionEvents.reset();
     gameplayAudio.play("death");
     survivalRun?.observe();
     survivalRun?.defeat(cause);
@@ -377,6 +398,7 @@ function startGame(mode = "infinite", menuPage = "home") {
     fragmentsDisplay.textContent = `FRAGMENTS ${progression.snapshot().normalFragmentsAbsorbed}`;
     fragmentsDisplay.hidden = menu || state.suspensionReasons.includes("portrait-orientation");
     if (state.gameOver || state.journeyComplete) combo.reset();
+    if (state.gameOver || state.journeyComplete) actionEvents.reset();
     comboDisplay.update(combo.snapshot(), state);
     scoreDisplay.element.hidden = menu;
     timeDisplay.update(movement.snapshot().simulationTime, state);
@@ -467,6 +489,7 @@ function startGame(mode = "infinite", menuPage = "home") {
     observeWeekly();
     weeklyChallenges.flush();
     disposed = true;
+    actionEvents.reset();
     gameplayAudio.setActive(false, true);
     gameLoop.stop();
     pointerInput.destroy();
@@ -494,11 +517,14 @@ function startGame(mode = "infinite", menuPage = "home") {
       nearParticlesParallax.update(deltaSeconds);
       decorativeAsteroidsParallax.update(deltaSeconds);
       absorptionFeedback.update(deltaSeconds);
+      const headBeforeMovement = movement.snapshot();
       movement.update(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight,
         mode === "survival" ? survivalSpeed(runStatistics.snapshot().cycles) :
         zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_4
           ? voidDifficulty.snapshot().speed / NYR_PROTOTYPE_CONFIG.speedPixelsPerSecond
           : zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_3 ? ZONE_THREE_SPEED_MULTIPLIER : 1);
+      const headAfterMovement = movement.snapshot();
+      if (Math.hypot(headAfterMovement.x - headBeforeMovement.x, headAfterMovement.y - headBeforeMovement.y) > 40) actionEvents.reset();
       if (mode !== "survival" && zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_4) {
         voidDifficulty.sync(movement.snapshot().simulationTime);
       }
@@ -522,6 +548,16 @@ function startGame(mode = "infinite", menuPage = "home") {
       if (!isRuntimeActive()) return;
       pocket.update(deltaSeconds, zoneProgression.snapshot().currentZone,
         displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(), pocketObstacles(), voidDifficulty.snapshot().pocketCooldown);
+      if (!isRuntimeActive()) return;
+      const head = movement.snapshot();
+      actionEvents.update(deltaSeconds, {
+        zone: zoneProgression.snapshot().currentZone, width: displaySize.cssWidth, height: displaySize.cssHeight,
+        head, enabled: mode !== "survival",
+        blocked: [portal, exitPortal, zoneThreePortal, zoneFourPortal].some(item => {
+          const p = item.snapshot();
+          return p.active && Math.hypot(head.x - p.x, head.y - p.y) < 100;
+        })
+      });
     },
     render() {
       window.CJGameIntegration?.tick(performance.now(), 'nyr');
@@ -567,6 +603,7 @@ function startGame(mode = "infinite", menuPage = "home") {
       renderZoneExitPortal(displayManager.context, zoneFourPortal.snapshot());
       renderMobileAsteroid(displayManager.context, mobileAsteroid.snapshot());
       renderNormalFragments(displayManager.context, fragmentSystem.snapshot());
+      renderActionEvents(displayManager.context, actionEvents.snapshot(), displaySize.cssWidth, displaySize.cssHeight);
       renderNyr(
         displayManager.context,
         movement.snapshot(),

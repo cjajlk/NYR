@@ -14,5 +14,10 @@ export function createNyrScore(config = NYR_SCORE_CONFIG) {
     return Object.freeze({ points });
   }
 
-  return Object.freeze({ awardNormalFragment, snapshot });
+  function awardDodge() {
+    points += 100;
+    return snapshot();
+  }
+
+  return Object.freeze({ awardNormalFragment, awardDodge, snapshot });
 }

@@ -96,7 +96,7 @@ const scoreDisplaySource = await readFile(
   "utf8"
 );
 
-assert.match(mainSource, /const stability = createNyrStability\(undefined, runStatistics.damage\)/);
+assert.match(mainSource, /const stability = createNyrStability\(undefined, \(before, after\) => \{\s*runStatistics.damage\(before, after\);\s*actionEvents.noteDamage\(\);/);
 // PACK 22 adds asteroid damage; the no-contact foundation stays unchanged.
 assert.doesNotMatch(stabilitySource, /heal|recover|gameOver/);
 // PACK 29 adds a read-only HUD; the score component remains independent.

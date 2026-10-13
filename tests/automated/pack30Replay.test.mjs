@@ -58,10 +58,16 @@ if (!hz) {
       absorptionFeedback, zoneBackgroundTransition, farStarsParallax, midNebulaParallax,
       nearParticlesParallax, decorativeAsteroidsParallax, stabilityDisplay, gameLoop, canvas };
     gameLoop.start();`);
+  if (process.env.NYR_ACTION_TEST) source = source.replace("readStory: weeklyChallenges.storySnapshot", "actionEvents, readStory: weeklyChallenges.storySnapshot");
   await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
   const snapshot = p => Object.fromEntries(Object.entries(p).filter(([, value]) => value.snapshot).map(([key, value]) => [key, value.snapshot()]));
   const frame = () => { timestamp += 1000 / hz; const callbacks = queue; queue = []; callbacks.forEach(fn => fn(timestamp)); };
   const button = p => p.stabilityDisplay.gameOverElement.children[2];
+  if (process.env.NYR_ACTION_TEST) {
+    const { verifyActionRuntime } = await import("./actionEventsRuntime.test.mjs");
+    verifyActionRuntime({ app, frame, hz });
+    process.exit(0);
+  }
   if (process.env.NYR_SURVIVAL_TEST) {
     const { verifySurvivalRuntime } = await import("./pack53Survival.test.mjs");
     verifySurvivalRuntime({ app, frame, snapshot, hz });
