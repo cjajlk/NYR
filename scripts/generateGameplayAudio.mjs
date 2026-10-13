@@ -26,7 +26,7 @@ for (const [name, [duration, kind, frequency]] of Object.entries(specs)) {
   wav.writeUInt32LE(rate, 24); wav.writeUInt32LE(rate * 2, 28);
   wav.writeUInt16LE(2, 32); wav.writeUInt16LE(16, 34); wav.write("data", 36);
   wav.writeUInt32LE(count * 2, 40);
-  let filteredNoise = 0;
+  let filteredNoise = 0, fastNoise = 0, slowNoise = 0;
   for (let i = 0; i < count; i++) {
     const t = i / rate, u = i / count;
     seed = (1664525 * seed + 1013904223) >>> 0;
@@ -37,7 +37,22 @@ for (const [name, [duration, kind, frequency]] of Object.entries(specs)) {
       // Integer cycles make a seamless four-second loop; gain stays very low in game.
       value = 0.12 * (Math.sin(tau * 110 * t) + 0.35 * Math.sin(tau * 165 * t)) *
         (0.8 + 0.2 * Math.cos(tau * 0.25 * t));
-    } else if (kind === "fragment" || kind === "pure") {
+    } else if (kind === "fragment") {
+      // Soft energy intake: airy band-limited noise and diffuse FM shimmer.
+      // A rounded swell avoids the plucked attack of the original musical partials.
+      fastNoise += 0.32 * (filteredNoise - fastNoise);
+      slowNoise += 0.025 * (filteredNoise - slowNoise);
+      const swell = Math.sin(Math.PI * u) ** 1.5;
+      let shimmer = 0;
+      for (const delay of [0, 0.023, 0.051]) {
+        const time = t - delay;
+        if (time < 0) continue;
+        const phase = tau * frequency * (0.55 * time + 0.35 * time * time / duration);
+        shimmer += Math.sin(phase + 1.8 * Math.sin(tau * frequency * 0.713 * time)) *
+          Math.exp(-delay * 16);
+      }
+      value = swell * (1.5 * (fastNoise - slowNoise) + 0.045 * shimmer);
+    } else if (kind === "pure") {
       value = envelope * (0.28 * Math.sin(tau * frequency * t) +
         0.10 * Math.sin(tau * frequency * 1.5 * t) * Math.exp(-t * 9) +
         0.04 * Math.sin(tau * frequency * 2 * t) * Math.exp(-t * 18));
