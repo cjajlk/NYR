@@ -1,7 +1,7 @@
 export const IMPULSE_RADIUS = 110;
 export const IMPULSE_DURATION = 0.4;
 const EPS = 1e-7;
-const TARGET_TYPES = new Set(["meteor", "shockwave", "corruption", "pocket"]);
+const TARGET_TYPES = new Set(["meteor", "shockwave", "corruption", "pocket", "parasite"]);
 
 // Exact intersection of a moving disk and a linearly expanding, thin circle.
 function hitsDisk(sweep, target, low, high) {
@@ -25,12 +25,14 @@ function hitsDisk(sweep, target, low, high) {
       }
     }
   }
-  return candidates.some(t => {
-    if (t < low - EPS || t > high + EPS) return false;
+  let first = null;
+  for (let t of candidates) {
+    if (t < low - EPS || t > high + EPS) continue;
     t = Math.max(low, Math.min(high, t));
     const distance = Math.hypot(x + vx * t, y + vy * t);
-    return Math.abs(distance - (sweep.radius + sweep.growth * t)) <= radius + EPS;
-  });
+    if (Math.abs(distance - (sweep.radius + sweep.growth * t)) <= radius + EPS) first = first === null ? t : Math.min(first, t);
+  }
+  return first;
 }
 
 // Enemy shockwave centers are stationary. Intersect three linear inequalities
@@ -40,17 +42,17 @@ function hitsRing(sweep, target, low, high) {
   const r = sweep.radius, dr = sweep.growth;
   const s = target.radius, ds = target.growth, w = target.halfWidth;
   for (const [a, b] of [[r + s + w - d, dr + ds], [d + w - r + s, ds - dr], [d + w + r - s, dr - ds]]) {
-    if (Math.abs(b) < EPS) { if (a < -EPS) return false; }
+    if (Math.abs(b) < EPS) { if (a < -EPS) return null; }
     else if (b > 0) low = Math.max(low, -a / b);
     else high = Math.min(high, -a / b);
-    if (low > high + EPS) return false;
+    if (low > high + EPS) return null;
   }
-  return true;
+  return Math.min(high, Math.max(0, low));
 }
 
 export function createAstralImpulseCombat({ energy, readHead, readState, onNeutralized = () => {} }) {
   let pulse = null, sweep = null;
-  const touched = new Set(), pending = new Set();
+  const touched = new Set(), pending = new Map();
   function isActive() { return Boolean(pulse && pulse.elapsed < IMPULSE_DURATION - 1e-12); }
   function trigger() {
     const state = readState();
@@ -70,17 +72,23 @@ export function createAstralImpulseCombat({ energy, readHead, readState, onNeutr
       growth: IMPULSE_RADIUS * dt / IMPULSE_DURATION, end: Math.min(1, available / dt) };
     pulse.elapsed = Math.min(IMPULSE_DURATION, pulse.elapsed + dt);
   }
-  function intersects(target) {
-    if (!sweep || !readState().active || touched.has(target.id) || !target.id || !TARGET_TYPES.has(target.category)) return false;
+  // Pure probe: target endpoints describe the complete frame, active bounds clip it.
+  function firstIntersection(target) {
+    if (!sweep || !readState().active || touched.has(target.id) || !target.id || !TARGET_TYPES.has(target.category)) return null;
     const low = Math.max(0, target.activeFrom ?? 0), high = Math.min(sweep.end, target.activeTo ?? 1);
-    if (low > high || !target.current) return false;
-    const hit = target.kind === "ring" ? hitsRing(sweep, target, low, high) : hitsDisk(sweep, target, low, high);
-    if (hit) pending.add(target.id);
-    return hit;
+    if (low > high || !target.current) return null;
+    return target.kind === "ring" ? hitsRing(sweep, target, low, high) : hitsDisk(sweep, target, low, high);
+  }
+  function intersects(target) {
+    const time = firstIntersection(target);
+    if (time === null) return false;
+    pending.set(target.id, target.category === "parasite" ? 75 : 50);
+    return true;
   }
   function confirmNeutralized(id) {
-    if (!readState().active || !pending.delete(id) || touched.has(id)) return false;
-    touched.add(id); onNeutralized(50, id);
+    if (!readState().active || !pending.has(id) || touched.has(id)) return false;
+    const amount = pending.get(id); pending.delete(id);
+    touched.add(id); onNeutralized(amount, id);
     return true;
   }
   function cancel() { pulse = null; sweep = null; touched.clear(); pending.clear(); }
@@ -89,5 +97,5 @@ export function createAstralImpulseCombat({ energy, readHead, readState, onNeutr
       elapsed: pulse?.elapsed ?? 0, radius: pulse ? IMPULSE_RADIUS * pulse.elapsed / IMPULSE_DURATION : 0,
       neutralized: touched.size });
   }
-  return Object.freeze({ trigger, update, intersects, confirmNeutralized, cancel, isActive, snapshot });
+  return Object.freeze({ trigger, update, intersects, firstIntersection, confirmNeutralized, cancel, isActive, snapshot });
 }

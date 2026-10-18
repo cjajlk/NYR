@@ -11,14 +11,15 @@ export function createImpulsePresentation({ combat, audio, reducedMotion = () =>
   }
   function intersects(target) {
     const hit = combat.intersects(target);
-    if (hit && armed) candidates.set(target.id, { x: target.current.x, y: target.current.y });
+    if (hit && armed) candidates.set(target.id, { x: (target.impactPosition ?? target.current).x, y: (target.impactPosition ?? target.current).y });
     return hit;
   }
-  function confirmed(id) {
+  function confirmed(id, amount = 50) {
+    if (amount !== 50 && amount !== 75) return;
     const position = candidates.get(id);
     if (!armed || !position) return;
     candidates.delete(id);
-    bursts.push({ ...position, age: 0 });
+    bursts.push({ ...position, age: 0, amount });
     if (bursts.length > 3) bursts.shift();
     if (soundCooldown <= 0) {
       audio.play("impulseNeutralized");
@@ -44,7 +45,7 @@ export function createImpulsePresentation({ combat, audio, reducedMotion = () =>
       ctx.font = "600 12px system-ui";
       ctx.textAlign = "center";
       ctx.fillStyle = "#b9faff";
-      ctx.fillText("+50", burst.x, burst.y - 15 - (reduced ? 0 : burst.age * 16));
+      ctx.fillText(`+${burst.amount}`, burst.x, burst.y - 15 - (reduced ? 0 : burst.age * 16));
       if (!reduced) {
         for (let i = 0; i < 4; i++) {
           const angle = i * Math.PI / 2 + Math.PI / 4;
@@ -57,7 +58,7 @@ export function createImpulsePresentation({ combat, audio, reducedMotion = () =>
       ctx.restore();
     }
   }
-  return Object.freeze({ trigger, intersects, confirmNeutralized: combat.confirmNeutralized,
+  return Object.freeze({ trigger, intersects, firstIntersection: combat.firstIntersection, confirmNeutralized: combat.confirmNeutralized,
     confirmed, update, cancel, render,
     snapshot: () => ({ bursts: bursts.map(b => ({ ...b })), armed }) });
 }
