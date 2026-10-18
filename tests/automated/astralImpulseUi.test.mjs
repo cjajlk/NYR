@@ -50,6 +50,8 @@ steering.destroy();second.destroy();assert.ok([...canvas.listeners.values()].eve
 
 for(const mobile of [false,true]) {
  const hud=createImpulseDisplay({ownerDocument:doc,story:true,mobile});
+ assert.equal(hud.button.attributes["aria-label"],"Impulsion astrale");
+ assert.equal(hud.button.children[0].attributes["aria-hidden"],"true");
  for(let energy=0;energy<=20;energy++){hud.update({energy,capacity:20,ready:energy===20},true,true);assert.equal(hud.element.children[0].textContent,`${energy}/20`);assert.equal(hud.button.disabled,energy<20);}
  assert.equal(hud.hint.hidden,false);assert.ok(hud.hint.textContent.includes(mobile?"sur IMPULSION":"sur Espace"));
  hud.advance(4);hud.update({energy:20,capacity:20,ready:true},true,true);assert.equal(hud.hint.hidden,true,"hint once per session");
@@ -58,8 +60,8 @@ for(const mobile of [false,true]) {
 }
 const energy=createAstralImpulse();for(let i=0;i<20;i++)energy.absorbNormalFragment();
 const combat=createAstralImpulseCombat({energy,readHead:()=>({x:123,y:234}),readState:()=>({active,transitioning:false})});active=true;combat.trigger();
-const arcs=[];const ctx={save(){},restore(){},beginPath(){},stroke(){},arc(...p){arcs.push(p);}};
-for(let i=0;i<7;i++){combat.update(.05);const pulse=combat.snapshot();renderAstralImpulse(ctx,pulse);assert.deepEqual(arcs.at(-1).slice(0,3),[123,234,pulse.radius]);assert.equal(ctx.globalAlpha,1-pulse.elapsed/.4);}
+const arcs=[];let strokeAlpha;const ctx={save(){},restore(){},beginPath(){},fill(){},stroke(){strokeAlpha=this.globalAlpha;},arc(...p){arcs.push(p);}};
+for(let i=0;i<7;i++){combat.update(.05);const pulse=combat.snapshot();renderAstralImpulse(ctx,pulse);assert.deepEqual(arcs[arcs.length-(pulse.elapsed<.1?2:1)].slice(0,3),[123,234,pulse.radius]);assert.equal(strokeAlpha,1-pulse.elapsed/.4);}
 active=false;const paused=combat.snapshot();combat.update(.05);assert.deepEqual(combat.snapshot(),paused);active=true;
 combat.update(.05);assert.ok(Math.abs(combat.snapshot().radius-110)<1e-10);const count=arcs.length;renderAstralImpulse(ctx,combat.snapshot());assert.equal(arcs.length,count);
 combat.cancel();renderAstralImpulse(ctx,combat.snapshot());assert.equal(arcs.length,count);

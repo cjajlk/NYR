@@ -12,7 +12,12 @@ export function createImpulseDisplay({ story = false, mobile = false, ownerDocum
   const button = ownerDocument.createElement("button");
   button.type = "button";
   button.className = "impulse-button";
-  button.textContent = "IMPULSION";
+  button.setAttribute("aria-label", "Impulsion astrale");
+  button.title = "Impulsion astrale — Espace";
+  const symbol = ownerDocument.createElement("span");
+  symbol.className = "impulse-symbol";
+  symbol.setAttribute("aria-hidden", "true");
+  button.append(symbol);
   button.setAttribute("aria-keyshortcuts", "Space");
   const hint = ownerDocument.createElement("p");
   hint.className = "impulse-hint";

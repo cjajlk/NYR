@@ -2,7 +2,8 @@ export const GAMEPLAY_SOUNDS = Object.freeze({
   fragment1: "nyr_fragment_absorb_1", fragment2: "nyr_fragment_absorb_2",
   fragment3: "nyr_fragment_absorb_3", pure: "nyr_fragment_pur",
   collision: "nyr_collision", corruption: "nyr_corruption_hit",
-  portal: "nyr_portal_enter", death: "nyr_death", movement: "nyr_movement_loop"
+  portal: "nyr_portal_enter", death: "nyr_death", movement: "nyr_movement_loop",
+  impulse: "nyr_impulse", impulseNeutralized: "nyr_impulse_neutralized"
 });
 export const AUDIO_PREFERENCES_KEY = "nyrAudioPreferencesV1";
 
@@ -19,6 +20,11 @@ export function createGameplayAudio({
   } catch { /* Unavailable storage keeps the existing default and gameplay working. */ }
   let loading = null;
   const buffers = new Map(), voices = new Set();
+  const impulseVoices = new Set();
+  function stopImpulse() {
+    for (const voice of impulseVoices) { try { voice.stop(); } catch {} }
+    impulseVoices.clear();
+  }
 
   function stopMovement() {
     if (!movement) return;
@@ -29,6 +35,7 @@ export function createGameplayAudio({
     stopMovement();
     for (const voice of voices) { try { voice.stop(); } catch {} }
     voices.clear();
+    impulseVoices.clear();
   }
   function syncMovement() {
     if (!active || !enabled || hidden || context?.state !== "running") { stopMovement(); return; }
@@ -72,11 +79,13 @@ export function createGameplayAudio({
     const key = kind === "fragment" ? `fragment${variant++ % 3 + 1}` : kind;
     const buffer = buffers.get(key);
     // Do not replay missed events once loading/unlock finishes.
-    if (!buffer || voices.size >= 12) return false;
+    const isImpulse = key === "impulse" || key === "impulseNeutralized";
+    if (!buffer || voices.size >= 12 || (isImpulse && impulseVoices.size >= 2)) return false;
     try {
       const source = context.createBufferSource(); source.buffer = buffer;
       source.connect(master); voices.add(source);
-      source.onended = () => { voices.delete(source); source.disconnect(); };
+      if (isImpulse) impulseVoices.add(source);
+      source.onended = () => { voices.delete(source); impulseVoices.delete(source); source.disconnect(); };
       source.start(); return true;
     } catch { return false; }
   }
@@ -91,6 +100,6 @@ export function createGameplayAudio({
     try { getStorage()?.setItem(AUDIO_PREFERENCES_KEY, JSON.stringify({ version: 1, enabled })); } catch {}
     if (!enabled) silence(); syncMovement();
   }
-  return Object.freeze({ unlock, play, setActive, setHidden, setEnabled, silence,
+  return Object.freeze({ unlock, play, setActive, setHidden, setEnabled, silence, stopImpulse,
     isEnabled: () => enabled });
 }

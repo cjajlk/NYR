@@ -22,7 +22,7 @@ const audio = createGameplayAudio({ Context: FakeContext, fetchAudio: async url 
 assert.equal(audio.play("fragment"), false, "locked audio drops events");
 audio.setActive(true);
 assert.equal(await audio.unlock(), true);
-assert.equal(fetched, 9);
+assert.equal(fetched, Object.keys(GAMEPLAY_SOUNDS).length);
 assert.equal(instance.sources.filter(s => s.loop).length, 1);
 for (const name of ["fragment", "fragment", "fragment", "pure", "portal", "collision", "corruption", "death"]) {
   assert.equal(audio.play(name), true);
@@ -47,7 +47,7 @@ audio.setEnabled(true);
 for (let i = 0; i < 12; i++) assert.equal(audio.play("fragment"), true);
 assert.equal(audio.play("fragment"), false, "polyphony bounded");
 await audio.unlock();
-assert.equal(fetched, 9, "assets loaded once across gestures");
+assert.equal(fetched, Object.keys(GAMEPLAY_SOUNDS).length, "assets loaded once across gestures");
 audio.silence();
 const unavailable = createGameplayAudio({ Context: null });
 assert.equal(await unavailable.unlock(), false);

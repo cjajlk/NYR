@@ -62,7 +62,7 @@ if (!hz) {
   if (process.env.NYR_ACTION_TEST) source = source.replace("readStory: weeklyChallenges.storySnapshot", "actionEvents, readStory: weeklyChallenges.storySnapshot");
   if (process.env.NYR_IMPULSE_TEST) source = source.replace("readStory: weeklyChallenges.storySnapshot", "astralImpulse, actionEvents, readStory: weeklyChallenges.storySnapshot");
   if (process.env.NYR_COMBAT_TEST) source = source.replace("readStory: weeklyChallenges.storySnapshot", "astralImpulse, impulseCombat, actionEvents, readStory: weeklyChallenges.storySnapshot");
-  if (process.env.NYR_IMPULSE_UI_TEST) source = source.replace("readStory: weeklyChallenges.storySnapshot", "impulseDisplay, pointerInput, impulseInput, astralImpulse, impulseCombat, readStory: weeklyChallenges.storySnapshot");
+  if (process.env.NYR_IMPULSE_UI_TEST) source = source.replace("readStory: weeklyChallenges.storySnapshot", "impulsePresentation, impulseDisplay, pointerInput, impulseInput, astralImpulse, impulseCombat, readStory: weeklyChallenges.storySnapshot");
   await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
   const snapshot = p => Object.fromEntries(Object.entries(p).filter(([, value]) => value.snapshot).map(([key, value]) => [key, value.snapshot()]));
   const frame = () => { timestamp += 1000 / hz; const callbacks = queue; queue = []; callbacks.forEach(fn => fn(timestamp)); };

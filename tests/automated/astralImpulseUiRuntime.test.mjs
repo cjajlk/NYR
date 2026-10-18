@@ -21,6 +21,7 @@ export function verifyImpulseUiRuntime({app,frame,hz,setBounds}) {
  const writes=[];const save=localStorage.setItem;localStorage.setItem=(k,v)=>{writes.push(k);save(k,v);};
  const head=p.movement.snapshot(),score=p.score.snapshot().points;
  assert.equal(key().prevented,true);assert.equal(p.impulseCombat.snapshot().active,true);assert.equal(p.impulseDisplay.element.children[0].textContent,"0/20");
+ assert.equal(p.impulsePresentation.snapshot().armed,true);assert.equal(p.impulsePresentation.snapshot().bursts.length,0);
  assert.equal(p.impulseCombat.snapshot().x,head.x);assert.equal(p.score.snapshot().points,score);assert.equal(writes.length,0,"command creates no persistent writes");
  key("keydown",{repeat:true});assert.equal(p.astralImpulse.snapshot().energy,0);key("keyup");
  app.children.find(e=>e.className==="return-menu").emit("click");assert.equal(p.impulseDisplay.element.hidden,true);
@@ -28,6 +29,7 @@ export function verifyImpulseUiRuntime({app,frame,hz,setBounds}) {
  window.innerWidth=390;window.innerHeight=844;setBounds({width:374,height:796});window.emit("orientationchange");frame();
  window.innerWidth=844;window.innerHeight=390;setBounds({width:828,height:342});window.emit("orientationchange");frame();
  assert.equal(p.impulseCombat.snapshot().active,false);assert.equal(p.impulseDisplay.element.hidden,true);assert.ok(getRuntimeState().suspensionReasons.includes("user-pause"));
+ assert.equal(p.impulsePresentation.snapshot().armed,false,"orientation clears all presentation state");
  app.children.find(e=>e.className==="pause-overlay").children[1].emit("click");frame();
  fill();const energy=p.astralImpulse.snapshot().energy;
  touch(p.canvas);const beforeFullscreen=p.movement.snapshot().desiredHeading;

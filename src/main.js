@@ -2,6 +2,7 @@ import { createGameplayAudio } from "./systems/gameplayAudio.js";
 import { createAstralImpulse } from "./gameplay/astralImpulse.js";
 import { createAstralImpulseCombat } from "./gameplay/astralImpulseCombat.js";
 import { renderAstralImpulse } from "./gameplay/astralImpulseRenderer.js";
+import { createImpulsePresentation } from "./gameplay/impulsePresentation.js";
 import { createImpulseDisplay } from "./ui/impulseDisplay.js";
 import { createImpulseInput } from "./systems/impulseInput.js";
 import { needsLandscape } from "./ui/mobileOrientation.js";
@@ -184,15 +185,21 @@ function startGame(mode = "infinite", menuPage = "home") {
   const impulseCombat = createAstralImpulseCombat({
     energy: astralImpulse, readHead: movement.snapshot,
     readState: () => ({ active: !disposed && isRuntimeActive(), transitioning: zoneBackgroundTransition.isCombatTransitioning() }),
-    onNeutralized() { scoreDisplay.update(score.awardNeutralizedDanger()); }
+    onNeutralized(amount, id) {
+      scoreDisplay.update(score.awardNeutralizedDanger());
+      impulsePresentation.confirmed(id);
+    }
   });
+  const motionPreference = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+  const impulsePresentation = createImpulsePresentation({ combat: impulseCombat, audio: gameplayAudio,
+    reducedMotion: () => Boolean(motionPreference?.matches) });
   const impulseDisplay = createImpulseDisplay({ story: mode === "story", mobile: needsLandscape({
     width: 1, height: 2, navigator: window.navigator ?? globalThis.navigator,
     matchMedia: window.matchMedia?.bind(window)
   }) });
   const canUseImpulse = () => !disposed && isRuntimeActive() && !zoneBackgroundTransition.isCombatTransitioning();
   const impulseInput = createImpulseInput({ button: impulseDisplay.button, canAttack: canUseImpulse,
-    attack() { impulseCombat.trigger(); syncImpulseDisplay(); } });
+    attack() { impulsePresentation.trigger(); syncImpulseDisplay(); } });
   function syncImpulseDisplay() {
     impulseDisplay.update(astralImpulse.snapshot(), !disposed && isRuntimeActive(),
       canUseImpulse() && !impulseCombat.isActive());
@@ -251,7 +258,7 @@ function startGame(mode = "infinite", menuPage = "home") {
     }
   });
   const portal = createZoneExitPortal(() => {
-    impulseCombat.cancel(); pointerInput?.reset();
+    impulsePresentation.cancel(); pointerInput?.reset();
     actionEvents.reset();
     gameplayAudio.play("portal");
     const zoneState = zoneProgression.sync(progression.snapshot(), true);
@@ -260,7 +267,7 @@ function startGame(mode = "infinite", menuPage = "home") {
     finishChapter(1);
   });
   const exitPortal = createZoneExitPortal(() => {
-    impulseCombat.cancel(); pointerInput?.reset();
+    impulsePresentation.cancel(); pointerInput?.reset();
     actionEvents.reset();
     gameplayAudio.play("portal");
     zoneThreePortal.reset();
@@ -271,7 +278,7 @@ function startGame(mode = "infinite", menuPage = "home") {
   }, ZONE_TWO_TARGET);
   const zoneThreePortal = createZoneExitPortal(() => {
     if (!isRuntimeActive() || zoneProgression.snapshot().currentZone !== NYR_ZONES.ZONE_3) return;
-    impulseCombat.cancel(); pointerInput?.reset();
+    impulsePresentation.cancel(); pointerInput?.reset();
     actionEvents.reset();
     gameplayAudio.play("portal");
     combo.reset();
@@ -284,7 +291,7 @@ function startGame(mode = "infinite", menuPage = "home") {
   }, ZONE_THREE_TARGET);
   const zoneFourPortal = createZoneExitPortal(() => {
     if (!isRuntimeActive() || zoneProgression.snapshot().currentZone !== NYR_ZONES.ZONE_4) return;
-    impulseCombat.cancel(); pointerInput?.reset();
+    impulsePresentation.cancel(); pointerInput?.reset();
     actionEvents.reset();
     gameplayAudio.play("portal");
     if (mode === "story") { finishChapter(4); return; }
@@ -309,7 +316,7 @@ function startGame(mode = "infinite", menuPage = "home") {
   function endGame(cause = "Stabilité épuisée") {
     if (!isRuntimeActive()) return;
     astralImpulse.reset();
-    impulseCombat.cancel(); pointerInput?.reset();
+    impulsePresentation.cancel(); pointerInput?.reset();
     actionEvents.reset();
     gameplayAudio.play("death");
     survivalRun?.observe();
@@ -424,7 +431,7 @@ function startGame(mode = "infinite", menuPage = "home") {
     fragmentsDisplay.textContent = `FRAGMENTS ${progression.snapshot().normalFragmentsAbsorbed}`;
     fragmentsDisplay.hidden = menu || state.suspensionReasons.includes("portrait-orientation");
     if (state.gameOver || state.journeyComplete) combo.reset();
-    if (state.gameOver || state.journeyComplete) { actionEvents.reset(); astralImpulse.reset(); impulseCombat.cancel(); pointerInput?.reset(); }
+    if (state.gameOver || state.journeyComplete) { actionEvents.reset(); astralImpulse.reset(); impulsePresentation.cancel(); pointerInput?.reset(); }
     comboDisplay.update(combo.snapshot(), state);
     scoreDisplay.element.hidden = menu;
     timeDisplay.update(movement.snapshot().simulationTime, state);
@@ -441,7 +448,7 @@ function startGame(mode = "infinite", menuPage = "home") {
     const previousSize = displaySize;
     displaySize = displayManager.resize();
     if (previousSize.cssWidth !== displaySize.cssWidth || previousSize.cssHeight !== displaySize.cssHeight) {
-      impulseCombat.cancel();
+      impulsePresentation.cancel();
       pointerInput?.reset();
     }
     syncOrientationState(needsLandscape({ width: window.innerWidth, height: window.innerHeight,
@@ -523,7 +530,7 @@ function startGame(mode = "infinite", menuPage = "home") {
     weeklyChallenges.flush();
     disposed = true;
     astralImpulse.reset();
-    impulseCombat.cancel(); pointerInput?.reset();
+    impulsePresentation.cancel(); pointerInput?.reset();
     actionEvents.reset();
     gameplayAudio.setActive(false, true);
     gameLoop.stop();
@@ -562,7 +569,7 @@ function startGame(mode = "infinite", menuPage = "home") {
           ? voidDifficulty.snapshot().speed / NYR_PROTOTYPE_CONFIG.speedPixelsPerSecond
           : zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_3 ? ZONE_THREE_SPEED_MULTIPLIER : 1);
       const headAfterMovement = movement.snapshot();
-      if (Math.hypot(headAfterMovement.x - headBeforeMovement.x, headAfterMovement.y - headBeforeMovement.y) > 40) { actionEvents.reset(); impulseCombat.cancel(); pointerInput?.reset(); }
+      if (Math.hypot(headAfterMovement.x - headBeforeMovement.x, headAfterMovement.y - headBeforeMovement.y) > 40) { actionEvents.reset(); impulsePresentation.cancel(); pointerInput?.reset(); }
       if (mode !== "survival" && zoneProgression.snapshot().currentZone === NYR_ZONES.ZONE_4) {
         voidDifficulty.sync(movement.snapshot().simulationTime);
       }
@@ -576,8 +583,9 @@ function startGame(mode = "infinite", menuPage = "home") {
         if (!isRuntimeActive()) return;
       }
       impulseCombat.update(deltaSeconds);
+      impulsePresentation.update(deltaSeconds);
       fragmentSystem.advanceCorruption(deltaSeconds, displaySize.cssWidth, displaySize.cssHeight);
-      fragmentSystem.update(movement.snapshot(), displaySize.cssWidth, displaySize.cssHeight, impulseCombat);
+      fragmentSystem.update(movement.snapshot(), displaySize.cssWidth, displaySize.cssHeight, impulsePresentation);
       if (!isRuntimeActive()) return;
       if (!impulseWasActive) {
         portal.update(movement.snapshot());
@@ -595,12 +603,12 @@ function startGame(mode = "infinite", menuPage = "home") {
       );
       if (!isRuntimeActive()) return;
       pocket.update(deltaSeconds, zoneProgression.snapshot().currentZone,
-        displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(), pocketObstacles(), voidDifficulty.snapshot().pocketCooldown, impulseCombat);
+        displaySize.cssWidth, displaySize.cssHeight, movement.snapshot(), pocketObstacles(), voidDifficulty.snapshot().pocketCooldown, impulsePresentation);
       if (!isRuntimeActive()) return;
       const head = movement.snapshot();
       actionEvents.update(deltaSeconds, {
         zone: zoneProgression.snapshot().currentZone, width: displaySize.cssWidth, height: displaySize.cssHeight,
-        head, enabled: mode !== "survival", impulse: impulseCombat,
+        head, enabled: mode !== "survival", impulse: impulsePresentation,
         blocked: [portal, exitPortal, zoneThreePortal, zoneFourPortal].some(item => {
           const p = item.snapshot();
           return p.active && Math.hypot(head.x - p.x, head.y - p.y) < 100;
@@ -652,7 +660,8 @@ function startGame(mode = "infinite", menuPage = "home") {
       renderMobileAsteroid(displayManager.context, mobileAsteroid.snapshot());
       renderNormalFragments(displayManager.context, fragmentSystem.snapshot());
       renderActionEvents(displayManager.context, actionEvents.snapshot(), displaySize.cssWidth, displaySize.cssHeight);
-      renderAstralImpulse(displayManager.context, impulseCombat.snapshot());
+      renderAstralImpulse(displayManager.context, impulseCombat.snapshot(), Boolean(motionPreference?.matches));
+      impulsePresentation.render(displayManager.context);
       renderNyr(
         displayManager.context,
         movement.snapshot(),
