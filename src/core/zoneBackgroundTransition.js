@@ -28,6 +28,7 @@ export function createZoneBackgroundTransition({
   let targetZone = NYR_ZONES.ZONE_1;
   let activeTransitionSeconds = 0;
   let transitioning = false;
+  let combatTransitionRemaining = 0;
   let previous = [];
   function progress() {
     return transitioning && layers[targetZone].status === "ready"
@@ -48,11 +49,13 @@ export function createZoneBackgroundTransition({
     previous = [...weights].map(([zone, alpha]) => ({ zone, alpha }));
     targetZone = next;
     transitioning = true;
+    combatTransitionRemaining = config.durationSeconds;
     activeTransitionSeconds = 0;
     onTransitionStarted(snapshot());
     return snapshot();
   }
   function update(deltaSeconds) {
+    if (Number.isFinite(deltaSeconds) && deltaSeconds > 0) combatTransitionRemaining = Math.max(0, combatTransitionRemaining - deltaSeconds);
     if (!transitioning || layers[targetZone].status !== "ready") return snapshot();
     const duration = Math.max(Number.EPSILON, config.durationSeconds);
     const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
@@ -91,5 +94,5 @@ export function createZoneBackgroundTransition({
     return Object.freeze({ targetZone, zoneTwoStatus: two.status, zoneThreeStatus: three.status, zoneFourStatus: four.status,
       activeTransitionSeconds, progress: progress() });
   }
-  return Object.freeze({ sync, update, render, snapshot });
+  return Object.freeze({ sync, update, render, snapshot, isCombatTransitioning: () => combatTransitionRemaining > 1e-9 });
 }

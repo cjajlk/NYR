@@ -1,5 +1,6 @@
 import { FRAGMENT_PROTOTYPE_CONFIG } from "./fragmentPrototypeConfig.js";
 import { NYR_ZONES } from "./nyrZoneProgression.js";
+import { MOBILE_ASTEROID_CONFIG } from "./mobileAsteroidSystem.js";
 export const CORRUPTION_MOTION = Object.freeze({ amplitudeX: 40, amplitudeY: 20, period: 4 });
 export const PURE_FRAGMENT_INTERVAL = 10;
 export const CORRUPTION_CONFIG = Object.freeze({ firstAbsorption: 35, interval: 10 });
@@ -35,6 +36,7 @@ export function createFragmentSystem({
   let normalAbsorptions = 0;
   let corruption = null;
   let nextVoidCorruption = null;
+  let previousCorruptionPosition = null;
   function enterVoid() {
     nextVoidCorruption = normalAbsorptions + CORRUPTION_CONFIG.interval;
   }
@@ -100,6 +102,7 @@ export function createFragmentSystem({
     fragment.x = position.x;
     fragment.y = position.y;
     if (fragment.kind === "corruption") {
+      previousCorruptionPosition = null;
       fragment.anchorX = position.x;
       fragment.anchorY = position.y;
       fragment.motionTime = 0;
@@ -112,6 +115,7 @@ export function createFragmentSystem({
     normalAbsorptions = 0;
     nextVoidCorruption = null;
     corruption = null;
+    previousCorruptionPosition = null;
     for (let index = 0; index < config.activeCount; index += 1) {
       const fragment = { id: index + 1, x: 0, y: 0 };
       fragments.push(fragment);
@@ -121,6 +125,7 @@ export function createFragmentSystem({
 
   function advanceCorruption(delta, width, height) {
     if (!corruption || !Number.isFinite(delta) || delta <= 0) return;
+    previousCorruptionPosition = { x: corruption.x, y: corruption.y };
     const margin = Math.min(config.spawnMarginPixels, width * 0.2, height * 0.2);
     const amplitudeX = Math.max(0, Math.min(CORRUPTION_MOTION.amplitudeX,
       corruption.anchorX - margin, width - margin - corruption.anchorX));
@@ -132,8 +137,16 @@ export function createFragmentSystem({
     corruption.y = corruption.anchorY + amplitudeY * Math.sin(phase * 2);
   }
 
-  function update(headState, width, height) {
+  function update(headState, width, height, impulse = null) {
     if (![NYR_ZONES.ZONE_2, NYR_ZONES.ZONE_3, NYR_ZONES.ZONE_4].includes(getCurrentZone())) corruption = null;
+    if (corruption && impulse?.intersects({ id: `corruption:${corruption.generation}`, category: "corruption",
+      previous: previousCorruptionPosition ?? corruption, current: corruption,
+      radius: Math.max(0, config.absorptionRadiusPixels - MOBILE_ASTEROID_CONFIG.headCollisionRadiusPixels) })) {
+      const id = `corruption:${corruption.generation}`;
+      corruption = null;
+      impulse.confirmNeutralized(id);
+    }
+    previousCorruptionPosition = null;
     if (corruption) {
       const touching = distanceBetween(corruption, headState) <= config.absorptionRadiusPixels;
       if (touching && !corruption.headContact) {

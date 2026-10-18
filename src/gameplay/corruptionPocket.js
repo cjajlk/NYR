@@ -29,7 +29,7 @@ export function createCorruptionPocket(onContact) {
     place(width, height, head, obstacles);
     state.phase = "warning"; state.remaining = POCKET_CONFIG.warning; state.contact = false;
   }
-  function update(delta, zone, width, height, head, obstacles = [], voidCooldown = POCKET_CONFIG.zoneThreeCooldown) {
+  function update(delta, zone, width, height, head, obstacles = [], voidCooldown = POCKET_CONFIG.zoneThreeCooldown, impulse = null) {
     if (![NYR_ZONES.ZONE_2, NYR_ZONES.ZONE_3, NYR_ZONES.ZONE_4].includes(zone) || !Number.isFinite(delta) || delta < 0) return;
     if (state.phase === "inactive") { warn(width, height, head, obstacles); return; }
     const nextCooldown = zone === NYR_ZONES.ZONE_4 ? voidCooldown : zone === NYR_ZONES.ZONE_3 ? POCKET_CONFIG.zoneThreeCooldown : POCKET_CONFIG.cooldown;
@@ -37,6 +37,7 @@ export function createCorruptionPocket(onContact) {
       state.remaining = Math.max(0, state.remaining + nextCooldown - cooldownDuration);
     }
     cooldownDuration = nextCooldown;
+    const oldPhase = state.phase, oldRemaining = state.remaining, oldGeneration = state.generation;
     let elapsed = delta;
     while (elapsed + 1e-9 >= state.remaining) {
       elapsed = Math.max(0, elapsed - state.remaining);
@@ -47,6 +48,14 @@ export function createCorruptionPocket(onContact) {
       } else warn(width, height, head, obstacles);
     }
     state.remaining -= elapsed;
+    const activeFrom = oldPhase === "active" ? 0 : oldPhase === "warning" && delta > 0 ? oldRemaining / delta : 2;
+    const activeTo = oldPhase === "active" && delta > 0 ? Math.min(1, oldRemaining / delta) : 1;
+    if (state.generation === oldGeneration && activeFrom <= activeTo && (oldPhase === "active" || state.phase === "active") &&
+      impulse?.intersects({ id: `pocket:${state.generation}`, category: "pocket", current: state, radius: state.radius, activeFrom, activeTo })) {
+      state.phase = "cooldown"; state.remaining = cooldownDuration; state.contact = false;
+      impulse.confirmNeutralized(`pocket:${state.generation}`);
+      return;
+    }
     if (state.phase !== "active") return;
     const touching = Math.hypot(head.x - state.x, head.y - state.y) <= state.radius + MOBILE_ASTEROID_CONFIG.headCollisionRadiusPixels;
     if (touching && !state.contact) { state.contact = true; onContact(); }

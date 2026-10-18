@@ -5,6 +5,63 @@
   color: #f4f1ff;
 }
 
+.impulse-control {
+  position: fixed;
+  right: max(0.75rem, calc(env(safe-area-inset-right) + 0.5rem));
+  bottom: max(0.5rem, calc(env(safe-area-inset-bottom) + 0.35rem));
+  z-index: 9;
+  width: 8.5rem;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.35rem;
+  border: 1px solid #a88cff55;
+  border-radius: 0.85rem;
+  background: #090b21df;
+  touch-action: none;
+  user-select: none;
+}
+.impulse-control[hidden], .impulse-hint[hidden] { display: none; }
+.impulse-energy { color: #d3dded; text-align: center; font-size: 0.65rem; font-variant-numeric: tabular-nums; }
+.impulse-control progress { width: 100%; height: 0.25rem; appearance: none; border: 0; border-radius: 1rem; background: #33364b; }
+.impulse-control progress::-webkit-progress-bar { background: #33364b; border-radius: 1rem; }
+.impulse-control progress::-webkit-progress-value { background: linear-gradient(90deg, #a076ff, #8ef4ff); border-radius: 1rem; }
+.impulse-control progress::-moz-progress-bar { background: #8ef4ff; border-radius: 1rem; }
+.impulse-button {
+  min-height: 48px;
+  width: 100%;
+  border: 1px solid #b8a1ff;
+  border-radius: 0.55rem;
+  background: linear-gradient(135deg, #342650, #17324a);
+  color: #effcff;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  touch-action: none;
+  cursor: pointer;
+}
+.impulse-button:disabled { color: #8e94ab; border-color: #6c638655; background: #1d2035; cursor: default; }
+.impulse-button:focus-visible { outline: 2px solid #a6faff; outline-offset: 3px; }
+.impulse-control[data-ready="true"] { animation: impulse-ready 2.4s ease-in-out infinite alternate; border-color: #96edff; }
+@keyframes impulse-ready { to { box-shadow: 0 0 0.9rem #8d64ff66; } }
+.impulse-hint {
+  position: fixed;
+  bottom: max(6.6rem, calc(env(safe-area-inset-bottom) + 6.6rem));
+  right: max(0.75rem, calc(env(safe-area-inset-right) + 0.5rem));
+  z-index: 9;
+  max-width: min(21rem, 65vw);
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  color: #d7faff;
+  background: #11152ced;
+  border: 1px solid #9875d97a;
+  border-radius: 0.6rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) { .impulse-control[data-ready="true"] { animation: none; } }
+
 * {
   box-sizing: border-box;
 }

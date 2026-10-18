@@ -18,6 +18,7 @@ function sweptDistance(a, b) {
 export function createActionEvents({ random = Math.random, onDamage = () => {}, onDodge = () => {} } = {}) {
   let zone = null, event = null, remaining = 75, serial = 0, shield = 0, previousHead = null;
   let feedback = 0, surface = null;
+  let generation = 0;
   function reset(nextZone = zone) {
     zone = nextZone; event = null; previousHead = null; shield = 0; feedback = 0;
     remaining = ACTION_EVENT_CONFIG[zone]?.delay ?? 75; serial = 0; surface = null;
@@ -40,7 +41,7 @@ export function createActionEvents({ random = Math.random, onDamage = () => {}, 
         { x: width * 0.22, y: height * 0.75 }, { x: width * 0.78, y: height * 0.75 }];
       const center = points.sort((a, b) => distance(b, head) - distance(a, head))[0];
       if (distance(center, head) < 140) return false;
-      event = { kind, phase: "warning", elapsed: 0, ...center, radius: 0,
+      event = { id: `wave:${++generation}`, kind, phase: "warning", elapsed: 0, ...center, radius: 0,
         maximum: Math.min(170, Math.min(width, height) * 0.36), contacted: false, damaged: false, near: false, rewarded: false };
     } else {
       const [min, max] = ACTION_EVENT_CONFIG[zone].meteors;
@@ -48,6 +49,7 @@ export function createActionEvents({ random = Math.random, onDamage = () => {}, 
       if (Math.max(width, height) / (count + 1) < 95) return false;
       const vertical = width / (count + 1) >= 95 && (height / (count + 1) < 95 || random() < 0.5);
       const meteors = [];
+      const rainId = ++generation;
       for (let i = 0; i < count; i++) {
         const lane = (i + 1) / (count + 1);
         const reverse = i % 2 === 1;
@@ -56,7 +58,7 @@ export function createActionEvents({ random = Math.random, onDamage = () => {}, 
         if (distance(point, head) < 120) return false;
         const speed = 70 + random() * 20;
         // Parallel lanes with alternating entry edges leave open, readable corridors.
-        meteors.push({ ...point, vx: vertical ? 0 : (reverse ? -speed : speed),
+        meteors.push({ id: `meteor:${rainId}:${i}`, ...point, vx: vertical ? 0 : (reverse ? -speed : speed),
           vy: vertical ? (reverse ? -speed : speed) : 0, radius: meteorRadius,
           contacted: false, damaged: false, near: false, rewarded: false, done: false });
       }
@@ -64,7 +66,7 @@ export function createActionEvents({ random = Math.random, onDamage = () => {}, 
     }
     return true;
   }
-  function update(delta, { active = true, zone: nextZone, width, height, head, blocked = false, enabled = true }) {
+  function update(delta, { active = true, zone: nextZone, width, height, head, blocked = false, enabled = true, impulse = null }) {
     if (!active) return;
     if (zone !== nextZone || (surface && (surface.width !== width || surface.height !== height))) reset(nextZone);
     surface = { width, height };
@@ -85,6 +87,7 @@ export function createActionEvents({ random = Math.random, onDamage = () => {}, 
       return;
     }
     const current = event;
+    const oldElapsed = current.elapsed;
     current.elapsed += dt;
     if (current.kind === "rain") {
       if (current.phase === "warning") {
@@ -95,6 +98,11 @@ export function createActionEvents({ random = Math.random, onDamage = () => {}, 
         if (meteor.done) continue;
         const old = { x: meteor.x, y: meteor.y };
         meteor.x += meteor.vx * dt; meteor.y += meteor.vy * dt;
+        if (!meteor.rewarded && impulse?.intersects({ id: meteor.id, category: "meteor", previous: old, current: meteor, radius: meteor.radius })) {
+          meteor.done = true; meteor.neutralized = true; meteor.rewarded = true;
+          impulse.confirmNeutralized(meteor.id);
+          continue;
+        }
         const gap = sweptDistance({ x: oldHead.x - old.x, y: oldHead.y - old.y },
           { x: head.x - meteor.x, y: head.y - meteor.y }) - headRadius - meteor.radius;
         if (gap <= 0) damage(meteor, 25);
@@ -107,6 +115,15 @@ export function createActionEvents({ random = Math.random, onDamage = () => {}, 
       }
       if (current.meteors.every(m => m.done)) event = null;
     } else {
+      if (!current.rewarded && dt > 0 && oldElapsed < 3.5 && current.elapsed >= 2 && impulse?.intersects({
+        id: current.id, category: "shockwave", kind: "ring", current, radius: current.maximum * (oldElapsed - 2) / 1.5,
+        growth: current.maximum * dt / 1.5, halfWidth: 5,
+        activeFrom: Math.max(0, (2 - oldElapsed) / dt), activeTo: Math.min(1, (3.5 - oldElapsed) / dt)
+      })) {
+        current.rewarded = true; event = null;
+        impulse.confirmNeutralized(current.id);
+        return;
+      }
       if (current.elapsed < 2) { current.phase = "warning"; return; }
       if (current.elapsed < 3.5) {
         current.phase = "active";

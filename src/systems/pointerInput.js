@@ -1,7 +1,15 @@
-import { isRuntimeActive } from "../core/runtimeState.js";
+import { isRuntimeActive, onRuntimeStateChange } from "../core/runtimeState.js";
 
 export function createPointerInput(canvas, movement) {
   let activeTouchPointerId = null;
+  function reset() {
+    if (activeTouchPointerId === null) return;
+    const id = activeTouchPointerId;
+    activeTouchPointerId = null;
+    if (canvas.hasPointerCapture?.(id)) canvas.releasePointerCapture(id);
+    movement.holdCurrentHeading();
+  }
+  const unsubscribe = onRuntimeStateChange(state => { if (!state.active) reset(); });
 
   function aimFromEvent(event) {
     if (!isRuntimeActive()) return;
@@ -22,7 +30,7 @@ export function createPointerInput(canvas, movement) {
   }
 
   function onPointerDown(event) {
-    if (event.pointerType === "mouse") return;
+    if (event.pointerType === "mouse" || !isRuntimeActive() || activeTouchPointerId !== null) return;
     activeTouchPointerId = event.pointerId;
     canvas.setPointerCapture?.(event.pointerId);
     event.preventDefault();
@@ -31,8 +39,7 @@ export function createPointerInput(canvas, movement) {
 
   function onPointerEnd(event) {
     if (event.pointerId !== activeTouchPointerId) return;
-    activeTouchPointerId = null;
-    if (isRuntimeActive()) movement.holdCurrentHeading();
+    reset();
   }
 
   canvas.addEventListener("pointermove", onPointerMove);
@@ -41,7 +48,10 @@ export function createPointerInput(canvas, movement) {
   canvas.addEventListener("pointercancel", onPointerEnd);
 
   return Object.freeze({
+    reset,
     destroy() {
+      reset();
+      unsubscribe();
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerdown", onPointerDown);
       canvas.removeEventListener("pointerup", onPointerEnd);

@@ -16,9 +16,9 @@ if (!hz) {
     listeners = new Map();
     addEventListener(name, fn) { if (!this.listeners.has(name)) this.listeners.set(name, new Set()); this.listeners.get(name).add(fn); }
     removeEventListener(name, fn) { this.listeners.get(name)?.delete(fn); }
-    emit(name) {
-      const selectInfinite = !process.env.NYR_STORY_TEST && !process.env.NYR_SURVIVAL_TEST && name === "click" && this.textContent === "JOUER" && !this.hidden && !this.disabled;
-      for (const fn of [...(this.listeners.get(name) ?? [])]) fn();
+    emit(name, event) {
+      const selectInfinite = !process.env.NYR_IMPULSE_UI_TEST && !process.env.NYR_COMBAT_TEST && !process.env.NYR_IMPULSE_TEST && !process.env.NYR_STORY_TEST && !process.env.NYR_SURVIVAL_TEST && name === "click" && this.textContent === "JOUER" && !this.hidden && !this.disabled;
+      for (const fn of [...(this.listeners.get(name) ?? [])]) fn(event);
       // Legacy gameplay scenarios explicitly select the already-unlocked Infinite mode.
       if (selectInfinite) {
         app.children.find(e => e.className === "main-menu").children.find(e => e.className === "mode-selection").children[2].emit("click");
@@ -60,10 +60,28 @@ if (!hz) {
       nearParticlesParallax, decorativeAsteroidsParallax, stabilityDisplay, gameLoop, canvas };
     gameLoop.start();`);
   if (process.env.NYR_ACTION_TEST) source = source.replace("readStory: weeklyChallenges.storySnapshot", "actionEvents, readStory: weeklyChallenges.storySnapshot");
+  if (process.env.NYR_IMPULSE_TEST) source = source.replace("readStory: weeklyChallenges.storySnapshot", "astralImpulse, actionEvents, readStory: weeklyChallenges.storySnapshot");
+  if (process.env.NYR_COMBAT_TEST) source = source.replace("readStory: weeklyChallenges.storySnapshot", "astralImpulse, impulseCombat, actionEvents, readStory: weeklyChallenges.storySnapshot");
+  if (process.env.NYR_IMPULSE_UI_TEST) source = source.replace("readStory: weeklyChallenges.storySnapshot", "impulseDisplay, pointerInput, impulseInput, astralImpulse, impulseCombat, readStory: weeklyChallenges.storySnapshot");
   await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
   const snapshot = p => Object.fromEntries(Object.entries(p).filter(([, value]) => value.snapshot).map(([key, value]) => [key, value.snapshot()]));
   const frame = () => { timestamp += 1000 / hz; const callbacks = queue; queue = []; callbacks.forEach(fn => fn(timestamp)); };
   const button = p => p.stabilityDisplay.gameOverElement.children[2];
+  if (process.env.NYR_IMPULSE_UI_TEST) {
+    const { verifyImpulseUiRuntime } = await import("./astralImpulseUiRuntime.test.mjs");
+    verifyImpulseUiRuntime({ app, frame, hz, setBounds: value => { bounds = value; } });
+    process.exit(0);
+  }
+  if (process.env.NYR_COMBAT_TEST) {
+    const { verifyCombatRuntime } = await import("./astralImpulseCombatRuntime.test.mjs");
+    verifyCombatRuntime({ app, frame, hz, setBounds: value => { bounds = value; } });
+    process.exit(0);
+  }
+  if (process.env.NYR_IMPULSE_TEST) {
+    const { verifyImpulseRuntime } = await import("./astralImpulseRuntime.test.mjs");
+    verifyImpulseRuntime({ app, frame, hz, setBounds: value => { bounds = value; } });
+    process.exit(0);
+  }
   if (process.env.NYR_MOBILE_UI_TEST) {
     const { verifyMobileUiRuntime } = await import("./mobileUi.test.mjs");
     verifyMobileUiRuntime({ app, frame, hz, setBounds: value => { bounds = value; } });
